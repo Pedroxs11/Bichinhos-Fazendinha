@@ -104,9 +104,9 @@ private val careSteps = listOf(
 )
 
 private val farmSteps = listOf(
-    FarmStep("Regar a horta", "💧", "Dê água para as plantinhas crescerem!", "A horta ficou verdinha! 🌱"),
-    FarmStep("Colher frutas", "🍎", "Pegue as frutas maduras da árvore!", "Cestinha cheia de frutas! 🍎"),
-    FarmStep("Pegar ovos", "🥚", "Ajude a recolher os ovos do galinheiro!", "Todos os ovos foram guardados! 🥚")
+    FarmStep("Regar a horta", "💧", "Dê água para as plantinhas crescerem!", "A horta ficou verdinha!"),
+    FarmStep("Colher frutas", "🍎", "Pegue as frutas maduras da árvore!", "Cestinha cheia de frutas!"),
+    FarmStep("Pegar ovos", "🥚", "Ajude a recolher os ovos do galinheiro!", "Todos os ovos foram guardados!")
 )
 
 @Composable
@@ -256,7 +256,7 @@ private fun PlayScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
-        item { TopBar(title = "Brincar ⚽", stars = stars, onBack = onBack) }
+        item { TopBar(title = "Brincar", stars = stars, onBack = onBack) }
 
         item {
             Card(
@@ -276,7 +276,7 @@ private fun PlayScreen(
                     )
                     Text(feedback, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = Color(0xFF5E514B))
                     if (finished) {
-                        Text("🎉", fontSize = 82.sp)
+                        ItemArt(title = "Recompensa", fallbackEmoji = "★", modifier = Modifier.size(82.dp))
                     } else {
                         ItemArt(title = "Brincar", fallbackEmoji = "⚽", modifier = Modifier.size(86.dp))
                     }
@@ -300,24 +300,24 @@ private fun PlayScreen(
                         throws += 1
                         feedback = when (throws) {
                             1 -> "Boa! ${animal.name} pegou a bola!"
-                            2 -> "Mais uma! ⚽"
+                            2 -> "Mais uma!"
                             3 -> "Que divertido!"
                             4 -> "Só falta uma!"
-                            else -> "Muito bem! Brincadeira completa! 🎉"
+                            else -> "Muito bem! Brincadeira completa!"
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(78.dp),
                     shape = RoundedCornerShape(26.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8A65))
                 ) {
-                    Text("⚽ Jogar bola  ${throws + 1}/$totalThrows", fontSize = 21.sp, fontWeight = FontWeight.Black)
+                    Text("Jogar bola  ${throws + 1}/$totalThrows", fontSize = 21.sp, fontWeight = FontWeight.Black)
                 }
             }
         } else {
             item {
                 RewardCard(
                     text = "Você jogou a bola 5 vezes e ganhou 2 estrelas!",
-                    buttonText = "⭐ Receber 2 estrelas",
+                    buttonText = "Receber 2 estrelas",
                     onClick = onPlayCompleted
                 )
             }
@@ -339,11 +339,11 @@ private fun FarmScreen(
     val requiredTaps = 4
     val finished = currentStep >= farmSteps.size
     val progress = if (finished) 1f else currentStep.toFloat() / farmSteps.size.toFloat()
-    val sceneEmoji = when (currentStep) {
-        0 -> "🌱"
-        1 -> "🌳"
-        2 -> "🐔"
-        else -> "🏡"
+    val sceneTitle = when (currentStep) {
+        0 -> "Cena horta"
+        1 -> "Cena pomar"
+        2 -> "Cena galinheiro"
+        else -> "Fazendinha"
     }
 
     LazyColumn(
@@ -351,7 +351,7 @@ private fun FarmScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
-        item { TopBar(title = "Fazendinha 🌾", stars = stars, onBack = onBack) }
+        item { TopBar(title = "Fazendinha", stars = stars, onBack = onBack) }
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -363,7 +363,7 @@ private fun FarmScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(sceneEmoji, fontSize = 92.sp)
+                    ItemArt(title = sceneTitle, fallbackEmoji = "", modifier = Modifier.size(130.dp, 98.dp))
                     Text(
                         if (finished) "Tudo pronto!" else farmSteps[currentStep].title,
                         fontSize = 26.sp,
@@ -408,7 +408,7 @@ private fun FarmScreen(
             item {
                 RewardCard(
                     text = "Você cuidou da fazendinha e ganhou 4 estrelas!",
-                    buttonText = "⭐ Receber 4 estrelas",
+                    buttonText = "Receber 4 estrelas",
                     onClick = onFarmCompleted
                 )
             }
@@ -517,7 +517,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                                     feedback = "Muito bem! ${animal.name}!"
                                     quizIndex += 1
                                 } else {
-                                    feedback = "Quase! Tente outro bichinho 😊"
+                                    feedback = "Quase! Tente outro bichinho."
                                 }
                             },
                             shape = RoundedCornerShape(22.dp),
@@ -543,7 +543,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
             item {
                 RewardCard(
                     text = "Você acertou $correctAnswers de ${animals.size} e ganhou 3 estrelas!",
-                    buttonText = "⭐ Receber 3 estrelas",
+                    buttonText = "Receber 3 estrelas",
                     onClick = onQuizCompleted
                 )
             }
@@ -571,7 +571,7 @@ private fun CareScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
-        item { TopBar(title = "Cuidar ${animal.emoji}", stars = stars, onBack = onBack) }
+        item { TopBar(title = "Cuidar", stars = stars, onBack = onBack) }
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -626,7 +626,7 @@ private fun CareScreen(
             item {
                 RewardCard(
                     text = "Você completou todos os cuidados e ganhou 5 estrelas!",
-                    buttonText = "⭐ Receber 5 estrelas",
+                    buttonText = "Receber 5 estrelas",
                     onClick = onRoutineCompleted
                 )
             }
@@ -673,7 +673,7 @@ private fun RewardCard(text: String, buttonText: String, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("🎉", fontSize = 62.sp)
+            ItemArt(title = "Recompensa", fallbackEmoji = "★", modifier = Modifier.size(70.dp))
             Text("Muito bem!", fontSize = 28.sp, fontWeight = FontWeight.Black)
             Text(text, fontSize = 17.sp, textAlign = TextAlign.Center)
             Button(
