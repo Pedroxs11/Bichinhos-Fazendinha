@@ -71,6 +71,14 @@ O quiz tem 4 rodadas, permite tentar novamente sem punição e entrega 3 estrela
 
 > Nesta etapa os sons são representados por texto/onomatopeias. Arquivos de áudio reais serão adicionados depois com conteúdo próprio ou devidamente licenciado.
 
+### Fazendinha — já funcional
+A área `Fazendinha` possui três tarefas sequenciais:
+1. regar a horta
+2. colher frutas
+3. pegar ovos
+
+A criança acompanha a barra de progresso, recebe feedback visual em cada tarefa e ganha 4 estrelas somente após completar as três atividades.
+
 ### Armário — funcional
 O app já possui uma entrada para o Armário com:
 - roupas permanentes de exemplo
@@ -86,12 +94,11 @@ O app já possui uma entrada para o Armário com:
 O prazo continua válido mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
 
 ## Próximas etapas
-1. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
-2. Evoluir as ações de cuidado para interações por toque/arraste
-3. Persistir estrelas e roupa atualmente vestida localmente
-4. Adicionar áudio real aos bichinhos
-5. Criar identidade visual e personagens próprios
-6. Criar sistema de moedas, estrelas e desbloqueios
-7. Integrar rewarded ads apropriados ao público infantil
-8. Preparar controles parentais e monetização adequada ao público infantil
-9. Testar e gerar a primeira versão para Android
+1. Evoluir as ações de cuidado e fazendinha para interações por toque/arraste
+2. Persistir estrelas e roupa atualmente vestida localmente
+3. Adicionar áudio real aos bichinhos
+4. Criar identidade visual e personagens próprios
+5. Criar sistema de moedas, estrelas e desbloqueios
+6. Integrar rewarded ads apropriados ao público infantil
+7. Preparar controles parentais e monetização adequada ao público infantil
+8. Testar e gerar a primeira versão para Android
