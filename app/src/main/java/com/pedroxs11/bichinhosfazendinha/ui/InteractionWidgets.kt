@@ -14,10 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,13 +23,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.abs
 
 private val dragActionTitles = setOf(
+    "Alimentar",
     "Dar banho",
     "Secar",
     "Regar a horta",
     "Colher frutas"
 )
+
+private fun interactionText(title: String, done: Boolean, current: Int, total: Int): String = when {
+    done -> "✓ Pronto!"
+    title == "Alimentar" -> "Arraste a comida até o bichinho ↑\n${current + 1}/$total"
+    title == "Dar banho" -> "Esfregue a esponja ↔\n${current + 1}/$total"
+    title == "Secar" -> "Esfregue a toalha ↔\n${current + 1}/$total"
+    title in dragActionTitles -> "Arraste o dedo aqui ↔\n${current + 1}/$total"
+    else -> "Toque aqui  ${current + 1}/$total"
+}
 
 @Composable
 fun TapActionPanel(
@@ -46,7 +53,8 @@ fun TapActionPanel(
 ) {
     val progress = (taps.toFloat() / requiredTaps.toFloat()).coerceIn(0f, 1f)
     val dragEnabled = title in dragActionTitles
-    var dragConsumed by remember(title, taps) { mutableStateOf(false) }
+    val rubMode = title == "Dar banho" || title == "Secar"
+    val feedMode = title == "Alimentar"
 
     Column(
         modifier = Modifier
@@ -78,25 +86,61 @@ fun TapActionPanel(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(if (dragEnabled) 135.dp else 78.dp)
+                .height(if (dragEnabled) 155.dp else 78.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(if (dragEnabled) Color(0xFFDDF3FF) else Color(0xFF5BAE62))
                 .pointerInput(title, taps, requiredTaps) {
                     if (dragEnabled && taps < requiredTaps) {
+                        var accumulatedDistance = 0f
+                        var verticalTravel = 0f
+                        var actionTriggered = false
+
                         detectDragGestures(
-                            onDragStart = { dragConsumed = false },
-                            onDragEnd = { dragConsumed = false },
-                            onDragCancel = { dragConsumed = false }
+                            onDragStart = {
+                                accumulatedDistance = 0f
+                                verticalTravel = 0f
+                                actionTriggered = false
+                            },
+                            onDragEnd = {
+                                accumulatedDistance = 0f
+                                verticalTravel = 0f
+                                actionTriggered = false
+                            },
+                            onDragCancel = {
+                                accumulatedDistance = 0f
+                                verticalTravel = 0f
+                                actionTriggered = false
+                            }
                         ) { change, dragAmount ->
                             change.consume()
-                            if (!dragConsumed && taps < requiredTaps && (dragAmount.x != 0f || dragAmount.y != 0f)) {
-                                dragConsumed = true
-                                onTap()
+                            if (actionTriggered || taps >= requiredTaps) return@detectDragGestures
+
+                            if (feedMode) {
+                                verticalTravel += dragAmount.y
+                                if (verticalTravel <= -120f) {
+                                    actionTriggered = true
+                                    onTap()
+                                }
+                            } else if (rubMode) {
+                                accumulatedDistance += abs(dragAmount.x) + abs(dragAmount.y)
+                                if (accumulatedDistance >= 260f) {
+                                    actionTriggered = true
+                                    onTap()
+                                }
+                            } else {
+                                accumulatedDistance += abs(dragAmount.x) + abs(dragAmount.y)
+                                if (accumulatedDistance >= 140f) {
+                                    actionTriggered = true
+                                    onTap()
+                                }
                             }
                         }
                     }
                 }
-                .clickable(enabled = taps < requiredTaps, onClick = onTap),
+                .clickable(
+                    enabled = !dragEnabled && taps < requiredTaps,
+                    onClick = onTap
+                ),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -106,14 +150,10 @@ fun TapActionPanel(
                 ItemArt(
                     title = title,
                     fallbackEmoji = emoji,
-                    modifier = Modifier.size(if (dragEnabled) 54.dp else 40.dp)
+                    modifier = Modifier.size(if (dragEnabled) 60.dp else 40.dp)
                 )
                 Text(
-                    when {
-                        taps >= requiredTaps -> "✓ Pronto!"
-                        dragEnabled -> "Arraste o dedo aqui ↔\n${taps + 1}/$requiredTaps"
-                        else -> "Toque aqui  ${taps + 1}/$requiredTaps"
-                    },
+                    interactionText(title, taps >= requiredTaps, taps, requiredTaps),
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Black,
                     color = if (dragEnabled) Color(0xFF315B75) else Color.White,
@@ -124,7 +164,12 @@ fun TapActionPanel(
 
         if (dragEnabled && taps < requiredTaps) {
             Text(
-                "Você também pode tocar se preferir.",
+                when (title) {
+                    "Alimentar" -> "Segure a comida e leve para cima."
+                    "Dar banho" -> "Passe o dedo de um lado para o outro como uma esponja."
+                    "Secar" -> "Passe o dedo pelo bichinho como uma toalha."
+                    else -> "Mova o dedo pela área para completar."
+                },
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF607060),
@@ -145,7 +190,6 @@ fun DragActionPanel(
     onFallbackTap: () -> Unit
 ) {
     val progress = (moves.toFloat() / requiredMoves.toFloat()).coerceIn(0f, 1f)
-    var dragConsumed by remember(title, moves) { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -182,14 +226,26 @@ fun DragActionPanel(
                 .background(Color(0xFFDDF3FF))
                 .pointerInput(title, moves, requiredMoves) {
                     if (moves < requiredMoves) {
+                        var accumulatedDistance = 0f
+                        var actionTriggered = false
                         detectDragGestures(
-                            onDragStart = { dragConsumed = false },
-                            onDragEnd = { dragConsumed = false },
-                            onDragCancel = { dragConsumed = false }
+                            onDragStart = {
+                                accumulatedDistance = 0f
+                                actionTriggered = false
+                            },
+                            onDragEnd = {
+                                accumulatedDistance = 0f
+                                actionTriggered = false
+                            },
+                            onDragCancel = {
+                                accumulatedDistance = 0f
+                                actionTriggered = false
+                            }
                         ) { change, dragAmount ->
                             change.consume()
-                            if (!dragConsumed && moves < requiredMoves && (dragAmount.x != 0f || dragAmount.y != 0f)) {
-                                dragConsumed = true
+                            accumulatedDistance += abs(dragAmount.x) + abs(dragAmount.y)
+                            if (!actionTriggered && accumulatedDistance >= 180f) {
+                                actionTriggered = true
                                 onMove()
                             }
                         }
