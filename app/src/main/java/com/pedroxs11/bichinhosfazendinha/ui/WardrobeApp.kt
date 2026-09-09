@@ -1,5 +1,6 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,10 +32,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private const val WARDROBE_PREFS = "wardrobe_prefs"
+private const val KEY_ROYAL_UNLOCKED_AT = "royal_unlocked_at"
+private const val TEMPORARY_DURATION_MS = 24L * 60L * 60L * 1000L
 
 private data class Outfit(
     val id: String,
@@ -86,17 +92,35 @@ fun WardrobeApp() {
 
 @Composable
 private fun WardrobeScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val prefs = remember {
+        context.getSharedPreferences(WARDROBE_PREFS, Context.MODE_PRIVATE)
+    }
+
     var selectedOutfit by remember { mutableStateOf(outfits.first()) }
-    var temporaryUnlockedAt by remember { mutableLongStateOf(0L) }
+    var temporaryUnlockedAt by remember {
+        mutableLongStateOf(prefs.getLong(KEY_ROYAL_UNLOCKED_AT, 0L))
+    }
     var message by remember { mutableStateOf("Escolha uma roupa para o bichinho!") }
 
     val now = System.currentTimeMillis()
-    val temporaryDuration = 24L * 60L * 60L * 1000L
-    val temporaryUnlocked = temporaryUnlockedAt > 0L && now - temporaryUnlockedAt < temporaryDuration
-    val expiresAt = if (temporaryUnlocked) temporaryUnlockedAt + temporaryDuration else 0L
-    val remainingHours = if (temporaryUnlocked) {
-        ((expiresAt - now) / (60L * 60L * 1000L)).coerceAtLeast(0L) + 1L
+    val temporaryUnlocked = temporaryUnlockedAt > 0L && now - temporaryUnlockedAt < TEMPORARY_DURATION_MS
+    val expiresAt = if (temporaryUnlocked) temporaryUnlockedAt + TEMPORARY_DURATION_MS else 0L
+    val remainingMinutes = if (temporaryUnlocked) {
+        ((expiresAt - now) / (60L * 1000L)).coerceAtLeast(0L)
     } else 0L
+    val remainingHours = if (temporaryUnlocked) {
+        (remainingMinutes / 60L).coerceAtLeast(0L)
+    } else 0L
+
+    if (!temporaryUnlocked && temporaryUnlockedAt > 0L) {
+        prefs.edit().remove(KEY_ROYAL_UNLOCKED_AT).apply()
+        temporaryUnlockedAt = 0L
+        if (selectedOutfit.id == "royal") {
+            selectedOutfit = outfits.first()
+            message = "A roupa Realeza expirou. Assista novamente para liberar por mais 24h."
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -181,7 +205,7 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                     .clickable(enabled = available) {
                         selectedOutfit = outfit
                         message = if (outfit.temporary) {
-                            "Roupa especial ativa por mais ou menos $remainingHours h!"
+                            "Roupa especial ativa! Restam ${formatRemainingTime(remainingHours, remainingMinutes)}."
                         } else {
                             "${outfit.name} vestida!"
                         }
@@ -247,7 +271,9 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                             onClick = {
                                 // Protótipo: simula a conclusão de um anúncio premiado.
                                 // Na integração com AdMob, este bloco deve rodar somente após a recompensa confirmada.
-                                temporaryUnlockedAt = System.currentTimeMillis()
+                                val unlockedAt = System.currentTimeMillis()
+                                prefs.edit().putLong(KEY_ROYAL_UNLOCKED_AT, unlockedAt).apply()
+                                temporaryUnlockedAt = unlockedAt
                                 selectedOutfit = outfits.first { it.id == "royal" }
                                 message = "Realeza liberada por 24 horas! 👑"
                             },
@@ -261,7 +287,7 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                         }
                     } else {
                         Text(
-                            "Liberada! Aproximadamente $remainingHours hora(s) restantes.",
+                            "Liberada! Restam ${formatRemainingTime(remainingHours, remainingMinutes)}.",
                             textAlign = TextAlign.Center,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
@@ -274,7 +300,7 @@ private fun WardrobeScreen(onBack: () -> Unit) {
 
         item {
             Text(
-                "Na V1 final, o prazo será salvo no aparelho para continuar contando mesmo se o jogo for fechado.",
+                "O prazo de 24 horas fica salvo no aparelho e continua contando mesmo se o jogo for fechado.",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 fontSize = 13.sp,
@@ -283,5 +309,13 @@ private fun WardrobeScreen(onBack: () -> Unit) {
         }
 
         item { Spacer(modifier = Modifier.height(26.dp)) }
+    }
+}
+
+private fun formatRemainingTime(hours: Long, minutes: Long): String {
+    return when {
+        hours >= 1L -> "$hours h ${minutes % 60L} min"
+        minutes >= 1L -> "$minutes min"
+        else -> "menos de 1 min"
     }
 }
