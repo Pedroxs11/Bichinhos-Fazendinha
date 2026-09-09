@@ -55,6 +55,8 @@ A branch `feat/v1-base` já contém a estrutura Android em Kotlin + Jetpack Comp
 - contador de estrelas persistente
 - áreas Sons, Cuidar, Brincar e Fazendinha em cards coloridos
 - botões grandes pensados para toque infantil
+- componente reutilizável para microinterações por vários toques
+- direção de arte documentada em `docs/ART_DIRECTION.md`
 
 ### Cuidar — funcional
 A área `Cuidar` possui uma rotina sequencial com:
@@ -107,18 +109,32 @@ O app já possui uma entrada para o Armário com:
 
 O prazo e a roupa equipada continuam válidos mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
 
+## Interações em evolução
+Foi adicionado `TapActionPanel`, um componente reutilizável para transformar ações simples em pequenas sequências de toque com barra de progresso. Ele será usado primeiro em `Cuidar` e `Fazendinha` e depois poderá evoluir para gestos contínuos de arrastar/esfregar.
+
 ## Persistência atual
 Já ficam salvos localmente:
 - saldo de estrelas
 - roupa equipada
 - horário de desbloqueio da roupa temporária
 
+## Direção de arte
+A identidade visual aprovada está documentada em `docs/ART_DIRECTION.md`, incluindo:
+- estilo 3D/chibi infantil
+- especificação dos quatro bichinhos iniciais
+- estados visuais necessários
+- itens, cenários e roupas iniciais
+- ordem de produção das artes
+
+Enquanto as artes finais não estiverem prontas, os emojis continuam como placeholders funcionais no código.
+
 ## Próximas etapas
-1. Evoluir as ações de cuidado, brincadeira e fazendinha para interações por toque/arraste e animações
-2. Adicionar áudio real aos bichinhos
-3. Criar identidade visual e personagens próprios inspirados no mockup aprovado
-4. Criar sistema de moedas, estrelas e desbloqueios mais completo
-5. Integrar rewarded ads apropriados ao público infantil
-6. Preparar controles parentais e monetização adequada ao público infantil
-7. Testar em aparelho real e corrigir problemas de usabilidade
-8. Gerar a primeira versão Android para testes
+1. Conectar `TapActionPanel` às rotinas de Cuidar e Fazendinha
+2. Evoluir algumas ações para gesto de arrastar/esfregar
+3. Produzir as primeiras artes próprias da vaca e itens principais
+4. Adicionar áudio real aos bichinhos
+5. Criar sistema de moedas, estrelas e desbloqueios mais completo
+6. Integrar rewarded ads apropriados ao público infantil
+7. Preparar controles parentais e monetização adequada ao público infantil
+8. Testar em aparelho real e corrigir problemas de usabilidade
+9. Gerar a primeira versão Android para testes
