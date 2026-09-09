@@ -1,6 +1,7 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -118,6 +119,10 @@ fun GameApp() {
     var stars by remember { mutableIntStateOf(prefs.getInt(KEY_STARS, 0)) }
     var message by remember { mutableStateOf("Escolha um bichinho para começar!") }
     var screen by remember { mutableStateOf(Screen.HOME) }
+
+    BackHandler(enabled = screen != Screen.HOME) {
+        screen = Screen.HOME
+    }
 
     fun addStars(amount: Int) {
         stars += amount
