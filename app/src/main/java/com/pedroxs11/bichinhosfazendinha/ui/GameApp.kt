@@ -208,7 +208,13 @@ private fun HomeScreen(
     ) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
         item { Header(stars = stars) }
-        item { MessageBubble(emoji = selectedAnimal.emoji, message = message) }
+        item {
+            MessageBubble(
+                animalName = selectedAnimal.name,
+                emoji = selectedAnimal.emoji,
+                message = message
+            )
+        }
         item { SectionTitle("Escolha seu bichinho") }
 
         items(animals.chunked(2)) { rowAnimals ->
@@ -263,9 +269,17 @@ private fun PlayScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(animal.emoji, fontSize = 88.sp)
+                    AnimalAvatar(
+                        animalName = animal.name,
+                        fallbackEmoji = animal.emoji,
+                        modifier = Modifier.size(112.dp)
+                    )
                     Text(feedback, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = Color(0xFF5E514B))
-                    Text(if (finished) "🎉" else "⚽", fontSize = 82.sp)
+                    if (finished) {
+                        Text("🎉", fontSize = 82.sp)
+                    } else {
+                        ItemArt(title = "Brincar", fallbackEmoji = "⚽", modifier = Modifier.size(86.dp))
+                    }
                 }
             }
         }
@@ -432,7 +446,15 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                     Text("🎵", fontSize = 52.sp)
                     Text(feedback, textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     heardAnimal?.let {
-                        Text("${it.emoji} ${it.sound}", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF2E7D32))
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            AnimalAvatar(
+                                animalName = it.name,
+                                fallbackEmoji = it.emoji,
+                                compact = true,
+                                modifier = Modifier.size(44.dp)
+                            )
+                            Text(it.sound, fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF2E7D32))
+                        }
                     }
                 }
             }
@@ -454,7 +476,11 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text(animal.emoji, fontSize = 52.sp)
+                            AnimalArt(
+                                animalName = animal.name,
+                                fallbackEmoji = animal.emoji,
+                                modifier = Modifier.size(64.dp)
+                            )
                             Text(animal.name, fontSize = 18.sp, fontWeight = FontWeight.Black)
                             Text("🔊 tocar", fontSize = 14.sp)
                         }
@@ -546,7 +572,11 @@ private fun CareScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(animal.emoji, fontSize = 92.sp)
+                    AnimalAvatar(
+                        animalName = animal.name,
+                        fallbackEmoji = animal.emoji,
+                        modifier = Modifier.size(118.dp)
+                    )
                     Text(animal.name, fontSize = 26.sp, fontWeight = FontWeight.Black)
                     Text(feedback, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
                 }
@@ -684,7 +714,7 @@ private fun Header(stars: Int) {
 }
 
 @Composable
-private fun MessageBubble(emoji: String, message: String) {
+private fun MessageBubble(animalName: String, emoji: String, message: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -699,7 +729,12 @@ private fun MessageBubble(emoji: String, message: String) {
                 modifier = Modifier.size(62.dp).clip(CircleShape).background(Color(0xFFFFF5D6)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(emoji, fontSize = 38.sp)
+                AnimalAvatar(
+                    animalName = animalName,
+                    fallbackEmoji = emoji,
+                    compact = true,
+                    modifier = Modifier.size(52.dp)
+                )
             }
             Text(
                 message,
@@ -740,7 +775,11 @@ private fun AnimalCard(modifier: Modifier, animal: Animal, selected: Boolean, on
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(animal.emoji, fontSize = 58.sp)
+            AnimalArt(
+                animalName = animal.name,
+                fallbackEmoji = animal.emoji,
+                modifier = Modifier.size(72.dp)
+            )
             Text(animal.name, fontSize = 20.sp, fontWeight = FontWeight.Black)
             if (selected) {
                 Text("✓ escolhido", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
@@ -765,7 +804,11 @@ private fun ActivityCard(activity: ActivityItem, onPlay: () -> Unit) {
                 modifier = Modifier.size(64.dp).clip(RoundedCornerShape(20.dp)).background(activity.color),
                 contentAlignment = Alignment.Center
             ) {
-                Text(activity.emoji, fontSize = 34.sp)
+                ItemArt(
+                    title = activity.title,
+                    fallbackEmoji = activity.emoji,
+                    modifier = Modifier.size(42.dp)
+                )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(activity.title, fontSize = 20.sp, fontWeight = FontWeight.Black)
