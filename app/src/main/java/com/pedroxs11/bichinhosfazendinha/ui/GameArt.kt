@@ -7,9 +7,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pedroxs11.bichinhosfazendinha.R
+
+private fun animalDrawable(animalName: String): Int? = when (animalName) {
+    "Vaca" -> R.drawable.cow_face
+    "Porquinho" -> R.drawable.pig_face
+    "Galinha" -> R.drawable.chicken_face
+    "Cachorro" -> R.drawable.dog_face
+    else -> null
+}
 
 @Composable
 fun AnimalArt(
@@ -17,10 +24,11 @@ fun AnimalArt(
     fallbackEmoji: String,
     modifier: Modifier = Modifier
 ) {
-    if (animalName == "Vaca") {
+    val drawable = animalDrawable(animalName)
+    if (drawable != null) {
         Image(
-            painter = painterResource(id = R.drawable.cow_face),
-            contentDescription = "Vaca",
+            painter = painterResource(id = drawable),
+            contentDescription = animalName,
             modifier = modifier
         )
     } else {
@@ -37,10 +45,11 @@ fun AnimalAvatar(
     compact: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    if (animalName == "Vaca") {
+    val drawable = animalDrawable(animalName)
+    if (drawable != null) {
         Image(
-            painter = painterResource(id = R.drawable.cow_face),
-            contentDescription = "Vaca",
+            painter = painterResource(id = drawable),
+            contentDescription = animalName,
             modifier = modifier
         )
     } else {
