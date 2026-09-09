@@ -1,0 +1,38 @@
+package com.pedroxs11.bichinhosfazendinha.ui
+
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.sp
+import com.pedroxs11.bichinhosfazendinha.R
+
+private fun itemDrawable(title: String): Int? = when (title) {
+    "Brincar" -> R.drawable.item_ball
+    "Alimentar" -> R.drawable.item_apple
+    "Regar a horta" -> R.drawable.item_watering_can
+    "Dar banho" -> R.drawable.item_sponge
+    "Secar" -> R.drawable.item_towel
+    "Colher frutas" -> R.drawable.item_apple
+    else -> null
+}
+
+@Composable
+fun ItemArt(
+    title: String,
+    fallbackEmoji: String,
+    modifier: Modifier = Modifier
+) {
+    val drawable = itemDrawable(title)
+    if (drawable != null) {
+        Image(
+            painter = painterResource(id = drawable),
+            contentDescription = title,
+            modifier = modifier
+        )
+    } else {
+        Text(fallbackEmoji, fontSize = 58.sp)
+    }
+}
