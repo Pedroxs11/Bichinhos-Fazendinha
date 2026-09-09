@@ -431,7 +431,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
-        item { TopBar(title = "Sons 🔊", stars = stars, onBack = onBack) }
+        item { TopBar(title = "Sons", stars = stars, onBack = onBack) }
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -443,7 +443,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("🎵", fontSize = 52.sp)
+                    ItemArt(title = "Sons", fallbackEmoji = "🔊", modifier = Modifier.size(56.dp))
                     Text(feedback, textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     heardAnimal?.let {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -482,7 +482,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                                 modifier = Modifier.size(64.dp)
                             )
                             Text(animal.name, fontSize = 18.sp, fontWeight = FontWeight.Black)
-                            Text("🔊 tocar", fontSize = 14.sp)
+                            Text("Ouvir", fontSize = 14.sp)
                         }
                     }
                 }
@@ -501,7 +501,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("🔊", fontSize = 54.sp)
+                        ItemArt(title = "Sons", fallbackEmoji = "🔊", modifier = Modifier.size(62.dp))
                         Text(target.sound, fontSize = 30.sp, fontWeight = FontWeight.Black)
                     }
                 }
@@ -510,11 +510,11 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     rowAnimals.forEach { animal ->
                         Button(
-                            modifier = Modifier.weight(1f).height(70.dp),
+                            modifier = Modifier.weight(1f).height(78.dp),
                             onClick = {
                                 if (animal == target) {
                                     correctAnswers += 1
-                                    feedback = "Muito bem! ${animal.emoji}"
+                                    feedback = "Muito bem! ${animal.name}!"
                                     quizIndex += 1
                                 } else {
                                     feedback = "Quase! Tente outro bichinho 😊"
@@ -523,7 +523,18 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                             shape = RoundedCornerShape(22.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = animal.color, contentColor = Color(0xFF3E463E))
                         ) {
-                            Text("${animal.emoji} ${animal.name}", fontSize = 17.sp, fontWeight = FontWeight.Black)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AnimalAvatar(
+                                    animalName = animal.name,
+                                    fallbackEmoji = animal.emoji,
+                                    compact = true,
+                                    modifier = Modifier.size(38.dp)
+                                )
+                                Text(animal.name, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                            }
                         }
                     }
                 }
