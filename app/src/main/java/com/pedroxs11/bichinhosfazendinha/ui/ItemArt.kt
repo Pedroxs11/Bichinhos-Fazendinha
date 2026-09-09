@@ -17,7 +17,9 @@ private fun itemDrawable(title: String): Int? = when (title) {
     "Regar a horta" -> R.drawable.item_watering_can
     "Dar banho" -> R.drawable.item_sponge
     "Secar" -> R.drawable.item_towel
+    "Dormir" -> R.drawable.item_sleep
     "Colher frutas" -> R.drawable.item_apple
+    "Pegar ovos" -> R.drawable.item_egg
     else -> null
 }
 
