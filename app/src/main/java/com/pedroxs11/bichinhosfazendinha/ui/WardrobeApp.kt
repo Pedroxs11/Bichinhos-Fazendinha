@@ -1,6 +1,7 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +79,10 @@ private fun outfitKey(animalId: String): String = "selected_outfit_$animalId"
 @Composable
 fun WardrobeApp() {
     var showWardrobe by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showWardrobe) {
+        showWardrobe = false
+    }
 
     MaterialTheme {
         if (showWardrobe) {
