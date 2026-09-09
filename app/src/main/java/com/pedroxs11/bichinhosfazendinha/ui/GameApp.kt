@@ -62,10 +62,18 @@ private data class CareStep(
     val successMessage: String
 )
 
+private data class FarmStep(
+    val title: String,
+    val emoji: String,
+    val instruction: String,
+    val successMessage: String
+)
+
 private enum class Screen {
     HOME,
     CARE,
-    SOUNDS
+    SOUNDS,
+    FARM
 }
 
 private val animals = listOf(
@@ -87,6 +95,12 @@ private val careSteps = listOf(
     CareStep("Dar banho", "🛁", "Hora de lavar e tirar toda a sujeira!", "Splash! Agora está limpinho!"),
     CareStep("Secar", "🧻", "Seque bem o bichinho depois do banho!", "Prontinho! Bem sequinho!"),
     CareStep("Dormir", "🌙", "Apague a luz e coloque o bichinho para dormir!", "Boa noite! Zzz...")
+)
+
+private val farmSteps = listOf(
+    FarmStep("Regar a horta", "💧", "Dê água para as plantinhas crescerem!", "A horta ficou verdinha! 🌱"),
+    FarmStep("Colher frutas", "🍎", "Pegue as frutas maduras da árvore!", "Cestinha cheia de frutas! 🍎"),
+    FarmStep("Pegar ovos", "🥚", "Ajude a recolher os ovos do galinheiro!", "Todos os ovos foram guardados! 🥚")
 )
 
 @Composable
@@ -113,6 +127,7 @@ fun GameApp() {
                         when (activity.title) {
                             "Cuidar" -> screen = Screen.CARE
                             "Sons" -> screen = Screen.SOUNDS
+                            "Fazendinha" -> screen = Screen.FARM
                             else -> {
                                 stars += 1
                                 message = activityMessage(activity.title, selectedAnimal)
@@ -138,6 +153,16 @@ fun GameApp() {
                     onQuizCompleted = {
                         stars += 3
                         message = "Você descobriu os sons dos bichinhos! +3 ⭐"
+                        screen = Screen.HOME
+                    }
+                )
+
+                Screen.FARM -> FarmScreen(
+                    stars = stars,
+                    onBack = { screen = Screen.HOME },
+                    onFarmCompleted = {
+                        stars += 4
+                        message = "A fazendinha está cuidada e cheia de vida! +4 ⭐"
                         screen = Screen.HOME
                     }
                 )
@@ -183,6 +208,164 @@ private fun HomeScreen(
         items(activities) { activity ->
             ActivityCard(activity = activity, onPlay = { onActivitySelected(activity) })
         }
+        item { Spacer(modifier = Modifier.height(30.dp)) }
+    }
+}
+
+@Composable
+private fun FarmScreen(
+    stars: Int,
+    onBack: () -> Unit,
+    onFarmCompleted: () -> Unit
+) {
+    var currentStep by remember { mutableIntStateOf(0) }
+    var feedback by remember { mutableStateOf("Vamos ajudar na fazendinha!") }
+
+    val finished = currentStep >= farmSteps.size
+    val progress = if (finished) 1f else currentStep.toFloat() / farmSteps.size.toFloat()
+    val sceneEmoji = when (currentStep) {
+        0 -> "🌱"
+        1 -> "🌳"
+        2 -> "🐔"
+        else -> "🏡"
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        item { Spacer(modifier = Modifier.height(14.dp)) }
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onBack,
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Text("←", color = Color(0xFF315337), fontSize = 22.sp)
+                }
+                Text("Fazendinha 🌾", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color(0xFF315337))
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.95f)).padding(horizontal = 12.dp, vertical = 9.dp)
+                ) {
+                    Text("⭐ $stars", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(30.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(sceneEmoji, fontSize = 92.sp)
+                    Text(
+                        if (finished) "Tudo pronto!" else farmSteps[currentStep].title,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF3E5F3C)
+                    )
+                    Text(
+                        feedback,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFF536653)
+                    )
+                }
+            }
+        }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
+                    color = Color(0xFF5BAE62),
+                    trackColor = Color.White.copy(alpha = 0.8f)
+                )
+                Text(
+                    if (finished) "Fazendinha completa!" else "${currentStep + 1} de ${farmSteps.size}",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF315337)
+                )
+            }
+        }
+
+        if (!finished) {
+            val step = farmSteps[currentStep]
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(step.emoji, fontSize = 64.sp)
+                        Text(step.instruction, fontSize = 17.sp, textAlign = TextAlign.Center, color = Color(0xFF607060))
+                        Button(
+                            onClick = {
+                                feedback = step.successMessage
+                                currentStep += 1
+                            },
+                            modifier = Modifier.fillMaxWidth().height(64.dp),
+                            shape = RoundedCornerShape(22.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
+                        ) {
+                            Text("${step.emoji} ${step.title}", fontSize = 19.sp, fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(22.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("🎉", fontSize = 62.sp)
+                        Text("Parabéns!", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF4A5D35))
+                        Text(
+                            "Você regou a horta, colheu as frutas e pegou os ovos. Ganhou 4 estrelas!",
+                            fontSize = 17.sp,
+                            textAlign = TextAlign.Center,
+                            color = Color(0xFF5C674F)
+                        )
+                        Button(
+                            onClick = onFarmCompleted,
+                            modifier = Modifier.fillMaxWidth().height(62.dp),
+                            shape = RoundedCornerShape(22.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
+                        ) {
+                            Text("⭐ Receber 4 estrelas", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+            }
+        }
+
         item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
@@ -555,5 +738,5 @@ private fun ActivityCard(activity: ActivityItem, onPlay: () -> Unit) {
 
 private fun activityMessage(activity: String, animal: Animal): String = when (activity) {
     "Brincar" -> "${animal.name} adorou brincar com você! +1 ⭐"
-    else -> "A fazendinha ficou ainda mais bonita! +1 ⭐"
+    else -> "Muito bem! +1 ⭐"
 }
