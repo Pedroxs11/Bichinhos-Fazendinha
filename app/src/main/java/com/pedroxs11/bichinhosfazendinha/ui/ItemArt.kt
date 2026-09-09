@@ -1,6 +1,5 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,7 +9,10 @@ import androidx.compose.ui.unit.sp
 import com.pedroxs11.bichinhosfazendinha.R
 
 private fun itemDrawable(title: String): Int? = when (title) {
+    "Sons" -> R.drawable.item_sound
+    "Cuidar" -> R.drawable.item_care
     "Brincar" -> R.drawable.item_ball
+    "Fazendinha" -> R.drawable.item_farm
     "Alimentar" -> R.drawable.item_apple
     "Regar a horta" -> R.drawable.item_watering_can
     "Dar banho" -> R.drawable.item_sponge
