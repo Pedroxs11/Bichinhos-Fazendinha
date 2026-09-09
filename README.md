@@ -49,10 +49,19 @@ A branch `feat/v1-base` já contém a primeira estrutura Android em Kotlin + Jet
 - áreas Sons, Cuidar, Brincar e Fazendinha em cards coloridos
 - botões grandes pensados para toque infantil
 
+### Cuidar — já funcional
+A área `Cuidar` já abre uma tela própria e possui uma rotina sequencial com:
+1. alimentar o bichinho
+2. dar banho
+3. secar
+4. colocar para dormir
+
+A criança acompanha uma barra de progresso e recebe 5 estrelas somente após concluir toda a rotina.
+
 ## Próximas etapas
-1. Transformar `Cuidar` em uma atividade real: alimentar, banho, secar e dormir
-2. Implementar a atividade de Sons
-3. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
+1. Implementar a atividade de Sons
+2. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
+3. Evoluir as ações de cuidado para interações por toque/arraste
 4. Criar identidade visual e personagens próprios
 5. Adicionar sons originais/licenciados
 6. Criar sistema de moedas, estrelas e desbloqueios
