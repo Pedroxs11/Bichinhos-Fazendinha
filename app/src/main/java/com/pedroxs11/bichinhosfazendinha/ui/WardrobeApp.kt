@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 
 private const val WARDROBE_PREFS = "wardrobe_prefs"
 private const val KEY_ROYAL_UNLOCKED_AT = "royal_unlocked_at"
+private const val KEY_SELECTED_OUTFIT = "selected_outfit"
 private const val TEMPORARY_DURATION_MS = 24L * 60L * 60L * 1000L
 
 private data class Outfit(
@@ -97,11 +98,22 @@ private fun WardrobeScreen(onBack: () -> Unit) {
         context.getSharedPreferences(WARDROBE_PREFS, Context.MODE_PRIVATE)
     }
 
-    var selectedOutfit by remember { mutableStateOf(outfits.first()) }
     var temporaryUnlockedAt by remember {
         mutableLongStateOf(prefs.getLong(KEY_ROYAL_UNLOCKED_AT, 0L))
     }
-    var message by remember { mutableStateOf("Escolha uma roupa para o bichinho!") }
+
+    val nowAtOpen = System.currentTimeMillis()
+    val royalValidAtOpen = temporaryUnlockedAt > 0L &&
+        nowAtOpen - temporaryUnlockedAt < TEMPORARY_DURATION_MS
+    val savedOutfitId = prefs.getString(KEY_SELECTED_OUTFIT, "none") ?: "none"
+    val initialOutfit = outfits.firstOrNull { it.id == savedOutfitId }
+        ?.takeIf { !it.temporary || royalValidAtOpen }
+        ?: outfits.first()
+
+    var selectedOutfit by remember { mutableStateOf(initialOutfit) }
+    var message by remember {
+        mutableStateOf("${initialOutfit.name} está vestida. Escolha outro visual quando quiser!")
+    }
 
     val now = System.currentTimeMillis()
     val temporaryUnlocked = temporaryUnlockedAt > 0L && now - temporaryUnlockedAt < TEMPORARY_DURATION_MS
@@ -118,6 +130,7 @@ private fun WardrobeScreen(onBack: () -> Unit) {
         temporaryUnlockedAt = 0L
         if (selectedOutfit.id == "royal") {
             selectedOutfit = outfits.first()
+            prefs.edit().putString(KEY_SELECTED_OUTFIT, "none").apply()
             message = "A roupa Realeza expirou. Assista novamente para liberar por mais 24h."
         }
     }
@@ -198,16 +211,18 @@ private fun WardrobeScreen(onBack: () -> Unit) {
 
         items(outfits) { outfit ->
             val available = !outfit.temporary || temporaryUnlocked
+            val equipped = selectedOutfit.id == outfit.id
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(enabled = available) {
                         selectedOutfit = outfit
+                        prefs.edit().putString(KEY_SELECTED_OUTFIT, outfit.id).apply()
                         message = if (outfit.temporary) {
                             "Roupa especial ativa! Restam ${formatRemainingTime(remainingHours, remainingMinutes)}."
                         } else {
-                            "${outfit.name} vestida!"
+                            "${outfit.name} vestida e salva!"
                         }
                     },
                 shape = RoundedCornerShape(24.dp),
@@ -237,10 +252,10 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                         Text(outfit.description, fontSize = 14.sp, color = Color(0xFF756D79))
                     }
 
-                    if (outfit.temporary && !temporaryUnlocked) {
-                        Text("🔒", fontSize = 24.sp)
-                    } else {
-                        Text("✓", fontSize = 22.sp)
+                    when {
+                        outfit.temporary && !temporaryUnlocked -> Text("🔒", fontSize = 24.sp)
+                        equipped -> Text("✅", fontSize = 22.sp)
+                        else -> Text("✓", fontSize = 22.sp)
                     }
                 }
             }
@@ -272,10 +287,13 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                                 // Protótipo: simula a conclusão de um anúncio premiado.
                                 // Na integração com AdMob, este bloco deve rodar somente após a recompensa confirmada.
                                 val unlockedAt = System.currentTimeMillis()
-                                prefs.edit().putLong(KEY_ROYAL_UNLOCKED_AT, unlockedAt).apply()
+                                prefs.edit()
+                                    .putLong(KEY_ROYAL_UNLOCKED_AT, unlockedAt)
+                                    .putString(KEY_SELECTED_OUTFIT, "royal")
+                                    .apply()
                                 temporaryUnlockedAt = unlockedAt
                                 selectedOutfit = outfits.first { it.id == "royal" }
-                                message = "Realeza liberada por 24 horas! 👑"
+                                message = "Realeza liberada por 24 horas e já está vestida! 👑"
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -300,7 +318,7 @@ private fun WardrobeScreen(onBack: () -> Unit) {
 
         item {
             Text(
-                "O prazo de 24 horas fica salvo no aparelho e continua contando mesmo se o jogo for fechado.",
+                "A roupa equipada e o prazo de 24 horas ficam salvos no aparelho mesmo se o jogo for fechado.",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 fontSize = 13.sp,
