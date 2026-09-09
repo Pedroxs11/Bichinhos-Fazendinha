@@ -40,7 +40,8 @@ import androidx.compose.ui.unit.sp
 
 private const val WARDROBE_PREFS = "wardrobe_prefs"
 private const val KEY_ROYAL_UNLOCKED_AT = "royal_unlocked_at"
-private const val KEY_SELECTED_OUTFIT = "selected_outfit"
+private const val LEGACY_KEY_SELECTED_OUTFIT = "selected_outfit"
+private const val KEY_SELECTED_ANIMAL = "selected_wardrobe_animal"
 private const val TEMPORARY_DURATION_MS = 24L * 60L * 60L * 1000L
 
 private data class Outfit(
@@ -51,12 +52,28 @@ private data class Outfit(
     val description: String
 )
 
+private data class WardrobeAnimal(
+    val id: String,
+    val name: String,
+    val emoji: String,
+    val color: Color
+)
+
 private val outfits = listOf(
     Outfit("none", "Sem roupa", "🐾", false, "Visual natural"),
     Outfit("party", "Festa", "🎉", false, "Roupa permanente"),
     Outfit("farmer", "Fazendeiro", "👒", false, "Roupa permanente"),
     Outfit("royal", "Realeza", "👑", true, "Especial por 24 horas")
 )
+
+private val wardrobeAnimals = listOf(
+    WardrobeAnimal("cow", "Vaca", "🐮", Color(0xFFFFE8A6)),
+    WardrobeAnimal("pig", "Porquinho", "🐷", Color(0xFFFFDDE8)),
+    WardrobeAnimal("chicken", "Galinha", "🐔", Color(0xFFFFE7C2)),
+    WardrobeAnimal("dog", "Cachorro", "🐶", Color(0xFFE8D8C8))
+)
+
+private fun outfitKey(animalId: String): String = "selected_outfit_$animalId"
 
 @Composable
 fun WardrobeApp() {
@@ -102,17 +119,31 @@ private fun WardrobeScreen(onBack: () -> Unit) {
         mutableLongStateOf(prefs.getLong(KEY_ROYAL_UNLOCKED_AT, 0L))
     }
 
+    val savedAnimalId = prefs.getString(KEY_SELECTED_ANIMAL, wardrobeAnimals.first().id)
+        ?: wardrobeAnimals.first().id
+    var selectedAnimal by remember {
+        mutableStateOf(wardrobeAnimals.firstOrNull { it.id == savedAnimalId } ?: wardrobeAnimals.first())
+    }
+
+    fun savedOutfitFor(animal: WardrobeAnimal, temporaryValid: Boolean): Outfit {
+        val legacyCowOutfit = if (animal.id == "cow") {
+            prefs.getString(LEGACY_KEY_SELECTED_OUTFIT, null)
+        } else null
+        val savedId = prefs.getString(outfitKey(animal.id), legacyCowOutfit ?: "none") ?: "none"
+        return outfits.firstOrNull { it.id == savedId }
+            ?.takeIf { !it.temporary || temporaryValid }
+            ?: outfits.first()
+    }
+
     val nowAtOpen = System.currentTimeMillis()
     val royalValidAtOpen = temporaryUnlockedAt > 0L &&
         nowAtOpen - temporaryUnlockedAt < TEMPORARY_DURATION_MS
-    val savedOutfitId = prefs.getString(KEY_SELECTED_OUTFIT, "none") ?: "none"
-    val initialOutfit = outfits.firstOrNull { it.id == savedOutfitId }
-        ?.takeIf { !it.temporary || royalValidAtOpen }
-        ?: outfits.first()
 
-    var selectedOutfit by remember { mutableStateOf(initialOutfit) }
+    var selectedOutfit by remember {
+        mutableStateOf(savedOutfitFor(selectedAnimal, royalValidAtOpen))
+    }
     var message by remember {
-        mutableStateOf("${initialOutfit.name} está vestida. Escolha outro visual quando quiser!")
+        mutableStateOf("${selectedOutfit.name} em ${selectedAnimal.name.lowercase()}. Escolha outro visual quando quiser!")
     }
 
     val now = System.currentTimeMillis()
@@ -128,9 +159,13 @@ private fun WardrobeScreen(onBack: () -> Unit) {
     if (!temporaryUnlocked && temporaryUnlockedAt > 0L) {
         prefs.edit().remove(KEY_ROYAL_UNLOCKED_AT).apply()
         temporaryUnlockedAt = 0L
+        wardrobeAnimals.forEach { animal ->
+            if (prefs.getString(outfitKey(animal.id), "none") == "royal") {
+                prefs.edit().putString(outfitKey(animal.id), "none").apply()
+            }
+        }
         if (selectedOutfit.id == "royal") {
             selectedOutfit = outfits.first()
-            prefs.edit().putString(KEY_SELECTED_OUTFIT, "none").apply()
             message = "A roupa Realeza expirou. Assista novamente para liberar por mais 24h."
         }
     }
@@ -170,10 +205,60 @@ private fun WardrobeScreen(onBack: () -> Unit) {
         }
 
         item {
+            Text(
+                "Escolha o bichinho",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFF5C4774)
+            )
+        }
+
+        items(wardrobeAnimals.chunked(2)) { rowAnimals ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowAnimals.forEach { animal ->
+                    val selected = animal.id == selectedAnimal.id
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(120.dp)
+                            .clickable {
+                                selectedAnimal = animal
+                                prefs.edit().putString(KEY_SELECTED_ANIMAL, animal.id).apply()
+                                selectedOutfit = savedOutfitFor(animal, temporaryUnlocked)
+                                message = "${selectedOutfit.name} em ${animal.name.lowercase()}."
+                            },
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (selected) animal.color else Color.White
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            AnimalAvatar(
+                                animalName = animal.name,
+                                fallbackEmoji = animal.emoji,
+                                compact = true,
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Text(animal.name, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                            if (selected) Text("✓", fontWeight = FontWeight.Black, color = Color(0xFF5D3D83))
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(30.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE8A6))
+                colors = CardDefaults.cardColors(containerColor = selectedAnimal.color)
             ) {
                 Column(
                     modifier = Modifier
@@ -183,16 +268,17 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     AnimalAvatar(
-                        animalName = "Vaca",
-                        fallbackEmoji = "🐮",
+                        animalName = selectedAnimal.name,
+                        fallbackEmoji = selectedAnimal.emoji,
                         modifier = Modifier.size(118.dp)
                     )
                     Text(selectedOutfit.emoji, fontSize = 48.sp)
                     Text(
-                        selectedOutfit.name,
-                        fontSize = 24.sp,
+                        "${selectedAnimal.name} • ${selectedOutfit.name}",
+                        fontSize = 23.sp,
                         fontWeight = FontWeight.Black,
-                        color = Color(0xFF5D5140)
+                        color = Color(0xFF5D5140),
+                        textAlign = TextAlign.Center
                     )
                     Text(
                         message,
@@ -222,11 +308,13 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                     .fillMaxWidth()
                     .clickable(enabled = available) {
                         selectedOutfit = outfit
-                        prefs.edit().putString(KEY_SELECTED_OUTFIT, outfit.id).apply()
+                        prefs.edit()
+                            .putString(outfitKey(selectedAnimal.id), outfit.id)
+                            .apply()
                         message = if (outfit.temporary) {
-                            "Roupa especial ativa! Restam ${formatRemainingTime(remainingHours, remainingMinutes)}."
+                            "${selectedAnimal.name} está de Realeza! Restam ${formatRemainingTime(remainingHours, remainingMinutes)}."
                         } else {
-                            "${outfit.name} vestida e salva!"
+                            "${outfit.name} salva para ${selectedAnimal.name.lowercase()}!"
                         }
                     },
                 shape = RoundedCornerShape(24.dp),
@@ -291,11 +379,11 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                                 val unlockedAt = System.currentTimeMillis()
                                 prefs.edit()
                                     .putLong(KEY_ROYAL_UNLOCKED_AT, unlockedAt)
-                                    .putString(KEY_SELECTED_OUTFIT, "royal")
+                                    .putString(outfitKey(selectedAnimal.id), "royal")
                                     .apply()
                                 temporaryUnlockedAt = unlockedAt
                                 selectedOutfit = outfits.first { it.id == "royal" }
-                                message = "Realeza liberada por 24 horas e já está vestida! 👑"
+                                message = "Realeza liberada por 24 horas para ${selectedAnimal.name.lowercase()}! 👑"
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -320,7 +408,7 @@ private fun WardrobeScreen(onBack: () -> Unit) {
 
         item {
             Text(
-                "A roupa equipada e o prazo de 24 horas ficam salvos no aparelho mesmo se o jogo for fechado.",
+                "Cada bichinho guarda sua própria roupa. As escolhas e o prazo de 24 horas ficam salvos no aparelho.",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 fontSize = 13.sp,
