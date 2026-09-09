@@ -55,7 +55,7 @@ A branch `feat/v1-base` já contém a estrutura Android em Kotlin + Jetpack Comp
 - contador de estrelas persistente
 - áreas Sons, Cuidar, Brincar e Fazendinha em cards coloridos
 - botões grandes pensados para toque infantil
-- componente reutilizável para microinterações por vários toques
+- componente reutilizável para microinterações por toque e arraste
 - direção de arte documentada em `docs/ART_DIRECTION.md`
 
 ### Cuidar — funcional
@@ -65,7 +65,7 @@ A área `Cuidar` possui uma rotina sequencial com:
 3. secar
 4. colocar para dormir
 
-Cada ação agora exige 3 toques no painel interativo. A criança acompanha o progresso da própria ação e da rotina completa, recebe mensagens intermediárias e ganha 5 estrelas somente após concluir todos os cuidados.
+Alimentar e dormir usam microinterações por toque. Dar banho e secar já aceitam gesto de arrastar o dedo no painel, com toque mantido como alternativa de acessibilidade. A criança acompanha o progresso da própria ação e da rotina completa e ganha 5 estrelas somente após concluir todos os cuidados.
 
 ### Sons — funcional
 A área `Sons` possui duas formas de brincar:
@@ -90,7 +90,7 @@ A área `Fazendinha` possui três tarefas sequenciais:
 2. colher frutas
 3. pegar ovos
 
-Cada tarefa agora exige 4 toques no painel interativo. A criança acompanha o progresso, recebe feedback visual em cada etapa e ganha 4 estrelas somente após completar as três atividades.
+Regar e colher já aceitam gesto de arrastar no painel. Pegar ovos continua com a sequência simples de toques. Todas as ações preservam o toque como alternativa e a criança ganha 4 estrelas somente após completar as três atividades.
 
 ### Armário — funcional
 O app já possui uma entrada para o Armário com:
@@ -110,9 +110,9 @@ O app já possui uma entrada para o Armário com:
 O prazo e a roupa equipada continuam válidos mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
 
 ## Interações atuais
-O componente `TapActionPanel` já está conectado a `Cuidar` e `Fazendinha`. Ele transforma ações simples em pequenas sequências de toque com barra de progresso e feedback intermediário.
+O `TapActionPanel` está conectado a `Cuidar` e `Fazendinha` e agora reconhece arraste automaticamente nas tarefas `Dar banho`, `Secar`, `Regar a horta` e `Colher frutas`. Há barra de progresso, feedback intermediário e fallback por toque.
 
-O próximo passo de interação é evoluir algumas tarefas específicas para gestos contínuos de arrastar/esfregar, principalmente banho, secagem, regar e colher.
+Também existe um `DragActionPanel` reutilizável preparado para interações futuras mais específicas.
 
 ## Persistência atual
 Já ficam salvos localmente:
@@ -131,9 +131,9 @@ A identidade visual aprovada está documentada em `docs/ART_DIRECTION.md`, inclu
 Enquanto as artes finais não estiverem prontas, os emojis continuam como placeholders funcionais no código.
 
 ## Próximas etapas
-1. Evoluir banho, secagem, regar e colher para gesto de arrastar/esfregar
-2. Produzir as primeiras artes próprias da vaca e itens principais
-3. Adicionar áudio real aos bichinhos
+1. Produzir as primeiras artes próprias da vaca e itens principais
+2. Adicionar áudio real aos bichinhos
+3. Evoluir arraste para interações visuais diretamente sobre personagens e objetos
 4. Criar sistema de moedas, estrelas e desbloqueios mais completo
 5. Integrar rewarded ads apropriados ao público infantil
 6. Preparar controles parentais e monetização adequada ao público infantil
