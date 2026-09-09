@@ -14,6 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +59,15 @@ fun TapActionPanel(
     val dragEnabled = title in dragActionTitles
     val rubMode = title == "Dar banho" || title == "Secar"
     val feedMode = title == "Alimentar"
+    var completionLocked by remember(title) { mutableStateOf(false) }
+
+    fun safeTap() {
+        if (completionLocked || taps >= requiredTaps) return
+        if (taps + 1 >= requiredTaps) {
+            completionLocked = true
+        }
+        onTap()
+    }
 
     Column(
         modifier = Modifier
@@ -89,8 +102,8 @@ fun TapActionPanel(
                 .height(if (dragEnabled) 155.dp else 78.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(if (dragEnabled) Color(0xFFDDF3FF) else Color(0xFF5BAE62))
-                .pointerInput(title, taps, requiredTaps) {
-                    if (dragEnabled && taps < requiredTaps) {
+                .pointerInput(title, taps, requiredTaps, completionLocked) {
+                    if (dragEnabled && taps < requiredTaps && !completionLocked) {
                         var accumulatedDistance = 0f
                         var verticalTravel = 0f
                         var actionTriggered = false
@@ -113,33 +126,33 @@ fun TapActionPanel(
                             }
                         ) { change, dragAmount ->
                             change.consume()
-                            if (actionTriggered || taps >= requiredTaps) return@detectDragGestures
+                            if (actionTriggered || taps >= requiredTaps || completionLocked) return@detectDragGestures
 
                             if (feedMode) {
                                 verticalTravel += dragAmount.y
                                 if (verticalTravel <= -120f) {
                                     actionTriggered = true
-                                    onTap()
+                                    safeTap()
                                 }
                             } else if (rubMode) {
                                 accumulatedDistance += abs(dragAmount.x) + abs(dragAmount.y)
                                 if (accumulatedDistance >= 260f) {
                                     actionTriggered = true
-                                    onTap()
+                                    safeTap()
                                 }
                             } else {
                                 accumulatedDistance += abs(dragAmount.x) + abs(dragAmount.y)
                                 if (accumulatedDistance >= 140f) {
                                     actionTriggered = true
-                                    onTap()
+                                    safeTap()
                                 }
                             }
                         }
                     }
                 }
                 .clickable(
-                    enabled = !dragEnabled && taps < requiredTaps,
-                    onClick = onTap
+                    enabled = !dragEnabled && taps < requiredTaps && !completionLocked,
+                    onClick = { safeTap() }
                 ),
             contentAlignment = Alignment.Center
         ) {
