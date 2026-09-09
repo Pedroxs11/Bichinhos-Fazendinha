@@ -14,6 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +46,7 @@ fun TapActionPanel(
 ) {
     val progress = (taps.toFloat() / requiredTaps.toFloat()).coerceIn(0f, 1f)
     val dragEnabled = title in dragActionTitles
+    var dragConsumed by remember(title, taps) { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -77,10 +82,15 @@ fun TapActionPanel(
                 .clip(RoundedCornerShape(24.dp))
                 .background(if (dragEnabled) Color(0xFFDDF3FF) else Color(0xFF5BAE62))
                 .pointerInput(title, taps, requiredTaps) {
-                    if (dragEnabled) {
-                        detectDragGestures { change, dragAmount ->
+                    if (dragEnabled && taps < requiredTaps) {
+                        detectDragGestures(
+                            onDragStart = { dragConsumed = false },
+                            onDragEnd = { dragConsumed = false },
+                            onDragCancel = { dragConsumed = false }
+                        ) { change, dragAmount ->
                             change.consume()
-                            if (taps < requiredTaps && (dragAmount.x != 0f || dragAmount.y != 0f)) {
+                            if (!dragConsumed && taps < requiredTaps && (dragAmount.x != 0f || dragAmount.y != 0f)) {
+                                dragConsumed = true
                                 onTap()
                             }
                         }
@@ -135,6 +145,7 @@ fun DragActionPanel(
     onFallbackTap: () -> Unit
 ) {
     val progress = (moves.toFloat() / requiredMoves.toFloat()).coerceIn(0f, 1f)
+    var dragConsumed by remember(title, moves) { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -169,11 +180,18 @@ fun DragActionPanel(
                 .height(150.dp)
                 .clip(RoundedCornerShape(26.dp))
                 .background(Color(0xFFDDF3FF))
-                .pointerInput(moves, requiredMoves) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        if (moves < requiredMoves && (dragAmount.x != 0f || dragAmount.y != 0f)) {
-                            onMove()
+                .pointerInput(title, moves, requiredMoves) {
+                    if (moves < requiredMoves) {
+                        detectDragGestures(
+                            onDragStart = { dragConsumed = false },
+                            onDragEnd = { dragConsumed = false },
+                            onDragCancel = { dragConsumed = false }
+                        ) { change, dragAmount ->
+                            change.consume()
+                            if (!dragConsumed && moves < requiredMoves && (dragAmount.x != 0f || dragAmount.y != 0f)) {
+                                dragConsumed = true
+                                onMove()
+                            }
                         }
                     }
                 },
