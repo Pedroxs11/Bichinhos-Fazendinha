@@ -17,6 +17,7 @@ Criar uma experiência simples, colorida e com pouco texto, preparada para publi
 - Cuidar
 - Brincar
 - Fazendinha
+- Armário
 
 ### Atividades planejadas
 - Ouvir sons dos bichos
@@ -27,6 +28,8 @@ Criar uma experiência simples, colorida e com pouco texto, preparada para publi
 - Regar planta
 - Colher fruta
 - Pegar ovos
+- Vestir os bichinhos
+- Liberar roupas temporárias por anúncio premiado
 
 ## Progressão
 A criança poderá ganhar estrelas e, futuramente, moedas, acessórios, comidas, itens e novos bichinhos.
@@ -35,6 +38,7 @@ A criança poderá ganhar estrelas e, futuramente, moedas, acessórios, comidas,
 - Jogo grátis
 - Anúncios leves entre blocos de atividades
 - Sem anúncios interrompendo ações infantis
+- Rewarded ad opcional para liberar roupa especial por 24 horas
 - Opção futura de remover anúncios por compra única
 
 > Antes da publicação, a monetização deverá ser configurada de acordo com as políticas da Google Play para conteúdo direcionado a crianças.
@@ -67,12 +71,24 @@ O quiz tem 4 rodadas, permite tentar novamente sem punição e entrega 3 estrela
 
 > Nesta etapa os sons são representados por texto/onomatopeias. Arquivos de áudio reais serão adicionados depois com conteúdo próprio ou devidamente licenciado.
 
+### Armário — protótipo funcional
+O app já possui uma entrada para o Armário com:
+- roupas permanentes de exemplo
+- seleção de visual
+- roupa especial `Realeza` bloqueada
+- botão que simula um anúncio premiado
+- liberação da roupa especial por 24 horas
+- indicação aproximada do tempo restante
+
+Nesta fase o prazo fica apenas em memória. Na V1 final, o momento da liberação será salvo localmente para continuar válido mesmo se o app for fechado ou o celular reiniciado. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
+
 ## Próximas etapas
 1. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
 2. Evoluir as ações de cuidado para interações por toque/arraste
-3. Adicionar áudio real aos bichinhos
-4. Criar identidade visual e personagens próprios
-5. Criar sistema de moedas, estrelas e desbloqueios
-6. Salvar progresso localmente
-7. Preparar controles parentais e monetização adequada ao público infantil
-8. Testar e gerar a primeira versão para Android
+3. Persistir estrelas, roupas e prazo das roupas temporárias localmente
+4. Adicionar áudio real aos bichinhos
+5. Criar identidade visual e personagens próprios
+6. Criar sistema de moedas, estrelas e desbloqueios
+7. Integrar rewarded ads apropriados ao público infantil
+8. Preparar controles parentais e monetização adequada ao público infantil
+9. Testar e gerar a primeira versão para Android
