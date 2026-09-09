@@ -182,7 +182,11 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("🐮", fontSize = 86.sp)
+                    AnimalAvatar(
+                        animalName = "Vaca",
+                        fallbackEmoji = "🐮",
+                        modifier = Modifier.size(118.dp)
+                    )
                     Text(selectedOutfit.emoji, fontSize = 48.sp)
                     Text(
                         selectedOutfit.name,
@@ -284,8 +288,6 @@ private fun WardrobeScreen(onBack: () -> Unit) {
                         )
                         Button(
                             onClick = {
-                                // Protótipo: simula a conclusão de um anúncio premiado.
-                                // Na integração com AdMob, este bloco deve rodar somente após a recompensa confirmada.
                                 val unlockedAt = System.currentTimeMillis()
                                 prefs.edit()
                                     .putLong(KEY_ROYAL_UNLOCKED_AT, unlockedAt)
