@@ -65,7 +65,7 @@ A área `Cuidar` possui uma rotina sequencial com:
 3. secar
 4. colocar para dormir
 
-A criança acompanha a barra de progresso e recebe 5 estrelas somente após concluir toda a rotina.
+Cada ação agora exige 3 toques no painel interativo. A criança acompanha o progresso da própria ação e da rotina completa, recebe mensagens intermediárias e ganha 5 estrelas somente após concluir todos os cuidados.
 
 ### Sons — funcional
 A área `Sons` possui duas formas de brincar:
@@ -77,7 +77,7 @@ O quiz tem 4 rodadas, permite tentar novamente sem punição e entrega 3 estrela
 > Nesta etapa os sons são representados por texto/onomatopeias. Arquivos de áudio reais serão adicionados depois com conteúdo próprio ou devidamente licenciado.
 
 ### Brincar — funcional
-A área `Brincar` agora possui um minijogo simples de bola:
+A área `Brincar` possui um minijogo simples de bola:
 - a criança toca para jogar a bola com o bichinho
 - são 5 jogadas por rodada
 - há barra de progresso e mensagens de incentivo
@@ -90,7 +90,7 @@ A área `Fazendinha` possui três tarefas sequenciais:
 2. colher frutas
 3. pegar ovos
 
-A criança acompanha a barra de progresso, recebe feedback visual em cada tarefa e ganha 4 estrelas somente após completar as três atividades.
+Cada tarefa agora exige 4 toques no painel interativo. A criança acompanha o progresso, recebe feedback visual em cada etapa e ganha 4 estrelas somente após completar as três atividades.
 
 ### Armário — funcional
 O app já possui uma entrada para o Armário com:
@@ -109,8 +109,10 @@ O app já possui uma entrada para o Armário com:
 
 O prazo e a roupa equipada continuam válidos mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
 
-## Interações em evolução
-Foi adicionado `TapActionPanel`, um componente reutilizável para transformar ações simples em pequenas sequências de toque com barra de progresso. Ele será usado primeiro em `Cuidar` e `Fazendinha` e depois poderá evoluir para gestos contínuos de arrastar/esfregar.
+## Interações atuais
+O componente `TapActionPanel` já está conectado a `Cuidar` e `Fazendinha`. Ele transforma ações simples em pequenas sequências de toque com barra de progresso e feedback intermediário.
+
+O próximo passo de interação é evoluir algumas tarefas específicas para gestos contínuos de arrastar/esfregar, principalmente banho, secagem, regar e colher.
 
 ## Persistência atual
 Já ficam salvos localmente:
@@ -129,12 +131,11 @@ A identidade visual aprovada está documentada em `docs/ART_DIRECTION.md`, inclu
 Enquanto as artes finais não estiverem prontas, os emojis continuam como placeholders funcionais no código.
 
 ## Próximas etapas
-1. Conectar `TapActionPanel` às rotinas de Cuidar e Fazendinha
-2. Evoluir algumas ações para gesto de arrastar/esfregar
-3. Produzir as primeiras artes próprias da vaca e itens principais
-4. Adicionar áudio real aos bichinhos
-5. Criar sistema de moedas, estrelas e desbloqueios mais completo
-6. Integrar rewarded ads apropriados ao público infantil
-7. Preparar controles parentais e monetização adequada ao público infantil
-8. Testar em aparelho real e corrigir problemas de usabilidade
-9. Gerar a primeira versão Android para testes
+1. Evoluir banho, secagem, regar e colher para gesto de arrastar/esfregar
+2. Produzir as primeiras artes próprias da vaca e itens principais
+3. Adicionar áudio real aos bichinhos
+4. Criar sistema de moedas, estrelas e desbloqueios mais completo
+5. Integrar rewarded ads apropriados ao público infantil
+6. Preparar controles parentais e monetização adequada ao público infantil
+7. Testar em aparelho real e corrigir problemas de usabilidade
+8. Gerar a primeira versão Android para testes
