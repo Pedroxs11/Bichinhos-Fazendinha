@@ -1,5 +1,6 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,10 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private const val GAME_PREFS = "game_progress"
+private const val KEY_STARS = "stars"
 
 private data class Animal(
     val name: String,
@@ -73,7 +78,8 @@ private enum class Screen {
     HOME,
     CARE,
     SOUNDS,
-    FARM
+    FARM,
+    PLAY
 }
 
 private val animals = listOf(
@@ -86,7 +92,7 @@ private val animals = listOf(
 private val activities = listOf(
     ActivityItem("Sons", "🔊", "Escute e descubra os bichinhos", Color(0xFFFFE082)),
     ActivityItem("Cuidar", "🛁", "Comida, banho e carinho", Color(0xFF81D4FA)),
-    ActivityItem("Brincar", "⚽", "Diversão com seu bichinho", Color(0xFFFFAB91)),
+    ActivityItem("Brincar", "⚽", "Jogue bola com seu bichinho", Color(0xFFFFAB91)),
     ActivityItem("Fazendinha", "🌱", "Plante, colha e cuide da fazenda", Color(0xFFA5D6A7))
 )
 
@@ -105,10 +111,18 @@ private val farmSteps = listOf(
 
 @Composable
 fun GameApp() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences(GAME_PREFS, Context.MODE_PRIVATE) }
+
     var selectedAnimal by remember { mutableStateOf(animals.first()) }
-    var stars by remember { mutableIntStateOf(0) }
+    var stars by remember { mutableIntStateOf(prefs.getInt(KEY_STARS, 0)) }
     var message by remember { mutableStateOf("Escolha um bichinho para começar!") }
     var screen by remember { mutableStateOf(Screen.HOME) }
+
+    fun addStars(amount: Int) {
+        stars += amount
+        prefs.edit().putInt(KEY_STARS, stars).apply()
+    }
 
     MaterialTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -124,14 +138,12 @@ fun GameApp() {
                         message = "Oi! Eu sou ${it.name.lowercase()}! Vamos brincar?"
                     },
                     onActivitySelected = { activity ->
-                        when (activity.title) {
-                            "Cuidar" -> screen = Screen.CARE
-                            "Sons" -> screen = Screen.SOUNDS
-                            "Fazendinha" -> screen = Screen.FARM
-                            else -> {
-                                stars += 1
-                                message = activityMessage(activity.title, selectedAnimal)
-                            }
+                        screen = when (activity.title) {
+                            "Cuidar" -> Screen.CARE
+                            "Sons" -> Screen.SOUNDS
+                            "Fazendinha" -> Screen.FARM
+                            "Brincar" -> Screen.PLAY
+                            else -> Screen.HOME
                         }
                     }
                 )
@@ -141,7 +153,7 @@ fun GameApp() {
                     stars = stars,
                     onBack = { screen = Screen.HOME },
                     onRoutineCompleted = {
-                        stars += 5
+                        addStars(5)
                         message = "${selectedAnimal.name} está feliz, limpinho e descansado! +5 ⭐"
                         screen = Screen.HOME
                     }
@@ -151,7 +163,7 @@ fun GameApp() {
                     stars = stars,
                     onBack = { screen = Screen.HOME },
                     onQuizCompleted = {
-                        stars += 3
+                        addStars(3)
                         message = "Você descobriu os sons dos bichinhos! +3 ⭐"
                         screen = Screen.HOME
                     }
@@ -161,8 +173,19 @@ fun GameApp() {
                     stars = stars,
                     onBack = { screen = Screen.HOME },
                     onFarmCompleted = {
-                        stars += 4
+                        addStars(4)
                         message = "A fazendinha está cuidada e cheia de vida! +4 ⭐"
+                        screen = Screen.HOME
+                    }
+                )
+
+                Screen.PLAY -> PlayScreen(
+                    animal = selectedAnimal,
+                    stars = stars,
+                    onBack = { screen = Screen.HOME },
+                    onPlayCompleted = {
+                        addStars(2)
+                        message = "${selectedAnimal.name} adorou brincar com você! +2 ⭐"
                         screen = Screen.HOME
                     }
                 )
@@ -189,10 +212,7 @@ private fun HomeScreen(
         item { SectionTitle("Escolha seu bichinho") }
 
         items(animals.chunked(2)) { rowAnimals ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 rowAnimals.forEach { animal ->
                     AnimalCard(
                         modifier = Modifier.weight(1f),
@@ -213,6 +233,104 @@ private fun HomeScreen(
 }
 
 @Composable
+private fun PlayScreen(
+    animal: Animal,
+    stars: Int,
+    onBack: () -> Unit,
+    onPlayCompleted: () -> Unit
+) {
+    var throws by remember(animal.name) { mutableIntStateOf(0) }
+    var feedback by remember(animal.name) { mutableStateOf("Toque na bola para jogar com ${animal.name.lowercase()}!") }
+    val totalThrows = 5
+    val finished = throws >= totalThrows
+    val progress = (throws.toFloat() / totalThrows.toFloat()).coerceIn(0f, 1f)
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        item { Spacer(modifier = Modifier.height(14.dp)) }
+        item { TopBar(title = "Brincar ⚽", stars = stars, onBack = onBack) }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(30.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE1D6))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(animal.emoji, fontSize = 88.sp)
+                    Text(feedback, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = Color(0xFF5E514B))
+                    Text(if (finished) "🎉" else "⚽", fontSize = 82.sp)
+                }
+            }
+        }
+
+        item {
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
+                color = Color(0xFFFF8A65),
+                trackColor = Color.White.copy(alpha = 0.8f)
+            )
+        }
+
+        if (!finished) {
+            item {
+                Button(
+                    onClick = {
+                        throws += 1
+                        feedback = when (throws) {
+                            1 -> "Boa! ${animal.name} pegou a bola!"
+                            2 -> "Mais uma! ⚽"
+                            3 -> "Que divertido!"
+                            4 -> "Só falta uma!"
+                            else -> "Muito bem! Brincadeira completa! 🎉"
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(78.dp),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8A65))
+                ) {
+                    Text("⚽ Jogar bola  ${throws + 1}/$totalThrows", fontSize = 21.sp, fontWeight = FontWeight.Black)
+                }
+            }
+        } else {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(22.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("Brincadeira completa!", fontSize = 26.sp, fontWeight = FontWeight.Black)
+                        Text("Você jogou a bola 5 vezes e ganhou 2 estrelas.", textAlign = TextAlign.Center, fontSize = 17.sp)
+                        Button(
+                            onClick = onPlayCompleted,
+                            modifier = Modifier.fillMaxWidth().height(62.dp),
+                            shape = RoundedCornerShape(22.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
+                        ) {
+                            Text("⭐ Receber 2 estrelas", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(30.dp)) }
+    }
+}
+
+@Composable
 private fun FarmScreen(
     stars: Int,
     onBack: () -> Unit,
@@ -220,7 +338,6 @@ private fun FarmScreen(
 ) {
     var currentStep by remember { mutableIntStateOf(0) }
     var feedback by remember { mutableStateOf("Vamos ajudar na fazendinha!") }
-
     val finished = currentStep >= farmSteps.size
     val progress = if (finished) 1f else currentStep.toFloat() / farmSteps.size.toFloat()
     val sceneEmoji = when (currentStep) {
@@ -235,90 +352,32 @@ private fun FarmScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
+        item { TopBar(title = "Fazendinha 🌾", stars = stars, onBack = onBack) }
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = onBack,
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                ) {
-                    Text("←", color = Color(0xFF315337), fontSize = 22.sp)
-                }
-                Text("Fazendinha 🌾", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color(0xFF315337))
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.95f)).padding(horizontal = 12.dp, vertical = 9.dp)
-                ) {
-                    Text("⭐ $stars", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(30.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(22.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))) {
+                Column(modifier = Modifier.fillMaxWidth().padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(sceneEmoji, fontSize = 92.sp)
-                    Text(
-                        if (finished) "Tudo pronto!" else farmSteps[currentStep].title,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color(0xFF3E5F3C)
-                    )
-                    Text(
-                        feedback,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        color = Color(0xFF536653)
-                    )
+                    Text(if (finished) "Tudo pronto!" else farmSteps[currentStep].title, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color(0xFF3E5F3C))
+                    Text(feedback, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, color = Color(0xFF536653))
                 }
             }
         }
-
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
-                    color = Color(0xFF5BAE62),
-                    trackColor = Color.White.copy(alpha = 0.8f)
-                )
-                Text(
-                    if (finished) "Fazendinha completa!" else "${currentStep + 1} de ${farmSteps.size}",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF315337)
-                )
-            }
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
+                color = Color(0xFF5BAE62),
+                trackColor = Color.White.copy(alpha = 0.8f)
+            )
         }
 
         if (!finished) {
             val step = farmSteps[currentStep]
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f))
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f))) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(step.emoji, fontSize = 64.sp)
-                        Text(step.instruction, fontSize = 17.sp, textAlign = TextAlign.Center, color = Color(0xFF607060))
+                        Text(step.instruction, fontSize = 17.sp, textAlign = TextAlign.Center)
                         Button(
                             onClick = {
                                 feedback = step.successMessage
@@ -334,110 +393,36 @@ private fun FarmScreen(
                 }
             }
         } else {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(22.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text("🎉", fontSize = 62.sp)
-                        Text("Parabéns!", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF4A5D35))
-                        Text(
-                            "Você regou a horta, colheu as frutas e pegou os ovos. Ganhou 4 estrelas!",
-                            fontSize = 17.sp,
-                            textAlign = TextAlign.Center,
-                            color = Color(0xFF5C674F)
-                        )
-                        Button(
-                            onClick = onFarmCompleted,
-                            modifier = Modifier.fillMaxWidth().height(62.dp),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
-                        ) {
-                            Text("⭐ Receber 4 estrelas", fontSize = 18.sp, fontWeight = FontWeight.Black)
-                        }
-                    }
-                }
-            }
+            item { RewardCard(text = "Você cuidou da fazendinha e ganhou 4 estrelas!", buttonText = "⭐ Receber 4 estrelas", onClick = onFarmCompleted) }
         }
-
         item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
 
 @Composable
-private fun SoundsScreen(
-    stars: Int,
-    onBack: () -> Unit,
-    onQuizCompleted: () -> Unit
-) {
+private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> Unit) {
     var heardAnimal by remember { mutableStateOf<Animal?>(null) }
     var quizIndex by remember { mutableIntStateOf(0) }
     var feedback by remember { mutableStateOf("Toque em um bichinho para descobrir o som!") }
     var correctAnswers by remember { mutableIntStateOf(0) }
+    val quizFinished = quizIndex >= animals.size
+    val target = if (quizFinished) null else animals[quizIndex]
 
-    val quizAnimals = animals
-    val quizFinished = quizIndex >= quizAnimals.size
-    val target = if (quizFinished) null else quizAnimals[quizIndex]
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
+        item { TopBar(title = "Sons 🔊", stars = stars, onBack = onBack) }
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = onBack,
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                ) {
-                    Text("←", color = Color(0xFF315337), fontSize = 22.sp)
-                }
-                Text("Sons 🔊", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF315337))
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 9.dp)
-                ) {
-                    Text("⭐ $stars", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f))
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f))) {
+                Column(modifier = Modifier.fillMaxWidth().padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("🎵", fontSize = 52.sp)
-                    Text(feedback, textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF435344))
-                    heardAnimal?.let {
-                        Text("${it.emoji} ${it.sound}", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF2E7D32))
-                    }
+                    Text(feedback, textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    heardAnimal?.let { Text("${it.emoji} ${it.sound}", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF2E7D32)) }
                 }
             }
         }
-
         item { SectionTitle("Descubra os sons") }
         items(animals.chunked(2)) { rowAnimals ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 rowAnimals.forEach { animal ->
                     Card(
                         modifier = Modifier.weight(1f).height(135.dp).clickable {
@@ -447,46 +432,27 @@ private fun SoundsScreen(
                         shape = RoundedCornerShape(26.dp),
                         colors = CardDefaults.cardColors(containerColor = animal.color)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
+                        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Text(animal.emoji, fontSize = 52.sp)
                             Text(animal.name, fontSize = 18.sp, fontWeight = FontWeight.Black)
-                            Text("🔊 tocar", fontSize = 14.sp, color = Color(0xFF566656))
+                            Text("🔊 tocar", fontSize = 14.sp)
                         }
                     }
                 }
             }
         }
-
         item { SectionTitle("Qual bichinho faz esse som?") }
-
         if (!quizFinished && target != null) {
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("🔊", fontSize = 54.sp)
-                        Text(target.sound, fontSize = 30.sp, fontWeight = FontWeight.Black, color = Color(0xFF4B5E35))
-                        Text("Escolha o bichinho", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(target.sound, fontSize = 30.sp, fontWeight = FontWeight.Black)
                     }
                 }
             }
-
             items(animals.chunked(2)) { rowAnimals ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     rowAnimals.forEach { animal ->
                         Button(
                             modifier = Modifier.weight(1f).height(70.dp),
@@ -508,114 +474,47 @@ private fun SoundsScreen(
                 }
             }
         } else {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(22.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text("🎉", fontSize = 62.sp)
-                        Text("Muito bem!", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF3F643D))
-                        Text("Você acertou $correctAnswers de ${quizAnimals.size} e ganhou 3 estrelas!", textAlign = TextAlign.Center, fontSize = 17.sp)
-                        Button(
-                            onClick = onQuizCompleted,
-                            modifier = Modifier.fillMaxWidth().height(62.dp),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
-                        ) {
-                            Text("⭐ Receber 3 estrelas", fontSize = 18.sp, fontWeight = FontWeight.Black)
-                        }
-                    }
-                }
-            }
+            item { RewardCard(text = "Você acertou $correctAnswers de ${animals.size} e ganhou 3 estrelas!", buttonText = "⭐ Receber 3 estrelas", onClick = onQuizCompleted) }
         }
-
         item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
 
 @Composable
-private fun CareScreen(
-    animal: Animal,
-    stars: Int,
-    onBack: () -> Unit,
-    onRoutineCompleted: () -> Unit
-) {
+private fun CareScreen(animal: Animal, stars: Int, onBack: () -> Unit, onRoutineCompleted: () -> Unit) {
     var currentStep by remember(animal.name) { mutableIntStateOf(0) }
     var feedback by remember(animal.name) { mutableStateOf("Vamos cuidar de ${animal.name.lowercase()}!") }
     val finished = currentStep >= careSteps.size
     val progress = if (finished) 1f else currentStep.toFloat() / careSteps.size.toFloat()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Spacer(modifier = Modifier.height(14.dp)) }
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(onClick = onBack, shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
-                    Text("←", color = Color(0xFF315337), fontSize = 22.sp)
-                }
-                Text("Cuidar ${animal.emoji}", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color(0xFF315337))
-                Box(modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.95f)).padding(horizontal = 12.dp, vertical = 9.dp)) {
-                    Text("⭐ $stars", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
+        item { TopBar(title = "Cuidar ${animal.emoji}", stars = stars, onBack = onBack) }
         item {
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = animal.color)) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(22.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(animal.emoji, fontSize = 92.sp)
-                    Text(animal.name, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color(0xFF40352E))
-                    Text(feedback, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, color = Color(0xFF4F534B))
+                    Text(animal.name, fontSize = 26.sp, fontWeight = FontWeight.Black)
+                    Text(feedback, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
                 }
             }
         }
-
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
-                    color = Color(0xFF5BAE62),
-                    trackColor = Color.White.copy(alpha = 0.8f)
-                )
-                Text(
-                    if (finished) "Rotina completa!" else "${currentStep + 1} de ${careSteps.size}",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF315337)
-                )
-            }
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
+                color = Color(0xFF5BAE62),
+                trackColor = Color.White.copy(alpha = 0.8f)
+            )
         }
-
         if (!finished) {
             val step = careSteps[currentStep]
             item {
                 Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f))) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(step.emoji, fontSize = 64.sp)
-                        Text(step.title, fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color(0xFF344934))
-                        Text(step.instruction, fontSize = 17.sp, textAlign = TextAlign.Center, color = Color(0xFF607060))
+                        Text(step.title, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                        Text(step.instruction, fontSize = 17.sp, textAlign = TextAlign.Center)
                         Button(
                             onClick = {
                                 feedback = step.successMessage
@@ -631,29 +530,36 @@ private fun CareScreen(
                 }
             }
         } else {
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(22.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text("🎉", fontSize = 62.sp)
-                        Text("Muito bem!", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFF4A5D35))
-                        Text("Você completou todos os cuidados e ganhou 5 estrelas!", fontSize = 17.sp, textAlign = TextAlign.Center, color = Color(0xFF5C674F))
-                        Button(
-                            onClick = onRoutineCompleted,
-                            modifier = Modifier.fillMaxWidth().height(62.dp),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
-                        ) {
-                            Text("⭐ Receber 5 estrelas", fontSize = 18.sp, fontWeight = FontWeight.Black)
-                        }
-                    }
-                }
-            }
+            item { RewardCard(text = "Você completou todos os cuidados e ganhou 5 estrelas!", buttonText = "⭐ Receber 5 estrelas", onClick = onRoutineCompleted) }
         }
         item { Spacer(modifier = Modifier.height(30.dp)) }
+    }
+}
+
+@Composable
+private fun TopBar(title: String, stars: Int, onBack: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Button(onClick = onBack, shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
+            Text("←", color = Color(0xFF315337), fontSize = 22.sp)
+        }
+        Text(title, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color(0xFF315337))
+        Box(modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.95f)).padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Text("⭐ $stars", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun RewardCard(text: String, buttonText: String, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))) {
+        Column(modifier = Modifier.fillMaxWidth().padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("🎉", fontSize = 62.sp)
+            Text("Muito bem!", fontSize = 28.sp, fontWeight = FontWeight.Black)
+            Text(text, fontSize = 17.sp, textAlign = TextAlign.Center)
+            Button(onClick = onClick, modifier = Modifier.fillMaxWidth().height(62.dp), shape = RoundedCornerShape(22.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))) {
+                Text(buttonText, fontSize = 18.sp, fontWeight = FontWeight.Black)
+            }
+        }
     }
 }
 
@@ -661,11 +567,7 @@ private fun CareScreen(
 private fun FarmBackground() {
     Canvas(modifier = Modifier.fillMaxSize().background(Color(0xFFBDEBFF))) {
         drawCircle(color = Color(0xFFFFE66D), radius = 60f, center = Offset(size.width - 90f, 90f))
-        drawRect(
-            color = Color(0xFF9AD66D),
-            topLeft = Offset(0f, size.height * 0.55f),
-            size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.45f)
-        )
+        drawRect(color = Color(0xFF9AD66D), topLeft = Offset(0f, size.height * 0.55f), size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.45f))
         drawCircle(color = Color.White.copy(alpha = 0.85f), radius = 40f, center = Offset(70f, 110f))
         drawCircle(color = Color.White.copy(alpha = 0.85f), radius = 30f, center = Offset(110f, 110f))
     }
@@ -712,7 +614,7 @@ private fun AnimalCard(modifier: Modifier, animal: Animal, selected: Boolean, on
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(animal.emoji, fontSize = 58.sp)
-            Text(animal.name, fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color(0xFF40352E))
+            Text(animal.name, fontSize = 20.sp, fontWeight = FontWeight.Black)
             if (selected) Text("✓ escolhido", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
         }
     }
@@ -726,17 +628,12 @@ private fun ActivityCard(activity: ActivityItem, onPlay: () -> Unit) {
                 Text(activity.emoji, fontSize = 34.sp)
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(activity.title, fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color(0xFF344934))
+                Text(activity.title, fontSize = 20.sp, fontWeight = FontWeight.Black)
                 Text(activity.subtitle, fontSize = 14.sp, color = Color(0xFF607060))
             }
             Button(onClick = onPlay, shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))) {
-                Text("▶", fontSize = 20.sp, textAlign = TextAlign.Center)
+                Text("▶", fontSize = 20.sp)
             }
         }
     }
-}
-
-private fun activityMessage(activity: String, animal: Animal): String = when (activity) {
-    "Brincar" -> "${animal.name} adorou brincar com você! +1 ⭐"
-    else -> "Muito bem! +1 ⭐"
 }
