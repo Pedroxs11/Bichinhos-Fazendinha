@@ -71,21 +71,24 @@ O quiz tem 4 rodadas, permite tentar novamente sem punição e entrega 3 estrela
 
 > Nesta etapa os sons são representados por texto/onomatopeias. Arquivos de áudio reais serão adicionados depois com conteúdo próprio ou devidamente licenciado.
 
-### Armário — protótipo funcional
+### Armário — funcional
 O app já possui uma entrada para o Armário com:
 - roupas permanentes de exemplo
 - seleção de visual
 - roupa especial `Realeza` bloqueada
 - botão que simula um anúncio premiado
 - liberação da roupa especial por 24 horas
-- indicação aproximada do tempo restante
+- indicação de horas e minutos restantes
+- prazo salvo localmente no aparelho com `SharedPreferences`
+- expiração automática após 24 horas
+- novo bloqueio após expirar, exigindo novo anúncio para liberar novamente
 
-Nesta fase o prazo fica apenas em memória. Na V1 final, o momento da liberação será salvo localmente para continuar válido mesmo se o app for fechado ou o celular reiniciado. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
+O prazo continua válido mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
 
 ## Próximas etapas
 1. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
 2. Evoluir as ações de cuidado para interações por toque/arraste
-3. Persistir estrelas, roupas e prazo das roupas temporárias localmente
+3. Persistir estrelas e roupa atualmente vestida localmente
 4. Adicionar áudio real aos bichinhos
 5. Criar identidade visual e personagens próprios
 6. Criar sistema de moedas, estrelas e desbloqueios
