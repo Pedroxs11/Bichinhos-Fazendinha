@@ -337,7 +337,8 @@ private fun FarmScreen(
     var feedback by remember { mutableStateOf("Vamos ajudar na fazendinha!") }
     var actionTaps by remember(currentStep) { mutableIntStateOf(0) }
     val requiredTaps = 4
-    val finished = currentStep >= farmSteps.size
+    val step = farmSteps.getOrNull(currentStep)
+    val finished = step == null
     val progress = if (finished) 1f else currentStep.toFloat() / farmSteps.size.toFloat()
     val sceneTitle = when (currentStep) {
         0 -> "Cena horta"
@@ -365,7 +366,7 @@ private fun FarmScreen(
                 ) {
                     ItemArt(title = sceneTitle, fallbackEmoji = "", modifier = Modifier.size(130.dp, 98.dp))
                     Text(
-                        if (finished) "Tudo pronto!" else farmSteps[currentStep].title,
+                        step?.title ?: "Tudo pronto!",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFF3E5F3C)
@@ -383,8 +384,7 @@ private fun FarmScreen(
             )
         }
 
-        if (!finished) {
-            val step = farmSteps[currentStep]
+        if (step != null) {
             item {
                 TapActionPanel(
                     emoji = step.emoji,
@@ -393,13 +393,15 @@ private fun FarmScreen(
                     taps = actionTaps,
                     requiredTaps = requiredTaps,
                     onTap = {
-                        val next = actionTaps + 1
-                        actionTaps = next
-                        if (next >= requiredTaps) {
-                            feedback = step.successMessage
-                            currentStep += 1
-                        } else {
-                            feedback = "Continue! ${requiredTaps - next} toque(s) para terminar."
+                        if (actionTaps < requiredTaps) {
+                            val next = (actionTaps + 1).coerceAtMost(requiredTaps)
+                            actionTaps = next
+                            if (next >= requiredTaps) {
+                                feedback = step.successMessage
+                                currentStep = (currentStep + 1).coerceAtMost(farmSteps.size)
+                            } else {
+                                feedback = "Continue! ${requiredTaps - next} toque(s) para terminar."
+                            }
                         }
                     }
                 )
@@ -563,7 +565,8 @@ private fun CareScreen(
     var feedback by remember(animal.name) { mutableStateOf("Vamos cuidar de ${animal.name.lowercase()}!") }
     var actionTaps by remember(animal.name, currentStep) { mutableIntStateOf(0) }
     val requiredTaps = 3
-    val finished = currentStep >= careSteps.size
+    val step = careSteps.getOrNull(currentStep)
+    val finished = step == null
     val progress = if (finished) 1f else currentStep.toFloat() / careSteps.size.toFloat()
 
     LazyColumn(
@@ -601,8 +604,7 @@ private fun CareScreen(
                 trackColor = Color.White.copy(alpha = 0.8f)
             )
         }
-        if (!finished) {
-            val step = careSteps[currentStep]
+        if (step != null) {
             item {
                 TapActionPanel(
                     emoji = step.emoji,
@@ -611,13 +613,15 @@ private fun CareScreen(
                     taps = actionTaps,
                     requiredTaps = requiredTaps,
                     onTap = {
-                        val next = actionTaps + 1
-                        actionTaps = next
-                        if (next >= requiredTaps) {
-                            feedback = step.successMessage
-                            currentStep += 1
-                        } else {
-                            feedback = "Muito bem! Mais ${requiredTaps - next} toque(s)."
+                        if (actionTaps < requiredTaps) {
+                            val next = (actionTaps + 1).coerceAtMost(requiredTaps)
+                            actionTaps = next
+                            if (next >= requiredTaps) {
+                                feedback = step.successMessage
+                                currentStep = (currentStep + 1).coerceAtMost(careSteps.size)
+                            } else {
+                                feedback = "Muito bem! Mais ${requiredTaps - next} toque(s)."
+                            }
                         }
                     }
                 )
