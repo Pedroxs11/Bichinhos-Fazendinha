@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -51,7 +52,11 @@ fun TapActionPanel(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(emoji, fontSize = 66.sp)
+        ItemArt(
+            title = title,
+            fallbackEmoji = emoji,
+            modifier = Modifier.size(70.dp)
+        )
         Text(title, fontSize = 24.sp, fontWeight = FontWeight.Black)
         Text(instruction, fontSize = 17.sp, textAlign = TextAlign.Center)
 
@@ -84,17 +89,27 @@ fun TapActionPanel(
                 .clickable(enabled = taps < requiredTaps, onClick = onTap),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                when {
-                    taps >= requiredTaps -> "✓ Pronto!"
-                    dragEnabled -> "$emoji  Arraste o dedo aqui ↔\n${taps + 1}/$requiredTaps"
-                    else -> "$emoji Toque aqui  ${taps + 1}/$requiredTaps"
-                },
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                color = if (dragEnabled) Color(0xFF315B75) else Color.White,
-                textAlign = TextAlign.Center
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ItemArt(
+                    title = title,
+                    fallbackEmoji = emoji,
+                    modifier = Modifier.size(if (dragEnabled) 54.dp else 40.dp)
+                )
+                Text(
+                    when {
+                        taps >= requiredTaps -> "✓ Pronto!"
+                        dragEnabled -> "Arraste o dedo aqui ↔\n${taps + 1}/$requiredTaps"
+                        else -> "Toque aqui  ${taps + 1}/$requiredTaps"
+                    },
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Black,
+                    color = if (dragEnabled) Color(0xFF315B75) else Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         if (dragEnabled && taps < requiredTaps) {
@@ -130,7 +145,11 @@ fun DragActionPanel(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(emoji, fontSize = 66.sp)
+        ItemArt(
+            title = title,
+            fallbackEmoji = emoji,
+            modifier = Modifier.size(70.dp)
+        )
         Text(title, fontSize = 24.sp, fontWeight = FontWeight.Black)
         Text(instruction, fontSize = 17.sp, textAlign = TextAlign.Center)
 
@@ -160,13 +179,23 @@ fun DragActionPanel(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                if (moves >= requiredMoves) "✓ Pronto!" else "$emoji  Arraste o dedo aqui ↔",
-                fontSize = 21.sp,
-                fontWeight = FontWeight.Black,
-                color = Color(0xFF315B75),
-                textAlign = TextAlign.Center
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ItemArt(
+                    title = title,
+                    fallbackEmoji = emoji,
+                    modifier = Modifier.size(60.dp)
+                )
+                Text(
+                    if (moves >= requiredMoves) "✓ Pronto!" else "Arraste o dedo aqui ↔",
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF315B75),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         Box(
