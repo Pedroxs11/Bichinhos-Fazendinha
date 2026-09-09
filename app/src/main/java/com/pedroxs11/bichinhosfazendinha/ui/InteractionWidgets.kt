@@ -23,6 +23,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+private val dragActionTitles = setOf(
+    "Dar banho",
+    "Secar",
+    "Regar a horta",
+    "Colher frutas"
+)
+
 @Composable
 fun TapActionPanel(
     emoji: String,
@@ -33,6 +40,7 @@ fun TapActionPanel(
     onTap: () -> Unit
 ) {
     val progress = (taps.toFloat() / requiredTaps.toFloat()).coerceIn(0f, 1f)
+    val dragEnabled = title in dragActionTitles
 
     Column(
         modifier = Modifier
@@ -53,24 +61,49 @@ fun TapActionPanel(
                 .fillMaxWidth()
                 .height(12.dp)
                 .clip(RoundedCornerShape(12.dp)),
-            color = Color(0xFF5BAE62),
+            color = if (dragEnabled) Color(0xFF42A5F5) else Color(0xFF5BAE62),
             trackColor = Color(0xFFE7EFE4)
         )
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(78.dp)
+                .height(if (dragEnabled) 135.dp else 78.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF5BAE62))
-                .clickable(onClick = onTap),
+                .background(if (dragEnabled) Color(0xFFDDF3FF) else Color(0xFF5BAE62))
+                .pointerInput(title, taps, requiredTaps) {
+                    if (dragEnabled) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            if (taps < requiredTaps && (dragAmount.x != 0f || dragAmount.y != 0f)) {
+                                onTap()
+                            }
+                        }
+                    }
+                }
+                .clickable(enabled = taps < requiredTaps, onClick = onTap),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                if (taps >= requiredTaps) "✓ Pronto!" else "$emoji Toque aqui  ${taps + 1}/$requiredTaps",
+                when {
+                    taps >= requiredTaps -> "✓ Pronto!"
+                    dragEnabled -> "$emoji  Arraste o dedo aqui ↔\n${taps + 1}/$requiredTaps"
+                    else -> "$emoji Toque aqui  ${taps + 1}/$requiredTaps"
+                },
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                color = Color.White
+                color = if (dragEnabled) Color(0xFF315B75) else Color.White,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        if (dragEnabled && taps < requiredTaps) {
+            Text(
+                "Você também pode tocar se preferir.",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF607060),
+                textAlign = TextAlign.Center
             )
         }
     }
