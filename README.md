@@ -88,17 +88,21 @@ O app já possui uma entrada para o Armário com:
 - liberação da roupa especial por 24 horas
 - indicação de horas e minutos restantes
 - prazo salvo localmente no aparelho com `SharedPreferences`
-- expiração automática após 24 horas
+- roupa atualmente equipada salva localmente
+- reabertura do jogo mantendo a roupa escolhida
+- expiração automática da Realeza após 24 horas
+- retorno automático ao visual padrão se a roupa temporária expirar equipada
 - novo bloqueio após expirar, exigindo novo anúncio para liberar novamente
 
-O prazo continua válido mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
+O prazo e a roupa equipada continuam válidos mesmo se o app for fechado e aberto novamente. Quando o AdMob for integrado, a liberação deverá acontecer somente após o callback de recompensa confirmado.
 
 ## Próximas etapas
-1. Evoluir as ações de cuidado e fazendinha para interações por toque/arraste
-2. Persistir estrelas e roupa atualmente vestida localmente
-3. Adicionar áudio real aos bichinhos
-4. Criar identidade visual e personagens próprios
-5. Criar sistema de moedas, estrelas e desbloqueios
-6. Integrar rewarded ads apropriados ao público infantil
-7. Preparar controles parentais e monetização adequada ao público infantil
-8. Testar e gerar a primeira versão para Android
+1. Persistir o saldo de estrelas localmente
+2. Transformar `Brincar` em minijogo real
+3. Evoluir as ações de cuidado e fazendinha para interações por toque/arraste
+4. Adicionar áudio real aos bichinhos
+5. Criar identidade visual e personagens próprios inspirados no mockup aprovado
+6. Criar sistema de moedas, estrelas e desbloqueios
+7. Integrar rewarded ads apropriados ao público infantil
+8. Preparar controles parentais e monetização adequada ao público infantil
+9. Testar e gerar a primeira versão para Android
