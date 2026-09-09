@@ -58,13 +58,21 @@ A área `Cuidar` já abre uma tela própria e possui uma rotina sequencial com:
 
 A criança acompanha uma barra de progresso e recebe 5 estrelas somente após concluir toda a rotina.
 
+### Sons — já funcional
+A área `Sons` já possui duas formas de brincar:
+1. exploração livre: tocar em vaca, porquinho, galinha ou cachorro para descobrir a onomatopeia do som
+2. quiz: o jogo apresenta um som e a criança escolhe qual bichinho corresponde
+
+O quiz tem 4 rodadas, permite tentar novamente sem punição e entrega 3 estrelas após a conclusão.
+
+> Nesta etapa os sons são representados por texto/onomatopeias. Arquivos de áudio reais serão adicionados depois com conteúdo próprio ou devidamente licenciado.
+
 ## Próximas etapas
-1. Implementar a atividade de Sons
-2. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
-3. Evoluir as ações de cuidado para interações por toque/arraste
+1. Implementar tarefas da Fazendinha: regar, colher e pegar ovos
+2. Evoluir as ações de cuidado para interações por toque/arraste
+3. Adicionar áudio real aos bichinhos
 4. Criar identidade visual e personagens próprios
-5. Adicionar sons originais/licenciados
-6. Criar sistema de moedas, estrelas e desbloqueios
-7. Salvar progresso localmente
-8. Preparar controles parentais e monetização adequada ao público infantil
-9. Testar e gerar a primeira versão para Android
+5. Criar sistema de moedas, estrelas e desbloqueios
+6. Salvar progresso localmente
+7. Preparar controles parentais e monetização adequada ao público infantil
+8. Testar e gerar a primeira versão para Android
