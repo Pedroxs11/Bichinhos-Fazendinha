@@ -44,7 +44,7 @@ private fun interactionText(title: String, done: Boolean, current: Int, total: I
     title == "Dar banho" -> "Esfregue a esponja ↔\n${current + 1}/$total"
     title == "Secar" -> "Esfregue a toalha ↔\n${current + 1}/$total"
     title in dragActionTitles -> "Arraste o dedo aqui ↔\n${current + 1}/$total"
-    else -> "Toque aqui  ${current + 1}/$total"
+    else -> "Toque aqui • ${current + 1}/$total"
 }
 
 @Composable
