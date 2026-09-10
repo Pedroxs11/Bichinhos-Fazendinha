@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 private const val V2_PREFS = "game_progress"
 private const val KEY_V2_SELECTED_ANIMAL = "selected_progression_animal"
@@ -508,6 +509,7 @@ private fun ProgressionSoundsScreen(
     val quizAnimals = remember(unlockedKey) { unlockedAnimals.shuffled() }
     var quizIndex by remember(unlockedKey) { mutableIntStateOf(0) }
     var feedback by remember(unlockedKey) { mutableStateOf("Escute e escolha o bichinho!") }
+    var answerLocked by remember(unlockedKey) { mutableStateOf(false) }
     val target = quizAnimals.getOrNull(quizIndex)
     val answerAnimals = remember(unlockedKey, quizIndex) {
         target?.let { correct ->
@@ -523,7 +525,15 @@ private fun ProgressionSoundsScreen(
     LaunchedEffect(quizIndex, quizAnimals.size) {
         target?.let {
             feedback = "Escute e escolha o bichinho!"
+            answerLocked = false
             playAnimalSound(it.name)
+        }
+    }
+
+    LaunchedEffect(answerLocked) {
+        if (answerLocked) {
+            delay(600)
+            quizIndex += 1
         }
     }
 
@@ -553,7 +563,10 @@ private fun ProgressionSoundsScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF607060)
                         )
-                        Button(onClick = { playAnimalSound(target.name) }) {
+                        Button(
+                            onClick = { playAnimalSound(target.name) },
+                            enabled = !answerLocked
+                        ) {
                             Text("Ouvir de novo")
                         }
                     }
@@ -566,14 +579,16 @@ private fun ProgressionSoundsScreen(
                     answerAnimals.forEach { animal ->
                         Button(
                             onClick = {
+                                if (answerLocked) return@Button
                                 if (animal.id == target.id) {
-                                    feedback = "Muito bem! ${animal.name}!"
-                                    quizIndex += 1
+                                    feedback = "Muito bem! ${animal.name}! ⭐"
+                                    answerLocked = true
                                 } else {
                                     feedback = "Quase! Escute de novo."
                                     playAnimalSound(target.name)
                                 }
                             },
+                            enabled = !answerLocked,
                             modifier = Modifier.fillMaxWidth().height(62.dp),
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(
