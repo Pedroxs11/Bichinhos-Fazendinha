@@ -22,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 private const val PROGRESSION_WARDROBE_PREFS = "wardrobe_prefs"
 private const val PROGRESSION_GAME_PREFS = "game_progress"
@@ -91,9 +93,9 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
     var royalUnlockedAt by remember {
         mutableLongStateOf(wardrobePrefs.getLong(KEY_PROGRESSION_ROYAL_AT, 0L))
     }
+    var clockNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
-    fun royalValid(): Boolean {
-        val now = System.currentTimeMillis()
+    fun royalValid(now: Long = System.currentTimeMillis()): Boolean {
         return royalUnlockedAt > 0L && now - royalUnlockedAt < PROGRESSION_ROYAL_DURATION_MS
     }
 
@@ -111,10 +113,38 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
         mutableStateOf("Escolha uma roupa para ${selectedAnimal.name.lowercase()}!")
     }
 
-    val now = System.currentTimeMillis()
-    val royalAvailable = royalValid()
+    LaunchedEffect(royalUnlockedAt) {
+        if (royalUnlockedAt <= 0L) return@LaunchedEffect
+
+        while (true) {
+            val now = System.currentTimeMillis()
+            clockNow = now
+            val remaining = royalUnlockedAt + PROGRESSION_ROYAL_DURATION_MS - now
+
+            if (remaining <= 0L) {
+                val editor = wardrobePrefs.edit().remove(KEY_PROGRESSION_ROYAL_AT)
+                FARM_ANIMALS.forEach { animal ->
+                    if (wardrobePrefs.getString(progressionOutfitKey(animal.id), "none") == "royal") {
+                        editor.putString(progressionOutfitKey(animal.id), "none")
+                    }
+                }
+                editor.apply()
+
+                royalUnlockedAt = 0L
+                if (selectedOutfit.id == "royal") {
+                    selectedOutfit = progressionOutfits.first()
+                    message = "A roupa Realeza expirou. Libere novamente quando quiser!"
+                }
+                break
+            }
+
+            delay(minOf(60_000L, remaining))
+        }
+    }
+
+    val royalAvailable = royalValid(clockNow)
     val remainingMinutes = if (royalAvailable) {
-        ((royalUnlockedAt + PROGRESSION_ROYAL_DURATION_MS - now) / 60_000L).coerceAtLeast(0L)
+        ((royalUnlockedAt + PROGRESSION_ROYAL_DURATION_MS - clockNow) / 60_000L).coerceAtLeast(0L)
     } else 0L
 
     LazyColumn(
@@ -304,6 +334,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                             onClick = {
                                 val unlockedAt = System.currentTimeMillis()
                                 royalUnlockedAt = unlockedAt
+                                clockNow = unlockedAt
                                 wardrobePrefs.edit()
                                     .putLong(KEY_PROGRESSION_ROYAL_AT, unlockedAt)
                                     .putString(progressionOutfitKey(selectedAnimal.id), "royal")
