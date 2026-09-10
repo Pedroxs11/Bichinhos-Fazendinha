@@ -72,6 +72,7 @@ class GameProgression(private val prefs: SharedPreferences) {
     fun unlockCost(animalId: String): Int = ANIMAL_UNLOCK_COSTS[animalId] ?: 0
 
     fun isUnlocked(animalId: String, startsUnlocked: Boolean = unlockCost(animalId) == 0): Boolean {
+        if (!ANIMAL_UNLOCK_COSTS.containsKey(animalId)) return false
         return startsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
     }
 
@@ -90,16 +91,19 @@ class GameProgression(private val prefs: SharedPreferences) {
         if (isUnlocked(animalId)) return true
         if (!canUnlock(animalId)) return false
 
-        if (cost <= 0) {
+        val canonicalCost = unlockCost(animalId)
+        if (cost != canonicalCost) return false
+
+        if (canonicalCost <= 0) {
             prefs.edit().putBoolean(KEY_UNLOCK_PREFIX + animalId, true).apply()
             return true
         }
 
         val currentTotal = totalStars()
-        if (currentTotal < cost) return false
+        if (currentTotal < canonicalCost) return false
 
         prefs.edit()
-            .putInt(KEY_TOTAL_STARS, currentTotal - cost)
+            .putInt(KEY_TOTAL_STARS, currentTotal - canonicalCost)
             .putBoolean(KEY_UNLOCK_PREFIX + animalId, true)
             .apply()
         return true
@@ -107,7 +111,10 @@ class GameProgression(private val prefs: SharedPreferences) {
 
     fun starsMissingFor(cost: Int): Int = (cost - totalStars()).coerceAtLeast(0)
 
-    fun starsMissingForAnimal(animalId: String): Int = starsMissingFor(unlockCost(animalId))
+    fun starsMissingForAnimal(animalId: String): Int {
+        if (!ANIMAL_UNLOCK_COSTS.containsKey(animalId)) return Int.MAX_VALUE
+        return starsMissingFor(unlockCost(animalId))
+    }
 
     private fun resetDailyCounterIfNeeded() {
         val today = todayKey()
