@@ -144,7 +144,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                 royalUnlockedAt = 0L
                 if (selectedOutfit.id == "royal") {
                     selectedOutfit = progressionOutfits.first()
-                    message = "A roupa Realeza foi encerrada. Libere novamente quando quiser!"
+                    message = "👑 A Realeza acabou. ${selectedAnimal.name} voltou ao visual natural."
                 }
                 break
             }
@@ -157,6 +157,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
     val remainingMinutes = if (royalAvailable) {
         ((royalUnlockedAt + PROGRESSION_ROYAL_DURATION_MS - clockNow) / 60_000L).coerceAtLeast(0L)
     } else 0L
+    val royalEndingSoon = royalAvailable && remainingMinutes < 60L
 
     LazyColumn(
         modifier = Modifier
@@ -355,7 +356,9 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFEADCF8))
+                colors = CardDefaults.cardColors(
+                    containerColor = if (royalEndingSoon) Color(0xFFFFE8E8) else Color(0xFFEADCF8)
+                )
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(18.dp),
@@ -387,13 +390,18 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                         ) { Text("▶ Liberar especial", fontWeight = FontWeight.Black) }
                     } else {
                         Text(
-                            if (selectedOutfit.id == "royal") {
-                                "👑 Vestindo Realeza • restam ${formatProgressionWardrobeTime(remainingMinutes)}."
-                            } else {
-                                "Realeza liberada • restam ${formatProgressionWardrobeTime(remainingMinutes)}. Toque em Realeza na lista para vestir."
+                            text = when {
+                                royalEndingSoon && selectedOutfit.id == "royal" ->
+                                    "⏳ Menos de 1 hora! 👑 Vestindo Realeza • restam ${formatProgressionWardrobeTime(remainingMinutes)}."
+                                royalEndingSoon ->
+                                    "⏳ Menos de 1 hora! Realeza ativa • restam ${formatProgressionWardrobeTime(remainingMinutes)}."
+                                selectedOutfit.id == "royal" ->
+                                    "✅ Especial ativo • 👑 Vestindo Realeza • restam ${formatProgressionWardrobeTime(remainingMinutes)}."
+                                else ->
+                                    "✅ Especial ativo • restam ${formatProgressionWardrobeTime(remainingMinutes)}. Toque em Realeza na lista para vestir."
                             },
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF5D3D83),
+                            color = if (royalEndingSoon) Color(0xFFB3261E) else Color(0xFF5D3D83),
                             textAlign = TextAlign.Center
                         )
                     }
