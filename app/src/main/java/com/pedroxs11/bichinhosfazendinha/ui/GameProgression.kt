@@ -43,11 +43,23 @@ class GameProgression(private val prefs: SharedPreferences) {
     private var lastRewardAtMs = 0L
     private var lastRewardResult: StarRewardResult? = null
 
-    fun totalStars(): Int = prefs.getInt(KEY_TOTAL_STARS, 0)
+    fun totalStars(): Int {
+        val saved = prefs.getInt(KEY_TOTAL_STARS, 0)
+        val safe = saved.coerceAtLeast(0)
+        if (safe != saved) {
+            prefs.edit().putInt(KEY_TOTAL_STARS, safe).apply()
+        }
+        return safe
+    }
 
     fun dailyStars(): Int {
         resetDailyCounterIfNeeded()
-        return prefs.getInt(KEY_DAILY_STARS, 0)
+        val saved = prefs.getInt(KEY_DAILY_STARS, 0)
+        val safe = saved.coerceIn(0, DAILY_STAR_LIMIT)
+        if (safe != saved) {
+            prefs.edit().putInt(KEY_DAILY_STARS, safe).apply()
+        }
+        return safe
     }
 
     fun rewardStars(amount: Int): StarRewardResult {
@@ -63,8 +75,8 @@ class GameProgression(private val prefs: SharedPreferences) {
             return cached
         }
 
-        val currentDaily = prefs.getInt(KEY_DAILY_STARS, 0)
-        val currentTotal = prefs.getInt(KEY_TOTAL_STARS, 0)
+        val currentDaily = dailyStars()
+        val currentTotal = totalStars()
         val remainingToday = (DAILY_STAR_LIMIT - currentDaily).coerceAtLeast(0)
         val granted = amount.coerceAtLeast(0).coerceAtMost(remainingToday)
         val newDaily = currentDaily + granted
