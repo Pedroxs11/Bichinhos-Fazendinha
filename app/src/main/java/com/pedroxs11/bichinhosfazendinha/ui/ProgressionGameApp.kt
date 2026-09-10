@@ -433,11 +433,21 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
     )
     var throws by remember(animal.id) { mutableIntStateOf(0) }
     var playFeedback by remember(animal.id) { mutableStateOf("Toque na bola para jogar!") }
+    var completionPending by remember(animal.id) { mutableStateOf(false) }
+    var playFinished by remember(animal.id) { mutableStateOf(false) }
     val total = reactions.size
-    val finished = throws >= total
+    val finished = playFinished
     val progress = (throws.toFloat() / total.toFloat()).coerceIn(0f, 1f)
     val throwDots = (0 until total).joinToString("  ") { index ->
         if (index < throws) "●" else "○"
+    }
+
+    LaunchedEffect(completionPending) {
+        if (completionPending) {
+            delay(650)
+            playFinished = true
+            completionPending = false
+        }
     }
 
     LazyColumn(
@@ -466,7 +476,7 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
                     )
                     Text("⚽", fontSize = 62.sp)
                     Text(
-                        if (finished) "5 de 5 jogadas" else "Jogada ${throws + 1} de $total",
+                        if (throws >= total) "$total de $total jogadas" else "Jogada ${throws + 1} de $total",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF607060)
@@ -494,11 +504,16 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
                 onClick = {
                     if (finished) {
                         onDone()
-                    } else {
+                    } else if (!completionPending) {
                         playFeedback = reactions[throws]
-                        throws += 1
+                        val next = (throws + 1).coerceAtMost(total)
+                        throws = next
+                        if (next >= total) {
+                            completionPending = true
+                        }
                     }
                 },
+                enabled = !completionPending,
                 modifier = Modifier.fillMaxWidth().height(70.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -506,7 +521,11 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
                 )
             ) {
                 Text(
-                    if (finished) "Receber até 2 estrelas" else "⚽ Jogar bola",
+                    when {
+                        finished -> "Receber até 2 estrelas"
+                        completionPending -> "Muito bem! ⭐"
+                        else -> "⚽ Jogar bola"
+                    },
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Black
                 )
