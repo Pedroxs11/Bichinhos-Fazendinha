@@ -317,6 +317,14 @@ private fun ProgressionStepsScreen(
     }
     val finished = step == null
     val progress = if (finished) 1f else currentStep.toFloat() / steps.size.toFloat()
+    val visibleStep = if (finished) steps.size else (currentStep + 1).coerceAtMost(steps.size)
+    val stepDots = steps.indices.joinToString("  ") { index ->
+        when {
+            finished || index < currentStep -> "●"
+            index == currentStep -> "◉"
+            else -> "○"
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -346,12 +354,31 @@ private fun ProgressionStepsScreen(
             }
         }
         item {
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
-                color = Color(0xFF5BAE62),
-                trackColor = Color.White
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = if (finished) "Tudo pronto!" else "Etapa $visibleStep de ${steps.size}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF4B5C43)
+                )
+                Text(
+                    text = stepDots,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF5BAE62),
+                    textAlign = TextAlign.Center
+                )
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
+                    color = Color(0xFF5BAE62),
+                    trackColor = Color.White
+                )
+            }
         }
         if (step != null) {
             item {
