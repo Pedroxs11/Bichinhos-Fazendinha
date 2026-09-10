@@ -305,6 +305,16 @@ private fun ProgressionStepsScreen(
     var actions by remember(animal?.id, title, currentStep) { mutableIntStateOf(0) }
     var feedback by remember(animal?.id, title) { mutableStateOf("Vamos começar!") }
     val step = steps.getOrNull(currentStep)
+    val stepRequiredActions = when (step?.title) {
+        "Alimentar" -> 1
+        "Dar banho" -> 3
+        "Secar" -> 2
+        "Dormir" -> 1
+        "Regar a horta" -> 3
+        "Colher frutas" -> 3
+        "Pegar ovos" -> 3
+        else -> requiredActions
+    }
     val finished = step == null
     val progress = if (finished) 1f else currentStep.toFloat() / steps.size.toFloat()
 
@@ -350,11 +360,11 @@ private fun ProgressionStepsScreen(
                     title = step.title,
                     instruction = step.instruction,
                     taps = actions,
-                    requiredTaps = requiredActions,
+                    requiredTaps = stepRequiredActions,
                     onTap = {
-                        val next = (actions + 1).coerceAtMost(requiredActions)
+                        val next = (actions + 1).coerceAtMost(stepRequiredActions)
                         actions = next
-                        if (next >= requiredActions) {
+                        if (next >= stepRequiredActions) {
                             feedback = step.success
                             currentStep = (currentStep + 1).coerceAtMost(steps.size)
                         }
