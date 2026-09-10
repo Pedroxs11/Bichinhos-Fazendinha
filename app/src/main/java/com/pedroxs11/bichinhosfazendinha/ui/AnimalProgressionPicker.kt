@@ -39,6 +39,9 @@ fun AnimalProgressionPicker(
     onMessage: (String) -> Unit
 ) {
     var celebrationAnimal by remember { mutableStateOf<FarmAnimal?>(null) }
+    val unlockedCount = FARM_ANIMALS.count { animal ->
+        progression.isUnlocked(animal.id, animal.startsUnlocked)
+    }
 
     val nextAnimal = FARM_ANIMALS.firstOrNull { animal ->
         if (progression.isUnlocked(animal.id, animal.startsUnlocked)) return@firstOrNull false
@@ -48,6 +51,15 @@ fun AnimalProgressionPicker(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "$unlockedCount de ${FARM_ANIMALS.size} bichinhos liberados",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF4B5C43)
+        )
+
         celebrationAnimal?.let { animal ->
             Card(
                 modifier = Modifier
