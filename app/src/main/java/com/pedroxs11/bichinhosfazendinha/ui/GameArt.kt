@@ -14,6 +14,9 @@ import com.pedroxs11.bichinhosfazendinha.R
 private fun animalDrawable(animalName: String): Int? = when (animalName) {
     "Pintinho" -> R.drawable.chick_face
     "Coelho" -> R.drawable.rabbit_face
+    "Pato" -> R.drawable.duck_face
+    "Ovelha" -> R.drawable.sheep_face
+    "Cabra" -> R.drawable.goat_face
     "Vaca" -> R.drawable.cow_face
     "Porquinho" -> R.drawable.pig_face
     "Galinha" -> R.drawable.chicken_face
