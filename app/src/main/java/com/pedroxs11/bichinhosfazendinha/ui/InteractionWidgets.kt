@@ -345,7 +345,7 @@ fun DragActionPanel(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                if (moves >= requiredMoves) "Concluído! ✓" else "Se precisar, toque aqui",
+                if (moves >= requiredMoves) "Concluído! ✓" else "Toque aqui se preferir",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF4F6B4D)
