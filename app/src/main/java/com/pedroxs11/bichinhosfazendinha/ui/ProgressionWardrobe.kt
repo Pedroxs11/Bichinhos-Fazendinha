@@ -296,7 +296,11 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                     },
                 shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (available) Color.White else Color(0xFFEDE7F1)
+                    containerColor = when {
+                        equipped -> Color(0xFFF3E8FF)
+                        available -> Color.White
+                        else -> Color(0xFFEDE7F1)
+                    }
                 )
             ) {
                 Row(
