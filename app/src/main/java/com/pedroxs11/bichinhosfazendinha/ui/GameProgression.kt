@@ -75,7 +75,21 @@ class GameProgression(private val prefs: SharedPreferences) {
         return startsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
     }
 
+    fun canUnlock(animalId: String): Boolean {
+        val ids = ANIMAL_UNLOCK_COSTS.keys.toList()
+        val index = ids.indexOf(animalId)
+        if (index < 0) return false
+        if (index == 0 || unlockCost(animalId) <= 0) return true
+
+        val previousId = ids[index - 1]
+        return isUnlocked(previousId)
+    }
+
     fun unlock(animalId: String, cost: Int = unlockCost(animalId)): Boolean {
+        if (!ANIMAL_UNLOCK_COSTS.containsKey(animalId)) return false
+        if (isUnlocked(animalId)) return true
+        if (!canUnlock(animalId)) return false
+
         if (cost <= 0) {
             prefs.edit().putBoolean(KEY_UNLOCK_PREFIX + animalId, true).apply()
             return true
