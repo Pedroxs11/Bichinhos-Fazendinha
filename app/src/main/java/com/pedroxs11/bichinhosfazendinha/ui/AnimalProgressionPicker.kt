@@ -164,7 +164,7 @@ fun AnimalProgressionPicker(
 
                     Text(
                         text = if (missing > 0) {
-                            "Você tem $currentStars ⭐ • faltam $missing ⭐"
+                            "Você tem $currentStars ⭐ • ${if (missing == 1) "falta" else "faltam"} $missing ⭐"
                         } else {
                             "🎉 Já dá para liberar ${nextAnimal.name}! Toque nele abaixo."
                         },
@@ -246,7 +246,7 @@ fun AnimalProgressionPicker(
                                         onMessage("🔒 Primeiro libere ${previousAnimal.name} para chegar em ${animal.name}.")
                                     }
                                     missing > 0 -> {
-                                        onMessage("🔒 Faltam $missing ⭐ para liberar ${animal.name}.")
+                                        onMessage("🔒 ${if (missing == 1) "Falta" else "Faltam"} $missing ⭐ para liberar ${animal.name}.")
                                     }
                                     else -> {
                                         val success = progression.unlock(animal.id, animal.unlockCost)
@@ -326,7 +326,7 @@ fun AnimalProgressionPicker(
                                     color = Color(0xFF6B5A6D)
                                 )
                                 missing > 0 -> Text(
-                                    "${animal.unlockCost} ⭐\nFaltam $missing",
+                                    "${animal.unlockCost} ⭐\n${if (missing == 1) "Falta" else "Faltam"} $missing",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center,
