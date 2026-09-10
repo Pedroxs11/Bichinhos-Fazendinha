@@ -25,6 +25,7 @@ fun initializeAnimalAudio(context: Context) {
 fun playAnimalSound(animalName: String) {
     val context = animalAudioContext
     if (context != null && playRecordedAnimalSound(context, animalName)) return
+    if (context != null && playRemoteAnimalSound(animalName)) return
     playSynthesizedAnimalSound(animalName)
 }
 
@@ -43,6 +44,19 @@ private fun recordedResourceName(animalName: String): String? = when (animalName
     else -> null
 }
 
+private fun remoteAnimalSoundUrl(animalName: String): String? = when (animalName) {
+    "Vaca" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Single_Cow_Moo.ogg"
+    "Porquinho" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Mudchute_pig_1.ogg"
+    "Galinha" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Hen_announcing_shes_lain_an_egg.ogg"
+    "Cachorro" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Sound-of-dog.ogg"
+    "Pato" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Anas_platyrhynchos_-_Mallard_-_XC62258.ogg"
+    "Ovelha" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Mudchute_sheep_1.ogg"
+    "Cabra" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Herd_of_goats_bleating.ogg"
+    "Cavalo" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Wiehern.ogg"
+    "Burrinho" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Personality-of-Wild-Male-Crested-Macaques-(Macaca-nigra)-pone.0069383.s002.oga"
+    else -> null
+}
+
 private fun playRecordedAnimalSound(context: Context, animalName: String): Boolean {
     val resourceName = recordedResourceName(animalName) ?: return false
     val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
@@ -50,27 +64,62 @@ private fun playRecordedAnimalSound(context: Context, animalName: String): Boole
 
     return runCatching {
         val player = MediaPlayer.create(context, resourceId) ?: return false
-        synchronized(playerLock) {
-            runCatching { activePlayer?.stop() }
-            runCatching { activePlayer?.release() }
-            activePlayer = player
-        }
-        player.setOnCompletionListener { completed ->
-            synchronized(playerLock) {
-                if (activePlayer === completed) activePlayer = null
-            }
-            completed.release()
-        }
-        player.setOnErrorListener { failed, _, _ ->
-            synchronized(playerLock) {
-                if (activePlayer === failed) activePlayer = null
-            }
-            failed.release()
-            true
-        }
+        installPlayer(player, animalName, false)
         player.start()
         true
     }.getOrDefault(false)
+}
+
+private fun playRemoteAnimalSound(animalName: String): Boolean {
+    val url = remoteAnimalSoundUrl(animalName) ?: return false
+    return runCatching {
+        val player = MediaPlayer()
+        player.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+        )
+        installPlayer(player, animalName, true)
+        player.setDataSource(url)
+        player.setOnPreparedListener { prepared ->
+            synchronized(playerLock) {
+                if (activePlayer !== prepared) {
+                    runCatching { prepared.release() }
+                    return@setOnPreparedListener
+                }
+            }
+            prepared.start()
+        }
+        player.prepareAsync()
+        true
+    }.getOrElse {
+        false
+    }
+}
+
+private fun installPlayer(player: MediaPlayer, animalName: String, useSynthFallbackOnError: Boolean) {
+    synchronized(playerLock) {
+        runCatching { activePlayer?.stop() }
+        runCatching { activePlayer?.release() }
+        activePlayer = player
+    }
+
+    player.setOnCompletionListener { completed ->
+        synchronized(playerLock) {
+            if (activePlayer === completed) activePlayer = null
+        }
+        completed.release()
+    }
+
+    player.setOnErrorListener { failed, _, _ ->
+        synchronized(playerLock) {
+            if (activePlayer === failed) activePlayer = null
+        }
+        runCatching { failed.release() }
+        if (useSynthFallbackOnError) playSynthesizedAnimalSound(animalName)
+        true
+    }
 }
 
 private fun playSynthesizedAnimalSound(animalName: String) {
