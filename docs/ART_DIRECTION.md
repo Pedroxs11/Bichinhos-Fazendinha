@@ -17,32 +17,88 @@ Criar um jogo infantil com aparência alegre, segura e reconhecível, mantendo i
 - pouco texto por tela
 - feedback visual imediato após cada toque
 
-## Personagens iniciais
+## Catálogo visual dos 10 bichinhos
 
-### Vaca
-- corpo branco com manchas escuras
-- focinho rosado
-- chifres pequenos e arredondados
-- expressão amigável
-- personagem principal do primeiro conjunto de artes
+### Pintinho
+- amarelo quente e suave
+- corpo pequeno e arredondado
+- asas curtinhas
+- bico pequeno alaranjado
+- olhos grandes e curiosos
+- aparência de primeiro bichinho da coleção
 
-### Porquinho
-- rosa claro
-- focinho grande e arredondado
-- orelhas pequenas
-- expressão alegre
-
-### Galinha
-- corpo claro
-- crista vermelha suave
-- asas pequenas
-- pernas curtas
+### Coelho
+- pelagem creme ou cinza bem claro
+- orelhas longas com interior rosado suave
+- focinho pequeno
+- patas arredondadas
+- expressão calma e carinhosa
 
 ### Cachorro
 - pelagem marrom clara
 - orelhas caídas
 - focinho curto
+- peito um pouco mais claro
 - expressão brincalhona
+
+### Porquinho
+- rosa claro
+- focinho grande e arredondado
+- orelhas pequenas
+- pernas curtas
+- expressão alegre
+
+### Pato
+- corpo amarelo-claro com detalhes creme
+- bico laranja arredondado
+- pés laranja simples
+- asas pequenas
+- postura levemente inclinada e curiosa
+
+### Ovelha
+- lã branca ou creme volumosa e bem arredondada
+- rosto bege claro
+- orelhas curtas laterais
+- pernas pequenas
+- aparência macia e tranquila
+
+### Cabra
+- pelagem creme com pequenas áreas bege
+- chifres muito curtos e arredondados
+- orelhas laterais
+- pequeno topete
+- expressão esperta, sem aparência agressiva
+
+### Vaca
+- corpo branco com manchas escuras suaves
+- focinho rosado
+- chifres pequenos e arredondados
+- orelhas largas
+- expressão amigável
+
+### Cavalo
+- pelagem caramelo ou castanho claro
+- crina curta em tom mais escuro
+- focinho arredondado
+- pernas visualmente simples e robustas
+- expressão gentil e confiante
+
+### Burrinho
+- pelagem cinza clara
+- focinho mais claro
+- orelhas grandes e arredondadas
+- pequena crina escura
+- expressão dócil e simpática
+- deve parecer especial sem ficar mais sério que os outros bichinhos
+
+## Regras dos personagens
+
+- todos devem compartilhar a mesma proporção de cabeça, olhos e arredondamento
+- nenhum animal deve parecer realista demais
+- evitar dentes, chifres pontudos ou detalhes que deixem a expressão agressiva
+- cada espécie precisa continuar reconhecível mesmo em tamanho pequeno
+- as cores devem permitir leitura clara sobre fundos claros e coloridos
+- roupas e acessórios não podem esconder olhos, focinho ou características principais da espécie
 
 ## Estados visuais necessários por bichinho
 
@@ -94,15 +150,19 @@ Cada personagem deve ter inicialmente:
 - evitar excesso de informação na tela
 - cada atividade deve ter uma cor predominante para facilitar reconhecimento
 
-## Prioridade de produção
+## Prioridade de produção final
 
-1. Vaca — neutra, feliz, suja e dormindo
-2. Bola, maçã, banho e toalha
-3. Porquinho
-4. Galinha
-5. Cachorro
-6. Itens da Fazendinha
-7. Roupas e acessórios
-8. Cenários completos
+A produção 3D continua sendo a última grande etapa visual. Quando ela começar, seguir esta ordem:
+
+1. Pintinho e Coelho — validar o estilo final com os primeiros bichinhos liberados
+2. Cachorro e Porquinho
+3. Pato e Ovelha
+4. Cabra e Vaca
+5. Cavalo e Burrinho
+6. Bola, maçã, banho, toalha e regador
+7. Itens da Fazendinha
+8. Roupas e acessórios
+9. Cenários completos
+10. Estados extras de todos os bichinhos
 
 Enquanto as artes finais não estiverem prontas, os emojis continuam como placeholders funcionais no código.
