@@ -212,7 +212,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                                     .putString(KEY_PROGRESSION_WARDROBE_ANIMAL, animal.id)
                                     .apply()
                                 selectedOutfit = savedOutfit(animal)
-                                message = "${selectedOutfit.name} em ${animal.name.lowercase()}."
+                                message = "${animal.name} está usando ${selectedOutfit.name.lowercase()}."
                             },
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(
@@ -294,7 +294,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                         wardrobePrefs.edit()
                             .putString(progressionOutfitKey(selectedAnimal.id), outfit.id)
                             .apply()
-                        message = "${outfit.name} salva para ${selectedAnimal.name.lowercase()}!"
+                        message = "${selectedAnimal.name} está usando ${outfit.name.lowercase()}! ✅"
                     },
                 shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
