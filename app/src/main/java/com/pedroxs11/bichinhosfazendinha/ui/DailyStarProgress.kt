@@ -93,8 +93,10 @@ fun DailyStarProgress(
             Text(
                 text = if (milestoneReached) {
                     "Marco de $safeDaily estrelas alcançado! ⭐"
+                } else if (starsToNextMilestone == 1) {
+                    "Falta 1 ⭐ para o próximo marco"
                 } else {
-                    "Próxima ⭐ em $starsToNextMilestone"
+                    "Faltam $starsToNextMilestone ⭐ para o próximo marco"
                 },
                 modifier = Modifier.fillMaxWidth(),
                 fontSize = 13.sp,
