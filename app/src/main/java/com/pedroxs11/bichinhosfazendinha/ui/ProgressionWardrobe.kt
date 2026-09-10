@@ -372,6 +372,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
 }
 
 private fun formatProgressionWardrobeTime(minutes: Long): String {
+    if (minutes <= 0L) return "menos de 1 min"
     val hours = minutes / 60L
     return if (hours > 0L) "$hours h ${minutes % 60L} min" else "$minutes min"
 }
