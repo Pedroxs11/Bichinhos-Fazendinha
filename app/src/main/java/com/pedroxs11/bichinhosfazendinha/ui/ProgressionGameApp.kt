@@ -435,12 +435,15 @@ private fun ProgressionSoundsScreen(
     onDone: () -> Unit
 ) {
     val unlockedAnimals = FARM_ANIMALS.filter { progression.isUnlocked(it.id, it.startsUnlocked) }
-    var quizIndex by remember { mutableIntStateOf(0) }
-    var feedback by remember { mutableStateOf("Escute e escolha o bichinho!") }
-    val target = unlockedAnimals.getOrNull(quizIndex)
+    val unlockedKey = unlockedAnimals.joinToString("|") { it.id }
+    val quizAnimals = remember(unlockedKey) { unlockedAnimals.shuffled() }
+    val answerAnimals = remember(unlockedKey) { unlockedAnimals.shuffled() }
+    var quizIndex by remember(unlockedKey) { mutableIntStateOf(0) }
+    var feedback by remember(unlockedKey) { mutableStateOf("Escute e escolha o bichinho!") }
+    val target = quizAnimals.getOrNull(quizIndex)
     val finished = target == null
 
-    LaunchedEffect(quizIndex, unlockedAnimals.size) {
+    LaunchedEffect(quizIndex, quizAnimals.size) {
         target?.let { playAnimalSound(it.name) }
     }
 
@@ -464,6 +467,12 @@ private fun ProgressionSoundsScreen(
                     Text("🔊", fontSize = 48.sp)
                     Text(feedback, textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Black)
                     if (target != null) {
+                        Text(
+                            "Som ${quizIndex + 1} de ${quizAnimals.size}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF607060)
+                        )
                         Button(onClick = { playAnimalSound(target.name) }) {
                             Text("Ouvir de novo")
                         }
@@ -474,7 +483,7 @@ private fun ProgressionSoundsScreen(
         if (!finished && target != null) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    unlockedAnimals.forEach { animal ->
+                    answerAnimals.forEach { animal ->
                         Button(
                             onClick = {
                                 if (animal.id == target.id) {
