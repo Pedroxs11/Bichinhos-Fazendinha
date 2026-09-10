@@ -1,0 +1,95 @@
+package com.pedroxs11.bichinhosfazendinha.ui
+
+import android.content.SharedPreferences
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private const val KEY_TOTAL_STARS = "stars"
+private const val KEY_DAILY_STARS = "daily_stars"
+private const val KEY_DAILY_DATE = "daily_stars_date"
+private const val KEY_UNLOCK_PREFIX = "animal_unlocked_"
+
+const val DAILY_STAR_LIMIT = 25
+
+data class StarRewardResult(
+    val requested: Int,
+    val granted: Int,
+    val totalStars: Int,
+    val dailyStars: Int,
+    val dailyLimit: Int = DAILY_STAR_LIMIT
+) {
+    val dailyLimitReached: Boolean
+        get() = dailyStars >= dailyLimit
+}
+
+class GameProgression(private val prefs: SharedPreferences) {
+
+    fun totalStars(): Int = prefs.getInt(KEY_TOTAL_STARS, 0)
+
+    fun dailyStars(): Int {
+        resetDailyCounterIfNeeded()
+        return prefs.getInt(KEY_DAILY_STARS, 0)
+    }
+
+    fun rewardStars(amount: Int): StarRewardResult {
+        resetDailyCounterIfNeeded()
+
+        val currentDaily = prefs.getInt(KEY_DAILY_STARS, 0)
+        val currentTotal = prefs.getInt(KEY_TOTAL_STARS, 0)
+        val remainingToday = (DAILY_STAR_LIMIT - currentDaily).coerceAtLeast(0)
+        val granted = amount.coerceAtLeast(0).coerceAtMost(remainingToday)
+        val newDaily = currentDaily + granted
+        val newTotal = currentTotal + granted
+
+        prefs.edit()
+            .putInt(KEY_DAILY_STARS, newDaily)
+            .putInt(KEY_TOTAL_STARS, newTotal)
+            .putString(KEY_DAILY_DATE, todayKey())
+            .apply()
+
+        return StarRewardResult(
+            requested = amount,
+            granted = granted,
+            totalStars = newTotal,
+            dailyStars = newDaily
+        )
+    }
+
+    fun isUnlocked(animalId: String, startsUnlocked: Boolean): Boolean {
+        return startsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
+    }
+
+    fun unlock(animalId: String, cost: Int): Boolean {
+        if (cost <= 0) {
+            prefs.edit().putBoolean(KEY_UNLOCK_PREFIX + animalId, true).apply()
+            return true
+        }
+
+        val currentTotal = totalStars()
+        if (currentTotal < cost) return false
+
+        prefs.edit()
+            .putInt(KEY_TOTAL_STARS, currentTotal - cost)
+            .putBoolean(KEY_UNLOCK_PREFIX + animalId, true)
+            .apply()
+        return true
+    }
+
+    fun starsMissingFor(cost: Int): Int = (cost - totalStars()).coerceAtLeast(0)
+
+    private fun resetDailyCounterIfNeeded() {
+        val today = todayKey()
+        val savedDate = prefs.getString(KEY_DAILY_DATE, null)
+        if (savedDate != today) {
+            prefs.edit()
+                .putInt(KEY_DAILY_STARS, 0)
+                .putString(KEY_DAILY_DATE, today)
+                .apply()
+        }
+    }
+
+    private fun todayKey(): String {
+        return SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+    }
+}
