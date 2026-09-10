@@ -196,14 +196,26 @@ fun AnimalProgressionPicker(
                 shape = RoundedCornerShape(26.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))
             ) {
-                Text(
-                    "🏆 Todos os bichinhos foram liberados!",
+                Column(
                     modifier = Modifier.fillMaxWidth().padding(18.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color(0xFF315337)
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "🏆 Fazendinha completa!",
+                        textAlign = TextAlign.Center,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF315337)
+                    )
+                    Text(
+                        "Todos os bichinhos foram liberados 🎉",
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4B5C43)
+                    )
+                }
             }
         }
 
