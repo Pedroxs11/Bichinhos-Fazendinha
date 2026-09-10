@@ -191,7 +191,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
 
         item {
             Text(
-                "Bichinhos liberados",
+                "Bichinhos liberados • ${unlockedAnimals.size}/${FARM_ANIMALS.size}",
                 fontSize = 21.sp,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF5C4774)
