@@ -1,8 +1,10 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
+import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import android.media.MediaPlayer
 import kotlin.concurrent.thread
 import kotlin.math.PI
 import kotlin.math.exp
@@ -10,7 +12,68 @@ import kotlin.math.sin
 
 private const val SAMPLE_RATE = 16_000
 
+@Volatile
+private var animalAudioContext: Context? = null
+
+private val playerLock = Any()
+private var activePlayer: MediaPlayer? = null
+
+fun initializeAnimalAudio(context: Context) {
+    animalAudioContext = context.applicationContext
+}
+
 fun playAnimalSound(animalName: String) {
+    val context = animalAudioContext
+    if (context != null && playRecordedAnimalSound(context, animalName)) return
+    playSynthesizedAnimalSound(animalName)
+}
+
+private fun recordedResourceName(animalName: String): String? = when (animalName) {
+    "Vaca" -> "sound_cow"
+    "Porquinho" -> "sound_pig"
+    "Galinha" -> "sound_chicken"
+    "Pintinho" -> "sound_chick"
+    "Cachorro" -> "sound_dog"
+    "Pato" -> "sound_duck"
+    "Ovelha" -> "sound_sheep"
+    "Cabra" -> "sound_goat"
+    "Cavalo" -> "sound_horse"
+    "Burrinho" -> "sound_donkey"
+    "Coelho" -> "sound_rabbit"
+    else -> null
+}
+
+private fun playRecordedAnimalSound(context: Context, animalName: String): Boolean {
+    val resourceName = recordedResourceName(animalName) ?: return false
+    val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
+    if (resourceId == 0) return false
+
+    return runCatching {
+        val player = MediaPlayer.create(context, resourceId) ?: return false
+        synchronized(playerLock) {
+            runCatching { activePlayer?.stop() }
+            runCatching { activePlayer?.release() }
+            activePlayer = player
+        }
+        player.setOnCompletionListener { completed ->
+            synchronized(playerLock) {
+                if (activePlayer === completed) activePlayer = null
+            }
+            completed.release()
+        }
+        player.setOnErrorListener { failed, _, _ ->
+            synchronized(playerLock) {
+                if (activePlayer === failed) activePlayer = null
+            }
+            failed.release()
+            true
+        }
+        player.start()
+        true
+    }.getOrDefault(false)
+}
+
+private fun playSynthesizedAnimalSound(animalName: String) {
     thread(name = "animal-sound", isDaemon = true) {
         val durationSeconds = when (animalName) {
             "Vaca" -> 1.2
