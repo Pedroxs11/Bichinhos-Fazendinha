@@ -479,10 +479,18 @@ private fun ProgressionSoundsScreen(
     val unlockedAnimals = FARM_ANIMALS.filter { progression.isUnlocked(it.id, it.startsUnlocked) }
     val unlockedKey = unlockedAnimals.joinToString("|") { it.id }
     val quizAnimals = remember(unlockedKey) { unlockedAnimals.shuffled() }
-    val answerAnimals = remember(unlockedKey) { unlockedAnimals.shuffled() }
     var quizIndex by remember(unlockedKey) { mutableIntStateOf(0) }
     var feedback by remember(unlockedKey) { mutableStateOf("Escute e escolha o bichinho!") }
     val target = quizAnimals.getOrNull(quizIndex)
+    val answerAnimals = remember(unlockedKey, quizIndex) {
+        target?.let { correct ->
+            (unlockedAnimals
+                .filter { it.id != correct.id }
+                .shuffled()
+                .take(3) + correct)
+                .shuffled()
+        } ?: emptyList()
+    }
     val finished = target == null
 
     LaunchedEffect(quizIndex, quizAnimals.size) {
