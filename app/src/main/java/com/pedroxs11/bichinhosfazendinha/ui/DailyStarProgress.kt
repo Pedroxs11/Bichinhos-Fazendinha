@@ -28,6 +28,7 @@ fun DailyStarProgress(
     val safeDaily = dailyStars.coerceIn(0, DAILY_STAR_LIMIT)
     val progress = safeDaily.toFloat() / DAILY_STAR_LIMIT.toFloat()
     val limitReached = safeDaily >= DAILY_STAR_LIMIT
+    val milestoneReached = safeDaily in 5 until DAILY_STAR_LIMIT && safeDaily % 5 == 0
     val nextMilestone = if (limitReached) {
         DAILY_STAR_LIMIT
     } else {
@@ -90,7 +91,11 @@ fun DailyStarProgress(
 
         if (!limitReached) {
             Text(
-                text = "Próxima ⭐ em $starsToNextMilestone",
+                text = if (milestoneReached) {
+                    "Marco de $safeDaily estrelas alcançado! ⭐"
+                } else {
+                    "Próxima ⭐ em $starsToNextMilestone"
+                },
                 modifier = Modifier.fillMaxWidth(),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
