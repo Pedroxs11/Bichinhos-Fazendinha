@@ -43,6 +43,10 @@ fun AnimalProgressionPicker(
                     val unlocked = progression.isUnlocked(animal.id, animal.startsUnlocked)
                     val selected = unlocked && animal.id == selectedAnimalId
                     val missing = progression.starsMissingFor(animal.unlockCost)
+                    val animalIndex = FARM_ANIMALS.indexOfFirst { it.id == animal.id }
+                    val previousAnimal = FARM_ANIMALS.getOrNull(animalIndex - 1)
+                    val previousUnlocked = previousAnimal == null ||
+                        progression.isUnlocked(previousAnimal.id, previousAnimal.startsUnlocked)
 
                     Card(
                         modifier = Modifier
@@ -54,17 +58,24 @@ fun AnimalProgressionPicker(
                                 shape = RoundedCornerShape(28.dp)
                             )
                             .clickable {
-                                if (unlocked) {
-                                    onAnimalSelected(animal)
-                                    onMessage("${animal.name} escolhido! Vamos brincar?")
-                                } else if (missing > 0) {
-                                    onMessage("🔒 Faltam $missing ⭐ para liberar ${animal.name}.")
-                                } else {
-                                    val success = progression.unlock(animal.id, animal.unlockCost)
-                                    if (success) {
-                                        onStarsChanged(progression.totalStars())
+                                when {
+                                    unlocked -> {
                                         onAnimalSelected(animal)
-                                        onMessage("🎉 ${animal.name} foi liberado!")
+                                        onMessage("${animal.name} escolhido! Vamos brincar?")
+                                    }
+                                    !previousUnlocked && previousAnimal != null -> {
+                                        onMessage("🔒 Primeiro libere ${previousAnimal.name} para chegar em ${animal.name}.")
+                                    }
+                                    missing > 0 -> {
+                                        onMessage("🔒 Faltam $missing ⭐ para liberar ${animal.name}.")
+                                    }
+                                    else -> {
+                                        val success = progression.unlock(animal.id, animal.unlockCost)
+                                        if (success) {
+                                            onStarsChanged(progression.totalStars())
+                                            onAnimalSelected(animal)
+                                            onMessage("🎉 ${animal.name} foi liberado!")
+                                        }
                                     }
                                 }
                             },
@@ -84,7 +95,10 @@ fun AnimalProgressionPicker(
                                 modifier = Modifier
                                     .size(76.dp)
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(if (unlocked) Color.White.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.65f)),
+                                    .background(
+                                        if (unlocked) Color.White.copy(alpha = 0.45f)
+                                        else Color.White.copy(alpha = 0.65f)
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (unlocked) {
@@ -117,6 +131,13 @@ fun AnimalProgressionPicker(
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF2E7D32)
+                                )
+                                !previousUnlocked && previousAnimal != null -> Text(
+                                    "Libere ${previousAnimal.name} primeiro",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = Color(0xFF6B5A6D)
                                 )
                                 missing > 0 -> Text(
                                     "${animal.unlockCost} ⭐\nFaltam $missing",
