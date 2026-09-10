@@ -521,7 +521,10 @@ private fun ProgressionSoundsScreen(
     val finished = target == null
 
     LaunchedEffect(quizIndex, quizAnimals.size) {
-        target?.let { playAnimalSound(it.name) }
+        target?.let {
+            feedback = "Escute e escolha o bichinho!"
+            playAnimalSound(it.name)
+        }
     }
 
     LazyColumn(
