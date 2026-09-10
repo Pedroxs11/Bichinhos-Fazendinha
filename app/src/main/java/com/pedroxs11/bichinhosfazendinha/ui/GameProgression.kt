@@ -1,6 +1,7 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
 import android.content.SharedPreferences
+import android.os.SystemClock
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -52,9 +53,13 @@ class GameProgression(private val prefs: SharedPreferences) {
     fun rewardStars(amount: Int): StarRewardResult {
         resetDailyCounterIfNeeded()
 
-        val now = System.currentTimeMillis()
+        val now = SystemClock.elapsedRealtime()
         val cached = lastRewardResult
-        if (cached != null && now - lastRewardAtMs < REWARD_DEBOUNCE_MS) {
+        if (
+            cached != null &&
+            cached.requested == amount &&
+            now - lastRewardAtMs in 0 until REWARD_DEBOUNCE_MS
+        ) {
             return cached
         }
 
