@@ -42,6 +42,7 @@ fun AnimalProgressionPicker(
     val unlockedCount = FARM_ANIMALS.count { animal ->
         progression.isUnlocked(animal.id, animal.startsUnlocked)
     }
+    val remainingAnimals = (FARM_ANIMALS.size - unlockedCount).coerceAtLeast(0)
     val collectionProgress = if (FARM_ANIMALS.isEmpty()) 0f else {
         (unlockedCount.toFloat() / FARM_ANIMALS.size.toFloat()).coerceIn(0f, 1f)
     }
@@ -55,7 +56,11 @@ fun AnimalProgressionPicker(
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = "$unlockedCount de ${FARM_ANIMALS.size} bichinhos liberados",
+            text = if (remainingAnimals > 0) {
+                "$unlockedCount de ${FARM_ANIMALS.size} liberados • ${if (remainingAnimals == 1) "falta 1" else "faltam $remainingAnimals"}"
+            } else {
+                "${FARM_ANIMALS.size} de ${FARM_ANIMALS.size} bichinhos liberados"
+            },
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             fontSize = 13.sp,
@@ -204,7 +209,7 @@ fun AnimalProgressionPicker(
 
                     if (missing > 0) {
                         Text(
-                            text = "No ritmo máximo: mínimo de $minimumPlayDays ${if (minimumPlayDays == 1) "dia" else "dias"} de jogo ⭐",
+                            text = "Mínimo: $minimumPlayDays ${if (minimumPlayDays == 1) "dia" else "dias"} no ritmo máximo ⭐",
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             fontSize = 12.sp,
