@@ -224,6 +224,15 @@ fun DragActionPanel(
     onFallbackTap: () -> Unit
 ) {
     val progress = (moves.toFloat() / requiredMoves.toFloat()).coerceIn(0f, 1f)
+    var completionLocked by remember(title) { mutableStateOf(false) }
+
+    fun safeMove(useFallback: Boolean = false) {
+        if (completionLocked || moves >= requiredMoves) return
+        if (moves + 1 >= requiredMoves) {
+            completionLocked = true
+        }
+        if (useFallback) onFallbackTap() else onMove()
+    }
 
     Column(
         modifier = Modifier
@@ -274,8 +283,8 @@ fun DragActionPanel(
                 .height(150.dp)
                 .clip(RoundedCornerShape(26.dp))
                 .background(Color(0xFFDDF3FF))
-                .pointerInput(title, moves, requiredMoves) {
-                    if (moves < requiredMoves) {
+                .pointerInput(title, moves, requiredMoves, completionLocked) {
+                    if (moves < requiredMoves && !completionLocked) {
                         var accumulatedDistance = 0f
                         var actionTriggered = false
                         detectDragGestures(
@@ -293,10 +302,11 @@ fun DragActionPanel(
                             }
                         ) { change, dragAmount ->
                             change.consume()
+                            if (actionTriggered || moves >= requiredMoves || completionLocked) return@detectDragGestures
                             accumulatedDistance += abs(dragAmount.x) + abs(dragAmount.y)
-                            if (!actionTriggered && accumulatedDistance >= 180f) {
+                            if (accumulatedDistance >= 180f) {
                                 actionTriggered = true
-                                onMove()
+                                safeMove()
                             }
                         }
                     }
@@ -328,7 +338,10 @@ fun DragActionPanel(
                 .height(52.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFFEAF1E7))
-                .clickable(enabled = moves < requiredMoves, onClick = onFallbackTap),
+                .clickable(
+                    enabled = moves < requiredMoves && !completionLocked,
+                    onClick = { safeMove(useFallback = true) }
+                ),
             contentAlignment = Alignment.Center
         ) {
             Text(
