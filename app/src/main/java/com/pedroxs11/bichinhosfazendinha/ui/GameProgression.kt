@@ -63,12 +63,13 @@ class GameProgression(private val prefs: SharedPreferences) {
         val rewardDate = todayKey()
         resetDailyCounterIfNeeded(rewardDate)
 
+        val requested = amount.coerceAtLeast(0)
         val now = SystemClock.elapsedRealtime()
         val cached = lastRewardResult
         if (
             cached != null &&
             lastRewardDate == rewardDate &&
-            cached.requested == amount &&
+            cached.requested == requested &&
             now - lastRewardAtMs in 0 until REWARD_DEBOUNCE_MS
         ) {
             return cached
@@ -77,20 +78,26 @@ class GameProgression(private val prefs: SharedPreferences) {
         val currentDaily = sanitizedDailyStars()
         val currentTotal = totalStars()
         val remainingToday = (DAILY_STAR_LIMIT - currentDaily).coerceAtLeast(0)
-        val granted = amount.coerceAtLeast(0).coerceAtMost(remainingToday)
-        val newDaily = currentDaily + granted
-        val newTotal = (currentTotal.toLong() + granted.toLong())
+        val remainingTotalCapacity = (Int.MAX_VALUE.toLong() - currentTotal.toLong())
+            .coerceAtLeast(0L)
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
+        val granted = requested
+            .coerceAtMost(remainingToday)
+            .coerceAtMost(remainingTotalCapacity)
+        val newDaily = currentDaily + granted
+        val newTotal = currentTotal + granted
 
-        prefs.edit()
-            .putInt(KEY_DAILY_STARS, newDaily)
-            .putInt(KEY_TOTAL_STARS, newTotal)
-            .putString(KEY_DAILY_DATE, rewardDate)
-            .apply()
+        if (granted > 0 || prefs.getString(KEY_DAILY_DATE, null) != rewardDate) {
+            prefs.edit()
+                .putInt(KEY_DAILY_STARS, newDaily)
+                .putInt(KEY_TOTAL_STARS, newTotal)
+                .putString(KEY_DAILY_DATE, rewardDate)
+                .apply()
+        }
 
         val result = StarRewardResult(
-            requested = amount,
+            requested = requested,
             granted = granted,
             totalStars = newTotal,
             dailyStars = newDaily
@@ -105,7 +112,8 @@ class GameProgression(private val prefs: SharedPreferences) {
 
     fun isUnlocked(animalId: String, startsUnlocked: Boolean = unlockCost(animalId) == 0): Boolean {
         if (!ANIMAL_UNLOCK_COSTS.containsKey(animalId)) return false
-        return startsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
+        val canonicallyStartsUnlocked = unlockCost(animalId) == 0
+        return canonicallyStartsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
     }
 
     fun canUnlock(animalId: String): Boolean {
@@ -159,11 +167,24 @@ class GameProgression(private val prefs: SharedPreferences) {
 
     private fun resetDailyCounterIfNeeded(today: String) {
         val savedDate = prefs.getString(KEY_DAILY_DATE, null)
-        if (savedDate != today) {
-            prefs.edit()
-                .putInt(KEY_DAILY_STARS, 0)
-                .putString(KEY_DAILY_DATE, today)
-                .apply()
+        when {
+            savedDate == null -> {
+                prefs.edit()
+                    .putInt(KEY_DAILY_STARS, 0)
+                    .putString(KEY_DAILY_DATE, today)
+                    .apply()
+            }
+            savedDate < today -> {
+                prefs.edit()
+                    .putInt(KEY_DAILY_STARS, 0)
+                    .putString(KEY_DAILY_DATE, today)
+                    .apply()
+            }
+            savedDate > today -> {
+                // Clock moved backwards: preserve the current daily progress instead of
+                // granting a fresh daily allowance for an earlier date.
+                return
+            }
         }
     }
 
