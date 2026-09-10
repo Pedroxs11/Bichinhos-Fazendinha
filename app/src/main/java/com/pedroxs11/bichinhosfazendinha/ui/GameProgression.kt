@@ -41,6 +41,7 @@ data class StarRewardResult(
 class GameProgression(private val prefs: SharedPreferences) {
 
     private var lastRewardAtMs = 0L
+    private var lastRewardDate: String? = null
     private var lastRewardResult: StarRewardResult? = null
 
     fun totalStars(): Int {
@@ -65,10 +66,12 @@ class GameProgression(private val prefs: SharedPreferences) {
     fun rewardStars(amount: Int): StarRewardResult {
         resetDailyCounterIfNeeded()
 
+        val rewardDate = todayKey()
         val now = SystemClock.elapsedRealtime()
         val cached = lastRewardResult
         if (
             cached != null &&
+            lastRewardDate == rewardDate &&
             cached.requested == amount &&
             now - lastRewardAtMs in 0 until REWARD_DEBOUNCE_MS
         ) {
@@ -85,7 +88,7 @@ class GameProgression(private val prefs: SharedPreferences) {
         prefs.edit()
             .putInt(KEY_DAILY_STARS, newDaily)
             .putInt(KEY_TOTAL_STARS, newTotal)
-            .putString(KEY_DAILY_DATE, todayKey())
+            .putString(KEY_DAILY_DATE, rewardDate)
             .apply()
 
         val result = StarRewardResult(
@@ -95,6 +98,7 @@ class GameProgression(private val prefs: SharedPreferences) {
             dailyStars = newDaily
         )
         lastRewardAtMs = now
+        lastRewardDate = rewardDate
         lastRewardResult = result
         return result
     }
