@@ -377,8 +377,16 @@ private fun ProgressionStepsScreen(
 
 @Composable
 private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> Unit, onDone: () -> Unit) {
+    val reactions = listOf(
+        "Pegou! 🐾",
+        "Boa! ⚽",
+        "De novo! 😄",
+        "Que divertido! 🎉",
+        "Muito bem! ⭐"
+    )
     var throws by remember(animal.id) { mutableIntStateOf(0) }
-    val total = 5
+    var playFeedback by remember(animal.id) { mutableStateOf("Toque na bola para jogar!") }
+    val total = reactions.size
     val finished = throws >= total
     val progress = (throws.toFloat() / total.toFloat()).coerceIn(0f, 1f)
 
@@ -400,8 +408,19 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     AnimalAvatar(animal.name, animal.emoji, modifier = Modifier.size(118.dp))
-                    Text(if (finished) "Muito bem!" else "Toque na bola para jogar!", fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    Text(
+                        if (finished) "${animal.name} adorou brincar!" else playFeedback,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center
+                    )
                     Text("⚽", fontSize = 62.sp)
+                    Text(
+                        if (finished) "5 de 5 jogadas" else "Jogada ${throws + 1} de $total",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF607060)
+                    )
                 }
             }
         }
@@ -415,12 +434,25 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
         }
         item {
             Button(
-                onClick = { if (finished) onDone() else throws += 1 },
+                onClick = {
+                    if (finished) {
+                        onDone()
+                    } else {
+                        playFeedback = reactions[throws]
+                        throws += 1
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().height(70.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = if (finished) Color(0xFF5BAE62) else Color(0xFFFF8A65))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (finished) Color(0xFF5BAE62) else Color(0xFFFF8A65)
+                )
             ) {
-                Text(if (finished) "Receber até 2 estrelas" else "Jogar bola ${throws + 1}/$total", fontSize = 19.sp, fontWeight = FontWeight.Black)
+                Text(
+                    if (finished) "Receber até 2 estrelas" else "⚽ Jogar bola",
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Black
+                )
             }
         }
         item { Spacer(modifier = Modifier.height(28.dp)) }
@@ -496,7 +528,10 @@ private fun ProgressionSoundsScreen(
                             },
                             modifier = Modifier.fillMaxWidth().height(62.dp),
                             shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = animal.color, contentColor = Color(0xFF3E463E))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = animal.color,
+                                contentColor = Color(0xFF3E463E)
+                            )
                         ) {
                             Text("${animal.emoji}  ${animal.name}", fontSize = 18.sp, fontWeight = FontWeight.Black)
                         }
