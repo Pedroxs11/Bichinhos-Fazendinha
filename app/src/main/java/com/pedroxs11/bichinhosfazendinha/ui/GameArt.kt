@@ -21,6 +21,8 @@ private fun animalDrawable(animalName: String): Int? = when (animalName) {
     "Porquinho" -> R.drawable.pig_face
     "Galinha" -> R.drawable.chicken_face
     "Cachorro" -> R.drawable.dog_face
+    "Cavalo" -> R.drawable.horse_face
+    "Burrinho" -> R.drawable.donkey_face
     else -> null
 }
 
