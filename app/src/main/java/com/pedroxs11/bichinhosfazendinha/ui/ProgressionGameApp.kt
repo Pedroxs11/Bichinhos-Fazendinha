@@ -331,7 +331,9 @@ private fun ProgressionStepsScreen(
     LaunchedEffect(stepAdvancePending, currentStep) {
         if (stepAdvancePending) {
             delay(650)
-            currentStep = (currentStep + 1).coerceAtMost(steps.size)
+            val nextStep = (currentStep + 1).coerceAtMost(steps.size)
+            currentStep = nextStep
+            feedback = steps.getOrNull(nextStep)?.instruction ?: "Tudo pronto!"
             stepAdvancePending = false
         }
     }
