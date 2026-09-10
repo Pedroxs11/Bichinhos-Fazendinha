@@ -108,6 +108,14 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
             ?: progressionOutfits.first()
     }
 
+    fun outfitMessage(animal: FarmAnimal, outfit: ProgressionOutfit, confirmed: Boolean = false): String {
+        return if (outfit.id == "none") {
+            "${animal.name} está sem roupa${if (confirmed) "! ✅" else "."}"
+        } else {
+            "${animal.name} está usando ${outfit.name.lowercase()}${if (confirmed) "! ✅" else "."}"
+        }
+    }
+
     var selectedOutfit by remember(selectedAnimal.id) {
         mutableStateOf(savedOutfit(selectedAnimal))
     }
@@ -213,7 +221,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                                     .putString(KEY_PROGRESSION_WARDROBE_ANIMAL, animal.id)
                                     .apply()
                                 selectedOutfit = outfit
-                                message = "${animal.name} está usando ${outfit.name.lowercase()}."
+                                message = outfitMessage(animal, outfit)
                             },
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(
@@ -295,7 +303,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                         wardrobePrefs.edit()
                             .putString(progressionOutfitKey(selectedAnimal.id), outfit.id)
                             .apply()
-                        message = "${selectedAnimal.name} está usando ${outfit.name.lowercase()}! ✅"
+                        message = outfitMessage(selectedAnimal, outfit, confirmed = true)
                     },
                 shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(
