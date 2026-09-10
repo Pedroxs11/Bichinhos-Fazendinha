@@ -568,10 +568,13 @@ private fun ProgressionSoundsScreen(
     }
 
     LaunchedEffect(quizIndex, quizAnimals.size) {
-        target?.let {
+        if (target != null) {
             feedback = "Escute e escolha o bichinho!"
             answerLocked = false
-            playAnimalSound(it.name)
+            playAnimalSound(target.name)
+        } else if (quizAnimals.isNotEmpty()) {
+            feedback = "Você descobriu todos os sons! 🎉"
+            answerLocked = false
         }
     }
 
