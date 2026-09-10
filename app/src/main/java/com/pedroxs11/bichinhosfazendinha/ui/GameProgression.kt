@@ -9,6 +9,7 @@ private const val KEY_TOTAL_STARS = "stars"
 private const val KEY_DAILY_STARS = "daily_stars"
 private const val KEY_DAILY_DATE = "daily_stars_date"
 private const val KEY_UNLOCK_PREFIX = "animal_unlocked_"
+private const val REWARD_DEBOUNCE_MS = 750L
 
 const val DAILY_STAR_LIMIT = 25
 
@@ -38,6 +39,9 @@ data class StarRewardResult(
 
 class GameProgression(private val prefs: SharedPreferences) {
 
+    private var lastRewardAtMs = 0L
+    private var lastRewardResult: StarRewardResult? = null
+
     fun totalStars(): Int = prefs.getInt(KEY_TOTAL_STARS, 0)
 
     fun dailyStars(): Int {
@@ -47,6 +51,12 @@ class GameProgression(private val prefs: SharedPreferences) {
 
     fun rewardStars(amount: Int): StarRewardResult {
         resetDailyCounterIfNeeded()
+
+        val now = System.currentTimeMillis()
+        val cached = lastRewardResult
+        if (cached != null && now - lastRewardAtMs < REWARD_DEBOUNCE_MS) {
+            return cached
+        }
 
         val currentDaily = prefs.getInt(KEY_DAILY_STARS, 0)
         val currentTotal = prefs.getInt(KEY_TOTAL_STARS, 0)
@@ -61,12 +71,15 @@ class GameProgression(private val prefs: SharedPreferences) {
             .putString(KEY_DAILY_DATE, todayKey())
             .apply()
 
-        return StarRewardResult(
+        val result = StarRewardResult(
             requested = amount,
             granted = granted,
             totalStars = newTotal,
             dailyStars = newDaily
         )
+        lastRewardAtMs = now
+        lastRewardResult = result
+        return result
     }
 
     fun unlockCost(animalId: String): Int = ANIMAL_UNLOCK_COSTS[animalId] ?: 0
