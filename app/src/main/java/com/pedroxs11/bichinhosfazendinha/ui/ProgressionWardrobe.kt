@@ -276,6 +276,17 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .then(
+                        if (equipped) {
+                            Modifier.border(
+                                width = 3.dp,
+                                color = Color(0xFF7A4FA3),
+                                shape = RoundedCornerShape(22.dp)
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
                     .clickable(enabled = available) {
                         selectedOutfit = outfit
                         wardrobePrefs.edit()
