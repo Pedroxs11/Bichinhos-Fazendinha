@@ -93,6 +93,14 @@ fun AnimalProgressionPicker(
         if (nextAnimal != null) {
             val currentStars = progression.totalStars()
             val missing = progression.starsMissingFor(nextAnimal.unlockCost)
+            val dailyStars = progression.dailyStars()
+            val remainingToday = (DAILY_STAR_LIMIT - dailyStars).coerceAtLeast(0)
+            val minimumPlayDays = when {
+                missing <= 0 -> 0
+                remainingToday <= 0 -> (missing + DAILY_STAR_LIMIT - 1) / DAILY_STAR_LIMIT
+                missing <= remainingToday -> 1
+                else -> 1 + (missing - remainingToday + DAILY_STAR_LIMIT - 1) / DAILY_STAR_LIMIT
+            }
             val unlockProgress = if (nextAnimal.unlockCost <= 0) {
                 1f
             } else {
@@ -166,6 +174,17 @@ fun AnimalProgressionPicker(
                         fontWeight = FontWeight.Bold,
                         color = if (missing > 0) Color(0xFF6A6045) else Color(0xFF2E7D32)
                     )
+
+                    if (missing > 0) {
+                        Text(
+                            text = "No ritmo máximo: mínimo de $minimumPlayDays ${if (minimumPlayDays == 1) "dia" else "dias"} de jogo ⭐",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF78651C)
+                        )
+                    }
                 }
             }
         } else {
