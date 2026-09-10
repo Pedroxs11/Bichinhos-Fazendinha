@@ -36,12 +36,15 @@ fun DailyStarProgress(
     }
     val starsToNextMilestone = (nextMilestone - safeDaily).coerceAtLeast(0)
     val starsRemainingToday = (DAILY_STAR_LIMIT - safeDaily).coerceAtLeast(0)
+    val finalStretch = safeDaily >= 20 && !limitReached
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
-            .background(Color.White.copy(alpha = 0.94f))
+            .background(
+                if (limitReached) Color(0xFFE8F5E9) else Color.White.copy(alpha = 0.94f)
+            )
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -70,8 +73,8 @@ fun DailyStarProgress(
                 .fillMaxWidth()
                 .height(10.dp)
                 .clip(RoundedCornerShape(10.dp)),
-            color = Color(0xFFFFC83D),
-            trackColor = Color(0xFFFFF1B8)
+            color = if (limitReached) Color(0xFF5BAE62) else Color(0xFFFFC83D),
+            trackColor = if (limitReached) Color(0xFFC8E6C9) else Color(0xFFFFF1B8)
         )
 
         Row(
@@ -95,7 +98,7 @@ fun DailyStarProgress(
                 text = when {
                     safeDaily == 0 -> "🌟 Comece a brincar para ganhar as estrelas de hoje!"
                     starsRemainingToday == 1 -> "⭐ Última estrela do dia!"
-                    safeDaily == 20 -> "🏁 Reta final! Só faltam 5 ⭐ para a meta de hoje."
+                    finalStretch -> "🏁 Reta final! Faltam $starsRemainingToday ⭐ para a meta de hoje."
                     milestoneReached -> "Marco de $safeDaily estrelas alcançado! ⭐"
                     starsToNextMilestone == 1 -> "Falta 1 ⭐ para o próximo marco"
                     else -> "Faltam $starsToNextMilestone ⭐ para o próximo marco"
