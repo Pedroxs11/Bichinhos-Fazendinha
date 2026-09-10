@@ -54,7 +54,7 @@ fun DailyStarProgress(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                if (limitReached) "🏆 Meta de hoje" else "Estrelas de hoje",
+                if (limitReached) "🏆 Meta de hoje" else "Meta de hoje",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF4B5C43)
@@ -96,10 +96,15 @@ fun DailyStarProgress(
         if (!limitReached) {
             Text(
                 text = when {
-                    safeDaily == 0 -> "🌟 Comece a brincar para ganhar as estrelas de hoje!"
+                    safeDaily == 0 -> "🌟 Comece a brincar e complete a meta de hoje!"
                     starsRemainingToday == 1 -> "⭐ Última estrela do dia!"
-                    finalStretch -> "🏁 Reta final! Faltam $starsRemainingToday ⭐ para a meta de hoje."
-                    milestoneReached -> "Marco de $safeDaily estrelas alcançado! ⭐"
+                    finalStretch -> "🏁 Reta final! Faltam $starsRemainingToday ⭐ para completar a meta."
+                    milestoneReached -> when (safeDaily) {
+                        5 -> "⭐ Primeiro marco concluído: 5 estrelas!"
+                        10 -> "⭐ Segundo marco concluído: 10 estrelas!"
+                        15 -> "⭐ Terceiro marco concluído: 15 estrelas!"
+                        else -> "Marco de $safeDaily estrelas alcançado! ⭐"
+                    }
                     starsToNextMilestone == 1 -> "Falta 1 ⭐ para o próximo marco"
                     else -> "Faltam $starsToNextMilestone ⭐ para o próximo marco"
                 },
@@ -113,7 +118,7 @@ fun DailyStarProgress(
 
         Text(
             text = when {
-                limitReached -> "🏆 Meta de hoje completa: $DAILY_STAR_LIMIT/$DAILY_STAR_LIMIT ⭐! Continue brincando; amanhã você ganha mais."
+                limitReached -> "🎉 Meta completa: $DAILY_STAR_LIMIT/$DAILY_STAR_LIMIT ⭐! Continue brincando; amanhã começa uma nova meta."
                 starsRemainingToday == 1 -> "Ainda dá para ganhar 1 ⭐ hoje."
                 else -> "Ainda dá para ganhar $starsRemainingToday ⭐ hoje."
             },
