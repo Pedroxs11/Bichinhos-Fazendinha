@@ -207,12 +207,13 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                                 shape = RoundedCornerShape(24.dp)
                             )
                             .clickable {
+                                val outfit = savedOutfit(animal)
                                 selectedAnimal = animal
                                 wardrobePrefs.edit()
                                     .putString(KEY_PROGRESSION_WARDROBE_ANIMAL, animal.id)
                                     .apply()
-                                selectedOutfit = savedOutfit(animal)
-                                message = "${animal.name} está usando ${selectedOutfit.name.lowercase()}."
+                                selectedOutfit = outfit
+                                message = "${animal.name} está usando ${outfit.name.lowercase()}."
                             },
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(
@@ -402,5 +403,10 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
 private fun formatProgressionWardrobeTime(minutes: Long): String {
     if (minutes <= 0L) return "menos de 1 min"
     val hours = minutes / 60L
-    return if (hours > 0L) "$hours h ${minutes % 60L} min" else "$minutes min"
+    val remaining = minutes % 60L
+    return when {
+        hours <= 0L -> "$minutes min"
+        remaining == 0L -> "$hours h"
+        else -> "$hours h $remaining min"
+    }
 }
