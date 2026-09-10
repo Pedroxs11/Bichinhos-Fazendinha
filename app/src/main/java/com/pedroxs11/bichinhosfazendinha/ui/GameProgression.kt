@@ -12,6 +12,19 @@ private const val KEY_UNLOCK_PREFIX = "animal_unlocked_"
 
 const val DAILY_STAR_LIMIT = 25
 
+val ANIMAL_UNLOCK_COSTS = linkedMapOf(
+    "chick" to 0,
+    "rabbit" to 0,
+    "dog" to 175,
+    "pig" to 250,
+    "duck" to 350,
+    "sheep" to 500,
+    "goat" to 700,
+    "cow" to 900,
+    "horse" to 1200,
+    "donkey" to 1500
+)
+
 data class StarRewardResult(
     val requested: Int,
     val granted: Int,
@@ -56,11 +69,13 @@ class GameProgression(private val prefs: SharedPreferences) {
         )
     }
 
-    fun isUnlocked(animalId: String, startsUnlocked: Boolean): Boolean {
+    fun unlockCost(animalId: String): Int = ANIMAL_UNLOCK_COSTS[animalId] ?: 0
+
+    fun isUnlocked(animalId: String, startsUnlocked: Boolean = unlockCost(animalId) == 0): Boolean {
         return startsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
     }
 
-    fun unlock(animalId: String, cost: Int): Boolean {
+    fun unlock(animalId: String, cost: Int = unlockCost(animalId)): Boolean {
         if (cost <= 0) {
             prefs.edit().putBoolean(KEY_UNLOCK_PREFIX + animalId, true).apply()
             return true
@@ -77,6 +92,8 @@ class GameProgression(private val prefs: SharedPreferences) {
     }
 
     fun starsMissingFor(cost: Int): Int = (cost - totalStars()).coerceAtLeast(0)
+
+    fun starsMissingForAnimal(animalId: String): Int = starsMissingFor(unlockCost(animalId))
 
     private fun resetDailyCounterIfNeeded() {
         val today = todayKey()
