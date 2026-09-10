@@ -338,6 +338,7 @@ private fun ProgressionStepsScreen(
         mutableStateOf(steps.firstOrNull()?.instruction ?: "Vamos começar!")
     }
     var stepAdvancePending by remember(animal?.id, title) { mutableStateOf(false) }
+    var completionSubmitted by remember(animal?.id, title) { mutableStateOf(false) }
     val step = steps.getOrNull(currentStep)
     val stepRequiredActions = when (step?.title) {
         "Alimentar" -> 1
@@ -365,13 +366,13 @@ private fun ProgressionStepsScreen(
         }
     }
 
-    LaunchedEffect(stepAdvancePending, currentStep) {
+    LaunchedEffect(stepAdvancePending) {
         if (stepAdvancePending) {
             delay(650)
             val nextStep = (currentStep + 1).coerceAtMost(steps.size)
+            stepAdvancePending = false
             currentStep = nextStep
             feedback = steps.getOrNull(nextStep)?.instruction ?: completionMessage
-            stepAdvancePending = false
         }
     }
 
@@ -438,9 +439,10 @@ private fun ProgressionStepsScreen(
                     taps = actions,
                     requiredTaps = stepRequiredActions,
                     onTap = {
+                        if (stepAdvancePending) return@TapActionPanel
                         val next = (actions + 1).coerceAtMost(stepRequiredActions)
                         actions = next
-                        if (next >= stepRequiredActions && !stepAdvancePending) {
+                        if (next >= stepRequiredActions) {
                             feedback = step.success
                             stepAdvancePending = true
                         }
@@ -450,7 +452,13 @@ private fun ProgressionStepsScreen(
         } else {
             item {
                 Button(
-                    onClick = onDone,
+                    onClick = {
+                        if (!completionSubmitted) {
+                            completionSubmitted = true
+                            onDone()
+                        }
+                    },
+                    enabled = !completionSubmitted,
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
