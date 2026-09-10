@@ -521,6 +521,11 @@ private fun ProgressionSoundsScreen(
         } ?: emptyList()
     }
     val finished = target == null
+    val quizProgress = if (quizAnimals.isEmpty()) {
+        0f
+    } else {
+        (quizIndex.toFloat() / quizAnimals.size.toFloat()).coerceIn(0f, 1f)
+    }
 
     LaunchedEffect(quizIndex, quizAnimals.size) {
         target?.let {
@@ -572,6 +577,14 @@ private fun ProgressionSoundsScreen(
                     }
                 }
             }
+        }
+        item {
+            LinearProgressIndicator(
+                progress = { if (finished) 1f else quizProgress },
+                modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(12.dp)),
+                color = Color(0xFF42A5F5),
+                trackColor = Color.White
+            )
         }
         if (!finished && target != null) {
             item {
