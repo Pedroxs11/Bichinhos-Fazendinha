@@ -1,0 +1,82 @@
+package com.pedroxs11.bichinhosfazendinha.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun DailyStarProgress(
+    dailyStars: Int,
+    modifier: Modifier = Modifier
+) {
+    val safeDaily = dailyStars.coerceIn(0, DAILY_STAR_LIMIT)
+    val progress = safeDaily.toFloat() / DAILY_STAR_LIMIT.toFloat()
+    val limitReached = safeDaily >= DAILY_STAR_LIMIT
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(Color.White.copy(alpha = 0.94f))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Estrelas de hoje",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFF4B5C43)
+            )
+            Text(
+                "⭐ $safeDaily/$DAILY_STAR_LIMIT",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFF6A5B21)
+            )
+        }
+
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(10.dp)),
+            color = Color(0xFFFFC83D),
+            trackColor = Color(0xFFFFF1B8)
+        )
+
+        Text(
+            text = if (limitReached) {
+                "Muito bem! As estrelas de hoje acabaram. Você pode continuar brincando e amanhã ganha mais! 🌙"
+            } else {
+                "Ainda dá para ganhar ${DAILY_STAR_LIMIT - safeDaily} ⭐ hoje."
+            },
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 13.sp,
+            fontWeight = if (limitReached) FontWeight.Bold else FontWeight.Medium,
+            color = Color(0xFF687064),
+            textAlign = TextAlign.Center
+        )
+    }
+}
