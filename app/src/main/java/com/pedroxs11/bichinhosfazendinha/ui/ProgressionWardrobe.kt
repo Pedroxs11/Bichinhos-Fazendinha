@@ -371,9 +371,14 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                         ) { Text("▶ Liberar especial", fontWeight = FontWeight.Black) }
                     } else {
                         Text(
-                            "Liberada! Restam ${formatProgressionWardrobeTime(remainingMinutes)}.",
+                            if (selectedOutfit.id == "royal") {
+                                "👑 Vestindo Realeza • restam ${formatProgressionWardrobeTime(remainingMinutes)}."
+                            } else {
+                                "Realeza liberada • restam ${formatProgressionWardrobeTime(remainingMinutes)}. Toque em Realeza na lista para vestir."
+                            },
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF5D3D83)
+                            color = Color(0xFF5D3D83),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
