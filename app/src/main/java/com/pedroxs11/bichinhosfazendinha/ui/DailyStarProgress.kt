@@ -91,12 +91,11 @@ fun DailyStarProgress(
 
         if (!limitReached) {
             Text(
-                text = if (milestoneReached) {
-                    "Marco de $safeDaily estrelas alcançado! ⭐"
-                } else if (starsToNextMilestone == 1) {
-                    "Falta 1 ⭐ para o próximo marco"
-                } else {
-                    "Faltam $starsToNextMilestone ⭐ para o próximo marco"
+                text = when {
+                    safeDaily == 0 -> "🌟 Comece a brincar para ganhar as estrelas de hoje!"
+                    milestoneReached -> "Marco de $safeDaily estrelas alcançado! ⭐"
+                    starsToNextMilestone == 1 -> "Falta 1 ⭐ para o próximo marco"
+                    else -> "Faltam $starsToNextMilestone ⭐ para o próximo marco"
                 },
                 modifier = Modifier.fillMaxWidth(),
                 fontSize = 13.sp,
