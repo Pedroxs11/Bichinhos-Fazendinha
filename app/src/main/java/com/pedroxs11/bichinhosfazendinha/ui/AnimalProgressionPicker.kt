@@ -17,6 +17,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +38,8 @@ fun AnimalProgressionPicker(
     onStarsChanged: (Int) -> Unit,
     onMessage: (String) -> Unit
 ) {
+    var celebrationAnimal by remember { mutableStateOf<FarmAnimal?>(null) }
+
     val nextAnimal = FARM_ANIMALS.firstOrNull { animal ->
         if (progression.isUnlocked(animal.id, animal.startsUnlocked)) return@firstOrNull false
         val index = FARM_ANIMALS.indexOfFirst { it.id == animal.id }
@@ -42,6 +48,48 @@ fun AnimalProgressionPicker(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        celebrationAnimal?.let { animal ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { celebrationAnimal = null },
+                shape = RoundedCornerShape(30.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE98A))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("🎉✨ NOVO BICHINHO! ✨🎉", fontSize = 21.sp, fontWeight = FontWeight.Black)
+                    AnimalArt(
+                        animalName = animal.name,
+                        fallbackEmoji = animal.emoji,
+                        modifier = Modifier.size(96.dp)
+                    )
+                    Text(
+                        animal.name,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF4F461F)
+                    )
+                    Text(
+                        "Agora ele faz parte da sua fazendinha!",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFF6A6045)
+                    )
+                    Text(
+                        "Toque aqui para continuar",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF78651C)
+                    )
+                }
+            }
+        }
+
         if (nextAnimal != null) {
             val currentStars = progression.totalStars()
             val missing = progression.starsMissingFor(nextAnimal.unlockCost)
@@ -184,6 +232,7 @@ fun AnimalProgressionPicker(
                                     else -> {
                                         val success = progression.unlock(animal.id, animal.unlockCost)
                                         if (success) {
+                                            celebrationAnimal = animal
                                             onStarsChanged(progression.totalStars())
                                             onAnimalSelected(animal)
                                             onMessage("🎉✨ NOVO BICHINHO! ${animal.name} foi liberado! ✨🎉")
