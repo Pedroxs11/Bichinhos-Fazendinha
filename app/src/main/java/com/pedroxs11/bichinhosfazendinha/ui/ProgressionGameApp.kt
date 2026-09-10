@@ -304,7 +304,9 @@ private fun ProgressionStepsScreen(
 ) {
     var currentStep by remember(animal?.id, title) { mutableIntStateOf(0) }
     var actions by remember(animal?.id, title, currentStep) { mutableIntStateOf(0) }
-    var feedback by remember(animal?.id, title) { mutableStateOf("Vamos começar!") }
+    var feedback by remember(animal?.id, title) {
+        mutableStateOf(steps.firstOrNull()?.instruction ?: "Vamos começar!")
+    }
     var stepAdvancePending by remember(animal?.id, title) { mutableStateOf(false) }
     val step = steps.getOrNull(currentStep)
     val stepRequiredActions = when (step?.title) {
