@@ -15,8 +15,12 @@ fun playAnimalSound(animalName: String) {
         val durationSeconds = when (animalName) {
             "Vaca" -> 1.2
             "Porquinho" -> 0.9
-            "Galinha" -> 1.0
+            "Galinha", "Pintinho" -> 1.0
             "Cachorro" -> 1.0
+            "Pato" -> 0.9
+            "Ovelha", "Cabra" -> 1.0
+            "Cavalo", "Burrinho" -> 1.2
+            "Coelho" -> 0.65
             else -> 0.7
         }
         val sampleCount = (SAMPLE_RATE * durationSeconds).toInt()
@@ -34,7 +38,14 @@ fun playAnimalSound(animalName: String) {
                 "Vaca" -> cowWave(t)
                 "Porquinho" -> pigWave(t)
                 "Galinha" -> chickenWave(t)
+                "Pintinho" -> chickWave(t)
                 "Cachorro" -> dogWave(t)
+                "Pato" -> duckWave(t)
+                "Ovelha" -> sheepWave(t)
+                "Cabra" -> goatWave(t)
+                "Cavalo" -> horseWave(t)
+                "Burrinho" -> donkeyWave(t)
+                "Coelho" -> rabbitWave(t)
                 else -> 0.35 * sin(2.0 * PI * 440.0 * t)
             }
 
@@ -106,6 +117,12 @@ private fun chickenWave(t: Double): Double {
         )
 }
 
+private fun chickWave(t: Double): Double {
+    val pulse = if ((t * 6.5).toInt() % 2 == 0) 1.0 else 0.25
+    val base = 1250.0 + 180.0 * sin(2.0 * PI * 8.0 * t)
+    return pulse * (0.32 * sin(2.0 * PI * base * t) + 0.12 * sin(2.0 * PI * 1850.0 * t))
+}
+
 private fun dogWave(t: Double): Double {
     val first = barkBurst(t, 0.05, 0.27)
     val second = barkBurst(t, 0.48, 0.72)
@@ -121,4 +138,37 @@ private fun barkBurst(t: Double, start: Double, end: Double): Double {
             0.25 * sin(2.0 * PI * 370.0 * t) +
             0.10 * sin(2.0 * PI * 555.0 * t)
         )
+}
+
+private fun duckWave(t: Double): Double {
+    val wobble = 0.7 + 0.3 * sin(2.0 * PI * 5.5 * t)
+    val base = 310.0 + 70.0 * sin(2.0 * PI * 3.0 * t)
+    return wobble * (0.45 * sin(2.0 * PI * base * t) + 0.18 * sin(2.0 * PI * base * 2.0 * t))
+}
+
+private fun sheepWave(t: Double): Double {
+    val base = 185.0 + 28.0 * sin(2.0 * PI * 5.0 * t)
+    return 0.50 * sin(2.0 * PI * base * t) + 0.20 * sin(2.0 * PI * base * 2.0 * t)
+}
+
+private fun goatWave(t: Double): Double {
+    val base = 245.0 + 55.0 * sin(2.0 * PI * 6.0 * t)
+    return 0.46 * sin(2.0 * PI * base * t) + 0.22 * sin(2.0 * PI * base * 2.2 * t)
+}
+
+private fun horseWave(t: Double): Double {
+    val sweep = 320.0 + 170.0 * sin(2.0 * PI * 1.7 * t)
+    val tremolo = 0.65 + 0.35 * sin(2.0 * PI * 7.0 * t)
+    return tremolo * (0.38 * sin(2.0 * PI * sweep * t) + 0.18 * sin(2.0 * PI * sweep * 1.8 * t))
+}
+
+private fun donkeyWave(t: Double): Double {
+    val pulse = 0.55 + 0.45 * sin(2.0 * PI * 2.2 * t)
+    val base = 165.0 + 90.0 * sin(2.0 * PI * 1.2 * t)
+    return pulse * (0.46 * sin(2.0 * PI * base * t) + 0.20 * sin(2.0 * PI * base * 2.0 * t))
+}
+
+private fun rabbitWave(t: Double): Double {
+    val pulse = if ((t * 10.0).toInt() % 3 == 0) 1.0 else 0.18
+    return pulse * (0.18 * sin(2.0 * PI * 1500.0 * t) + 0.08 * sin(2.0 * PI * 2200.0 * t))
 }
