@@ -108,7 +108,7 @@ fun DailyStarProgress(
 
         Text(
             text = if (limitReached) {
-                "Muito bem! As estrelas de hoje acabaram. Você pode continuar brincando e amanhã ganha mais! 🌙"
+                "🏆 Meta de hoje completa: $DAILY_STAR_LIMIT/$DAILY_STAR_LIMIT ⭐! Continue brincando; amanhã você ganha mais."
             } else {
                 "Ainda dá para ganhar ${DAILY_STAR_LIMIT - safeDaily} ⭐ hoje."
             },
