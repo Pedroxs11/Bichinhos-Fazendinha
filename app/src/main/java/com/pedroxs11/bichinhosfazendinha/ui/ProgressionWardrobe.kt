@@ -97,7 +97,8 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
     var clockNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     fun royalValid(now: Long = System.currentTimeMillis()): Boolean {
-        return royalUnlockedAt > 0L && now - royalUnlockedAt < PROGRESSION_ROYAL_DURATION_MS
+        val elapsed = now - royalUnlockedAt
+        return royalUnlockedAt > 0L && elapsed in 0 until PROGRESSION_ROYAL_DURATION_MS
     }
 
     fun savedOutfit(animal: FarmAnimal): ProgressionOutfit {
@@ -121,8 +122,9 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
             val now = System.currentTimeMillis()
             clockNow = now
             val remaining = royalUnlockedAt + PROGRESSION_ROYAL_DURATION_MS - now
+            val clockMovedBeforeUnlock = now < royalUnlockedAt
 
-            if (remaining <= 0L) {
+            if (remaining <= 0L || clockMovedBeforeUnlock) {
                 val editor = wardrobePrefs.edit().remove(KEY_PROGRESSION_ROYAL_AT)
                 FARM_ANIMALS.forEach { animal ->
                     if (wardrobePrefs.getString(progressionOutfitKey(animal.id), "none") == "royal") {
@@ -134,7 +136,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                 royalUnlockedAt = 0L
                 if (selectedOutfit.id == "royal") {
                     selectedOutfit = progressionOutfits.first()
-                    message = "A roupa Realeza expirou. Libere novamente quando quiser!"
+                    message = "A roupa Realeza foi encerrada. Libere novamente quando quiser!"
                 }
                 break
             }
