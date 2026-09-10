@@ -299,21 +299,20 @@ fun AnimalProgressionPicker(
                                     .size(76.dp)
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(
-                                        if (unlocked) Color.White.copy(alpha = 0.45f)
+                                        if (unlocked || readyToUnlock) Color.White.copy(alpha = 0.45f)
                                         else Color.White.copy(alpha = 0.65f)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (unlocked) {
-                                    AnimalArt(
+                                when {
+                                    unlocked -> AnimalArt(
                                         animalName = animal.name,
                                         fallbackEmoji = animal.emoji,
                                         modifier = Modifier.size(68.dp)
                                     )
-                                } else if (isNextTarget) {
-                                    Text("${animal.emoji} 🔒", fontSize = 30.sp)
-                                } else {
-                                    Text("🔒", fontSize = 38.sp)
+                                    readyToUnlock -> Text("✨ ${animal.emoji}", fontSize = 32.sp)
+                                    isNextTarget -> Text("${animal.emoji} 🔒", fontSize = 30.sp)
+                                    else -> Text("🔒", fontSize = 38.sp)
                                 }
                             }
 
