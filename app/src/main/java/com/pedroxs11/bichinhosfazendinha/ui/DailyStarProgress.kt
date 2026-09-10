@@ -54,13 +54,13 @@ fun DailyStarProgress(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Estrelas de hoje",
+                if (limitReached) "🏆 Meta de hoje" else "Estrelas de hoje",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF4B5C43)
             )
             Text(
-                "⭐ $safeDaily/$DAILY_STAR_LIMIT",
+                if (safeDaily == 0) "⭐ Vamos começar!" else "⭐ $safeDaily/$DAILY_STAR_LIMIT",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF6A5B21)
