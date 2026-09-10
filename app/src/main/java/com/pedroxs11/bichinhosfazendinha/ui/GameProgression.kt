@@ -2,7 +2,6 @@ package com.pedroxs11.bichinhosfazendinha.ui
 
 import android.content.SharedPreferences
 import android.os.SystemClock
-import com.pedroxs11.bichinhosfazendinha.BuildConfig
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -157,7 +156,6 @@ class GameProgression(private val prefs: SharedPreferences) {
 
     fun isUnlocked(animalId: String, startsUnlocked: Boolean = unlockCost(animalId) == 0): Boolean {
         if (!ANIMAL_UNLOCK_COSTS.containsKey(animalId)) return false
-        if (BuildConfig.DEBUG) return true
         val canonicallyStartsUnlocked = unlockCost(animalId) == 0
         return canonicallyStartsUnlocked || safeBoolean(KEY_UNLOCK_PREFIX + animalId)
     }
@@ -166,7 +164,6 @@ class GameProgression(private val prefs: SharedPreferences) {
         val ids = ANIMAL_UNLOCK_COSTS.keys.toList()
         val index = ids.indexOf(animalId)
         if (index < 0) return false
-        if (BuildConfig.DEBUG) return true
         if (index == 0 || unlockCost(animalId) <= 0) return true
 
         val previousId = ids[index - 1]
