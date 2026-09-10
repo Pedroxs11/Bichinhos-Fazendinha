@@ -2,6 +2,7 @@ package com.pedroxs11.bichinhosfazendinha.ui
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -198,6 +199,11 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                         modifier = Modifier
                             .weight(1f)
                             .height(120.dp)
+                            .border(
+                                width = if (selected) 4.dp else 2.dp,
+                                color = if (selected) Color(0xFF7A4FA3) else Color.White,
+                                shape = RoundedCornerShape(24.dp)
+                            )
                             .clickable {
                                 selectedAnimal = animal
                                 wardrobePrefs.edit()
