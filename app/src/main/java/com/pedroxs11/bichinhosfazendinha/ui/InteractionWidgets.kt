@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -95,6 +96,26 @@ fun TapActionPanel(
             color = if (dragEnabled) Color(0xFF42A5F5) else Color(0xFF5BAE62),
             trackColor = Color(0xFFE7EFE4)
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(requiredTaps.coerceAtLeast(1)) { index ->
+                Text(
+                    text = if (index < taps) "●" else "○",
+                    modifier = Modifier.padding(horizontal = 5.dp),
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Black,
+                    color = when {
+                        index < taps && dragEnabled -> Color(0xFF42A5F5)
+                        index < taps -> Color(0xFF5BAE62)
+                        else -> Color(0xFFB9C3B7)
+                    }
+                )
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -230,6 +251,22 @@ fun DragActionPanel(
             color = Color(0xFF42A5F5),
             trackColor = Color(0xFFE5F2FB)
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(requiredMoves.coerceAtLeast(1)) { index ->
+                Text(
+                    text = if (index < moves) "●" else "○",
+                    modifier = Modifier.padding(horizontal = 5.dp),
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Black,
+                    color = if (index < moves) Color(0xFF42A5F5) else Color(0xFFB9C3B7)
+                )
+            }
+        }
 
         Box(
             modifier = Modifier
