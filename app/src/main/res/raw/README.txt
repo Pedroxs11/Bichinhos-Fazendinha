@@ -1,0 +1,1 @@
+Sons originais locais do jogo. Os arquivos WAV desta pasta são efeitos sintetizados para uso offline no Bichinhos & Fazendinha.
