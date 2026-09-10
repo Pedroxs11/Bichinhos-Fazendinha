@@ -42,6 +42,9 @@ fun AnimalProgressionPicker(
     val unlockedCount = FARM_ANIMALS.count { animal ->
         progression.isUnlocked(animal.id, animal.startsUnlocked)
     }
+    val collectionProgress = if (FARM_ANIMALS.isEmpty()) 0f else {
+        (unlockedCount.toFloat() / FARM_ANIMALS.size.toFloat()).coerceIn(0f, 1f)
+    }
 
     val nextAnimal = FARM_ANIMALS.firstOrNull { animal ->
         if (progression.isUnlocked(animal.id, animal.startsUnlocked)) return@firstOrNull false
@@ -58,6 +61,15 @@ fun AnimalProgressionPicker(
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF4B5C43)
+        )
+        LinearProgressIndicator(
+            progress = { collectionProgress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(9.dp)
+                .clip(RoundedCornerShape(9.dp)),
+            color = Color(0xFF5BAE62),
+            trackColor = Color.White.copy(alpha = 0.8f)
         )
 
         celebrationAnimal?.let { animal ->
