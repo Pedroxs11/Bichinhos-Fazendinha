@@ -323,6 +323,11 @@ private fun ProgressionStepsScreen(
         else -> requiredActions
     }
     val finished = step == null
+    val completionMessage = when (title) {
+        "Cuidar" -> "🎉 Cuidado completo!"
+        "Fazendinha" -> "🎉 Fazendinha pronta!"
+        else -> "🎉 Atividade concluída!"
+    }
     val progress = if (finished) 1f else currentStep.toFloat() / steps.size.toFloat()
     val visibleStep = if (finished) steps.size else (currentStep + 1).coerceAtMost(steps.size)
     val stepDots = steps.indices.joinToString("  ") { index ->
@@ -338,7 +343,7 @@ private fun ProgressionStepsScreen(
             delay(650)
             val nextStep = (currentStep + 1).coerceAtMost(steps.size)
             currentStep = nextStep
-            feedback = steps.getOrNull(nextStep)?.instruction ?: "Tudo pronto!"
+            feedback = steps.getOrNull(nextStep)?.instruction ?: completionMessage
             stepAdvancePending = false
         }
     }
@@ -377,7 +382,7 @@ private fun ProgressionStepsScreen(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = if (finished) "Tudo pronto!" else "Etapa $visibleStep de ${steps.size}",
+                    text = if (finished) "Atividade concluída!" else "Etapa $visibleStep de ${steps.size}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFF4B5C43)
