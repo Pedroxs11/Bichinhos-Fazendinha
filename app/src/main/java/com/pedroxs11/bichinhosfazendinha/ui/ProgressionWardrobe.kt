@@ -240,7 +240,14 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                                 modifier = Modifier.size(62.dp)
                             )
                             Text(animal.name, fontSize = 15.sp, fontWeight = FontWeight.Black)
-                            if (selected) Text("✓", color = Color(0xFF5D3D83), fontWeight = FontWeight.Black)
+                            if (selected) {
+                                Text(
+                                    "✓ selecionado",
+                                    color = Color(0xFF5D3D83),
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     }
                 }
