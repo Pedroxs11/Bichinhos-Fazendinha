@@ -28,6 +28,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -431,7 +432,11 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
     var feedback by remember { mutableStateOf("Toque em um bichinho para descobrir o som!") }
     var correctAnswers by remember { mutableIntStateOf(0) }
     val quizFinished = quizIndex >= animals.size
-    val target = if (quizFinished) null else animals[quizIndex]
+    val target = animals.getOrNull(quizIndex)
+
+    LaunchedEffect(quizIndex) {
+        target?.let { playAnimalSound(it.name) }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -472,6 +477,7 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                 rowAnimals.forEach { animal ->
                     Card(
                         modifier = Modifier.weight(1f).height(135.dp).clickable {
+                            playAnimalSound(animal.name)
                             heardAnimal = animal
                             feedback = "Esse é o som da ${animal.name.lowercase()}!"
                         },
@@ -509,7 +515,14 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         ItemArt(title = "Sons", fallbackEmoji = "🔊", modifier = Modifier.size(62.dp))
-                        Text(target.sound, fontSize = 30.sp, fontWeight = FontWeight.Black)
+                        Text("Escute e escolha o bichinho", fontSize = 20.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                        Button(
+                            onClick = { playAnimalSound(target.name) },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
+                        ) {
+                            Text("🔊 Ouvir de novo", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                        }
                     }
                 }
             }
@@ -524,7 +537,8 @@ private fun SoundsScreen(stars: Int, onBack: () -> Unit, onQuizCompleted: () -> 
                                     feedback = "Muito bem! ${animal.name}!"
                                     quizIndex += 1
                                 } else {
-                                    feedback = "Quase! Tente outro bichinho."
+                                    feedback = "Quase! Escute de novo e tente outro bichinho."
+                                    playAnimalSound(target.name)
                                 }
                             },
                             shape = RoundedCornerShape(22.dp),
