@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,7 +34,109 @@ fun AnimalProgressionPicker(
     onStarsChanged: (Int) -> Unit,
     onMessage: (String) -> Unit
 ) {
+    val nextAnimal = FARM_ANIMALS.firstOrNull { animal ->
+        if (progression.isUnlocked(animal.id, animal.startsUnlocked)) return@firstOrNull false
+        val index = FARM_ANIMALS.indexOfFirst { it.id == animal.id }
+        val previous = FARM_ANIMALS.getOrNull(index - 1)
+        previous == null || progression.isUnlocked(previous.id, previous.startsUnlocked)
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (nextAnimal != null) {
+            val currentStars = progression.totalStars()
+            val missing = progression.starsMissingFor(nextAnimal.unlockCost)
+            val unlockProgress = if (nextAnimal.unlockCost <= 0) {
+                1f
+            } else {
+                (currentStars.toFloat() / nextAnimal.unlockCost.toFloat()).coerceIn(0f, 1f)
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color.White.copy(alpha = 0.75f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(nextAnimal.emoji, fontSize = 35.sp)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Próximo bichinho",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF78651C)
+                            )
+                            Text(
+                                nextAnimal.name,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF4F461F)
+                            )
+                        }
+                        Text(
+                            "${nextAnimal.unlockCost} ⭐",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF6A5B21)
+                        )
+                    }
+
+                    LinearProgressIndicator(
+                        progress = { unlockProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        color = Color(0xFFFFC83D),
+                        trackColor = Color.White.copy(alpha = 0.8f)
+                    )
+
+                    Text(
+                        text = if (missing > 0) {
+                            "Você tem $currentStars ⭐ • faltam $missing ⭐"
+                        } else {
+                            "🎉 Já dá para liberar ${nextAnimal.name}! Toque nele abaixo."
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (missing > 0) Color(0xFF6A6045) else Color(0xFF2E7D32)
+                    )
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))
+            ) {
+                Text(
+                    "🏆 Todos os bichinhos foram liberados!",
+                    modifier = Modifier.fillMaxWidth().padding(18.dp),
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF315337)
+                )
+            }
+        }
+
         FARM_ANIMALS.chunked(2).forEach { rowAnimals ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -47,14 +150,23 @@ fun AnimalProgressionPicker(
                     val previousAnimal = FARM_ANIMALS.getOrNull(animalIndex - 1)
                     val previousUnlocked = previousAnimal == null ||
                         progression.isUnlocked(previousAnimal.id, previousAnimal.startsUnlocked)
+                    val isNextTarget = nextAnimal?.id == animal.id
 
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .height(170.dp)
+                            .height(174.dp)
                             .border(
-                                width = if (selected) 4.dp else 2.dp,
-                                color = if (selected) Color(0xFF4CAF50) else Color.White,
+                                width = when {
+                                    selected -> 4.dp
+                                    isNextTarget -> 3.dp
+                                    else -> 2.dp
+                                },
+                                color = when {
+                                    selected -> Color(0xFF4CAF50)
+                                    isNextTarget -> Color(0xFFFFB300)
+                                    else -> Color.White
+                                },
                                 shape = RoundedCornerShape(28.dp)
                             )
                             .clickable {
@@ -74,14 +186,18 @@ fun AnimalProgressionPicker(
                                         if (success) {
                                             onStarsChanged(progression.totalStars())
                                             onAnimalSelected(animal)
-                                            onMessage("🎉 ${animal.name} foi liberado!")
+                                            onMessage("🎉✨ NOVO BICHINHO! ${animal.name} foi liberado! ✨🎉")
                                         }
                                     }
                                 }
                             },
                         shape = RoundedCornerShape(28.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (unlocked) animal.color else Color(0xFFE6E2E6)
+                            containerColor = when {
+                                unlocked -> animal.color
+                                isNextTarget -> Color(0xFFFFEFB0)
+                                else -> Color(0xFFE6E2E6)
+                            }
                         )
                     ) {
                         Column(
@@ -107,6 +223,8 @@ fun AnimalProgressionPicker(
                                         fallbackEmoji = animal.emoji,
                                         modifier = Modifier.size(68.dp)
                                     )
+                                } else if (isNextTarget) {
+                                    Text("${animal.emoji} 🔒", fontSize = 30.sp)
                                 } else {
                                     Text("🔒", fontSize = 38.sp)
                                 }
@@ -147,11 +265,11 @@ fun AnimalProgressionPicker(
                                     color = Color(0xFF6B5A6D)
                                 )
                                 else -> Text(
-                                    "Toque para liberar • ${animal.unlockCost} ⭐",
+                                    "🎉 Pode liberar!\n${animal.unlockCost} ⭐",
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.Black,
                                     textAlign = TextAlign.Center,
-                                    color = Color(0xFF5D3D83)
+                                    color = Color(0xFF2E7D32)
                                 )
                             }
                         }
