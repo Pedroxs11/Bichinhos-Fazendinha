@@ -1,6 +1,7 @@
 package com.pedroxs11.bichinhosfazendinha.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,15 +25,16 @@ fun AnimalArt(
     fallbackEmoji: String,
     modifier: Modifier = Modifier
 ) {
+    val soundModifier = modifier.clickable { playAnimalSound(animalName) }
     val drawable = animalDrawable(animalName)
     if (drawable != null) {
         Image(
             painter = painterResource(id = drawable),
-            contentDescription = animalName,
-            modifier = modifier
+            contentDescription = "$animalName - toque para ouvir",
+            modifier = soundModifier
         )
     } else {
-        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Box(modifier = soundModifier, contentAlignment = Alignment.Center) {
             Text(fallbackEmoji, fontSize = 58.sp)
         }
     }
@@ -45,18 +47,19 @@ fun AnimalAvatar(
     compact: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val soundModifier = modifier.clickable { playAnimalSound(animalName) }
     val drawable = animalDrawable(animalName)
     if (drawable != null) {
         Image(
             painter = painterResource(id = drawable),
-            contentDescription = animalName,
-            modifier = modifier
+            contentDescription = "$animalName - toque para ouvir",
+            modifier = soundModifier
         )
     } else {
         Text(
             text = fallbackEmoji,
             fontSize = if (compact) 38.sp else 88.sp,
-            modifier = modifier
+            modifier = soundModifier
         )
     }
 }
