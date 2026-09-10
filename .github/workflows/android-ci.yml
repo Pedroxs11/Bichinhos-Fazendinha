@@ -33,6 +33,15 @@ jobs:
           mkdir -p "$HOME/.android"
           base64 --decode .github/test-signing/bichinhos-debug.keystore.b64 > "$HOME/.android/debug.keystore"
 
+      - name: Inspect CC0 baby animal audio pack
+        run: |
+          set -euo pipefail
+          mkdir -p .ci-audio
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://opengameart.org/sites/default/files/baby-animals_0.zip" \
+            -o .ci-audio/baby-animals.zip
+          unzip -l .ci-audio/baby-animals.zip
+
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
 
