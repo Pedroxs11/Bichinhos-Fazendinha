@@ -305,6 +305,7 @@ private fun ProgressionStepsScreen(
     var currentStep by remember(animal?.id, title) { mutableIntStateOf(0) }
     var actions by remember(animal?.id, title, currentStep) { mutableIntStateOf(0) }
     var feedback by remember(animal?.id, title) { mutableStateOf("Vamos começar!") }
+    var stepAdvancePending by remember(animal?.id, title) { mutableStateOf(false) }
     val step = steps.getOrNull(currentStep)
     val stepRequiredActions = when (step?.title) {
         "Alimentar" -> 1
@@ -324,6 +325,14 @@ private fun ProgressionStepsScreen(
             finished || index < currentStep -> "●"
             index == currentStep -> "◉"
             else -> "○"
+        }
+    }
+
+    LaunchedEffect(stepAdvancePending, currentStep) {
+        if (stepAdvancePending) {
+            delay(650)
+            currentStep = (currentStep + 1).coerceAtMost(steps.size)
+            stepAdvancePending = false
         }
     }
 
@@ -392,9 +401,9 @@ private fun ProgressionStepsScreen(
                     onTap = {
                         val next = (actions + 1).coerceAtMost(stepRequiredActions)
                         actions = next
-                        if (next >= stepRequiredActions) {
+                        if (next >= stepRequiredActions && !stepAdvancePending) {
                             feedback = step.success
-                            currentStep = (currentStep + 1).coerceAtMost(steps.size)
+                            stepAdvancePending = true
                         }
                     }
                 )
