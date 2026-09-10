@@ -35,6 +35,7 @@ fun DailyStarProgress(
         (((safeDaily / 5) + 1) * 5).coerceAtMost(DAILY_STAR_LIMIT)
     }
     val starsToNextMilestone = (nextMilestone - safeDaily).coerceAtLeast(0)
+    val starsRemainingToday = (DAILY_STAR_LIMIT - safeDaily).coerceAtLeast(0)
 
     Column(
         modifier = modifier
@@ -106,10 +107,10 @@ fun DailyStarProgress(
         }
 
         Text(
-            text = if (limitReached) {
-                "🏆 Meta de hoje completa: $DAILY_STAR_LIMIT/$DAILY_STAR_LIMIT ⭐! Continue brincando; amanhã você ganha mais."
-            } else {
-                "Ainda dá para ganhar ${DAILY_STAR_LIMIT - safeDaily} ⭐ hoje."
+            text = when {
+                limitReached -> "🏆 Meta de hoje completa: $DAILY_STAR_LIMIT/$DAILY_STAR_LIMIT ⭐! Continue brincando; amanhã você ganha mais."
+                starsRemainingToday == 1 -> "Ainda dá para ganhar 1 ⭐ hoje."
+                else -> "Ainda dá para ganhar $starsRemainingToday ⭐ hoje."
             },
             modifier = Modifier.fillMaxWidth(),
             fontSize = 13.sp,
