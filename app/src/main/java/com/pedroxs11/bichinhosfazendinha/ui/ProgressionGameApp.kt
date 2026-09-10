@@ -261,7 +261,7 @@ private fun ProgressionActivityButton(emoji: String, title: String, subtitle: St
                 onClick = onClick,
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
-            ) { Text("▶") }
+            ) { Text("▶ Abrir") }
         }
     }
 }
