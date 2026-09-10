@@ -94,6 +94,7 @@ fun DailyStarProgress(
             Text(
                 text = when {
                     safeDaily == 0 -> "🌟 Comece a brincar para ganhar as estrelas de hoje!"
+                    starsRemainingToday == 1 -> "⭐ Última estrela do dia!"
                     milestoneReached -> "Marco de $safeDaily estrelas alcançado! ⭐"
                     starsToNextMilestone == 1 -> "Falta 1 ⭐ para o próximo marco"
                     else -> "Faltam $starsToNextMilestone ⭐ para o próximo marco"
