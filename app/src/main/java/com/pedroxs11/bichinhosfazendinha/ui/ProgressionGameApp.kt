@@ -436,6 +436,9 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
     val total = reactions.size
     val finished = throws >= total
     val progress = (throws.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+    val throwDots = (0 until total).joinToString("  ") { index ->
+        if (index < throws) "●" else "○"
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -467,6 +470,13 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF607060)
+                    )
+                    Text(
+                        text = throwDots,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFFF7043),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
