@@ -66,6 +66,22 @@ fun DailyStarProgress(
             trackColor = Color(0xFFFFF1B8)
         )
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(5) { index ->
+                val milestone = (index + 1) * 5
+                Text(
+                    text = if (safeDaily >= milestone) "⭐" else "☆",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = if (safeDaily >= milestone) Color(0xFFFFB300) else Color(0xFFB8B8B8)
+                )
+            }
+        }
+
         Text(
             text = if (limitReached) {
                 "Muito bem! As estrelas de hoje acabaram. Você pode continuar brincando e amanhã ganha mais! 🌙"
