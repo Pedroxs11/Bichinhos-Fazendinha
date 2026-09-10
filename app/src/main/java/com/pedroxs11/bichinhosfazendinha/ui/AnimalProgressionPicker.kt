@@ -56,10 +56,10 @@ fun AnimalProgressionPicker(
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = if (remainingAnimals > 0) {
-                "$unlockedCount de ${FARM_ANIMALS.size} liberados • ${if (remainingAnimals == 1) "falta 1" else "faltam $remainingAnimals"}"
-            } else {
-                "${FARM_ANIMALS.size} de ${FARM_ANIMALS.size} bichinhos liberados"
+            text = when {
+                remainingAnimals == 0 -> "🏆 Coleção completa • ${FARM_ANIMALS.size}/${FARM_ANIMALS.size}"
+                remainingAnimals == 1 -> "$unlockedCount de ${FARM_ANIMALS.size} liberados • falta só 1"
+                else -> "$unlockedCount de ${FARM_ANIMALS.size} liberados • faltam $remainingAnimals"
             },
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
