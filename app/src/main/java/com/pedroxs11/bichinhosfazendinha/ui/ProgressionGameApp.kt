@@ -66,6 +66,18 @@ private val progressionFarmSteps = listOf(
     ProgressionStep("Pegar ovos", "🥚", "Toque para recolher os ovos.", "Ovos guardados!")
 )
 
+private fun rewardButtonText(dailyStars: Int, maxReward: Int): String {
+    val remainingToday = (DAILY_STAR_LIMIT - dailyStars).coerceAtLeast(0)
+    if (remainingToday <= 0) return "Concluir atividade"
+
+    val availableReward = minOf(maxReward, remainingToday)
+    return if (availableReward == 1) {
+        "Receber até 1 estrela"
+    } else {
+        "Receber até $availableReward estrelas"
+    }
+}
+
 @Composable
 fun ProgressionGameApp() {
     val context = LocalContext.current
@@ -129,6 +141,7 @@ fun ProgressionGameApp() {
                 ProgressionScreen.CARE -> ProgressionCareScreen(
                     animal = selectedAnimal,
                     stars = stars,
+                    dailyStars = dailyStars,
                     onBack = { screen = ProgressionScreen.HOME },
                     onDone = { reward(5, "${selectedAnimal.name} está feliz, limpinho e descansado!") }
                 )
@@ -136,12 +149,14 @@ fun ProgressionGameApp() {
                 ProgressionScreen.SOUNDS -> ProgressionSoundsScreen(
                     progression = progression,
                     stars = stars,
+                    dailyStars = dailyStars,
                     onBack = { screen = ProgressionScreen.HOME },
                     onDone = { reward(3, "Você descobriu os sons dos bichinhos!") }
                 )
 
                 ProgressionScreen.FARM -> ProgressionFarmScreen(
                     stars = stars,
+                    dailyStars = dailyStars,
                     onBack = { screen = ProgressionScreen.HOME },
                     onDone = { reward(4, "A fazendinha está cuidada e cheia de vida!") }
                 )
@@ -149,6 +164,7 @@ fun ProgressionGameApp() {
                 ProgressionScreen.PLAY -> ProgressionPlayScreen(
                     animal = selectedAnimal,
                     stars = stars,
+                    dailyStars = dailyStars,
                     onBack = { screen = ProgressionScreen.HOME },
                     onDone = { reward(2, "${selectedAnimal.name} adorou brincar com você!") }
                 )
@@ -267,7 +283,13 @@ private fun ProgressionActivityButton(emoji: String, title: String, subtitle: St
 }
 
 @Composable
-private fun ProgressionCareScreen(animal: FarmAnimal, stars: Int, onBack: () -> Unit, onDone: () -> Unit) {
+private fun ProgressionCareScreen(
+    animal: FarmAnimal,
+    stars: Int,
+    dailyStars: Int,
+    onBack: () -> Unit,
+    onDone: () -> Unit
+) {
     ProgressionStepsScreen(
         title = "Cuidar",
         animal = animal,
@@ -275,13 +297,18 @@ private fun ProgressionCareScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
         steps = progressionCareSteps,
         requiredActions = 3,
         onBack = onBack,
-        rewardText = "Receber até 5 estrelas",
+        rewardText = rewardButtonText(dailyStars, 5),
         onDone = onDone
     )
 }
 
 @Composable
-private fun ProgressionFarmScreen(stars: Int, onBack: () -> Unit, onDone: () -> Unit) {
+private fun ProgressionFarmScreen(
+    stars: Int,
+    dailyStars: Int,
+    onBack: () -> Unit,
+    onDone: () -> Unit
+) {
     ProgressionStepsScreen(
         title = "Fazendinha",
         animal = null,
@@ -289,7 +316,7 @@ private fun ProgressionFarmScreen(stars: Int, onBack: () -> Unit, onDone: () -> 
         steps = progressionFarmSteps,
         requiredActions = 4,
         onBack = onBack,
-        rewardText = "Receber até 4 estrelas",
+        rewardText = rewardButtonText(dailyStars, 4),
         onDone = onDone
     )
 }
@@ -435,7 +462,13 @@ private fun ProgressionStepsScreen(
 }
 
 @Composable
-private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> Unit, onDone: () -> Unit) {
+private fun ProgressionPlayScreen(
+    animal: FarmAnimal,
+    stars: Int,
+    dailyStars: Int,
+    onBack: () -> Unit,
+    onDone: () -> Unit
+) {
     val reactions = listOf(
         "Pegou! 🐾",
         "Boa! ⚽",
@@ -534,7 +567,7 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
             ) {
                 Text(
                     when {
-                        finished -> "Receber até 2 estrelas"
+                        finished -> rewardButtonText(dailyStars, 2)
                         completionPending -> "Muito bem! ⭐"
                         else -> "⚽ Jogar bola"
                     },
@@ -551,6 +584,7 @@ private fun ProgressionPlayScreen(animal: FarmAnimal, stars: Int, onBack: () -> 
 private fun ProgressionSoundsScreen(
     progression: GameProgression,
     stars: Int,
+    dailyStars: Int,
     onBack: () -> Unit,
     onDone: () -> Unit
 ) {
@@ -675,7 +709,7 @@ private fun ProgressionSoundsScreen(
                     shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5BAE62))
                 ) {
-                    Text("Receber até 3 estrelas", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                    Text(rewardButtonText(dailyStars, 3), fontSize = 18.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
