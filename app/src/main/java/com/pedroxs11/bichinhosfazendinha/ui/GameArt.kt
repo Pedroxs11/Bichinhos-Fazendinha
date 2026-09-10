@@ -7,11 +7,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import com.pedroxs11.bichinhosfazendinha.R
 
-private fun animalDrawable(animalName: String): Int? = when (animalName) {
+private fun animalFallbackDrawable(animalName: String): Int? = when (animalName) {
     "Pintinho" -> R.drawable.chick_face
     "Coelho" -> R.drawable.rabbit_face
     "Pato" -> R.drawable.duck_face
@@ -26,6 +28,35 @@ private fun animalDrawable(animalName: String): Int? = when (animalName) {
     else -> null
 }
 
+private fun animal3dResourceName(animalName: String): String? = when (animalName) {
+    "Pintinho" -> "animal_chick_3d"
+    "Coelho" -> "animal_rabbit_3d"
+    "Cachorro" -> "animal_dog_3d"
+    "Porquinho" -> "animal_pig_3d"
+    "Pato" -> "animal_duck_3d"
+    "Ovelha" -> "animal_sheep_3d"
+    "Cabra" -> "animal_goat_3d"
+    "Vaca" -> "animal_cow_3d"
+    "Cavalo" -> "animal_horse_3d"
+    "Burrinho" -> "animal_donkey_3d"
+    else -> null
+}
+
+@Composable
+private fun resolvedAnimalDrawable(animalName: String): Int? {
+    val context = LocalContext.current
+    val resourceName = animal3dResourceName(animalName)
+    if (resourceName != null) {
+        val threeD = context.resources.getIdentifier(
+            resourceName,
+            "drawable",
+            context.packageName
+        )
+        if (threeD != 0) return threeD
+    }
+    return animalFallbackDrawable(animalName)
+}
+
 @Composable
 fun AnimalArt(
     animalName: String,
@@ -33,12 +64,13 @@ fun AnimalArt(
     modifier: Modifier = Modifier
 ) {
     val soundModifier = modifier.clickable { playAnimalSound(animalName) }
-    val drawable = animalDrawable(animalName)
+    val drawable = resolvedAnimalDrawable(animalName)
     if (drawable != null) {
         Image(
             painter = painterResource(id = drawable),
             contentDescription = "$animalName - toque para ouvir",
-            modifier = soundModifier
+            modifier = soundModifier,
+            contentScale = ContentScale.Fit
         )
     } else {
         Box(modifier = soundModifier, contentAlignment = Alignment.Center) {
@@ -55,12 +87,13 @@ fun AnimalAvatar(
     modifier: Modifier = Modifier
 ) {
     val soundModifier = modifier.clickable { playAnimalSound(animalName) }
-    val drawable = animalDrawable(animalName)
+    val drawable = resolvedAnimalDrawable(animalName)
     if (drawable != null) {
         Image(
             painter = painterResource(id = drawable),
             contentDescription = "$animalName - toque para ouvir",
-            modifier = soundModifier
+            modifier = soundModifier,
+            contentScale = ContentScale.Fit
         )
     } else {
         Text(
