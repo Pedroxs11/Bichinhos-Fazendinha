@@ -5,27 +5,52 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.media.MediaPlayer
+import android.os.SystemClock
 import kotlin.concurrent.thread
 import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sin
 
 private const val SAMPLE_RATE = 16_000
+private const val TAP_DEBOUNCE_MS = 180L
 
 @Volatile
 private var animalAudioContext: Context? = null
 
 private val playerLock = Any()
 private var activePlayer: MediaPlayer? = null
+private var activeTrack: AudioTrack? = null
+private var lastAnimalName: String? = null
+private var lastTapAtMs: Long = 0L
 
 fun initializeAnimalAudio(context: Context) {
     animalAudioContext = context.applicationContext
 }
 
+fun stopAnimalAudio() {
+    synchronized(playerLock) {
+        runCatching { activePlayer?.stop() }
+        runCatching { activePlayer?.release() }
+        activePlayer = null
+
+        runCatching { activeTrack?.stop() }
+        runCatching { activeTrack?.release() }
+        activeTrack = null
+    }
+}
+
 fun playAnimalSound(animalName: String) {
+    val now = SystemClock.elapsedRealtime()
+    synchronized(playerLock) {
+        if (animalName == lastAnimalName && now - lastTapAtMs < TAP_DEBOUNCE_MS) return
+        lastAnimalName = animalName
+        lastTapAtMs = now
+    }
+
+    stopAnimalAudio()
+
     val context = animalAudioContext
     if (context != null && playRecordedAnimalSound(context, animalName)) return
-    if (context != null && playRemoteAnimalSound(animalName)) return
     playSynthesizedAnimalSound(animalName)
 }
 
@@ -44,17 +69,9 @@ private fun recordedResourceName(animalName: String): String? = when (animalName
     else -> null
 }
 
-private fun remoteAnimalSoundUrl(animalName: String): String? = when (animalName) {
-    "Vaca" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Single_Cow_Moo.ogg"
-    "Porquinho" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Mudchute_pig_1.ogg"
-    "Galinha" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Hen_announcing_shes_lain_an_egg.ogg"
-    "Cachorro" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Sound-of-dog.ogg"
-    "Pato" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Anas_platyrhynchos_-_Mallard_-_XC62258.ogg"
-    "Ovelha" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Mudchute_sheep_1.ogg"
-    "Cabra" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Herd_of_goats_bleating.ogg"
-    "Cavalo" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Wiehern.ogg"
-    "Burrinho" -> "https://commons.wikimedia.org/wiki/Special:Redirect/file/Personality-of-Wild-Male-Crested-Macaques-(Macaca-nigra)-pone.0069383.s002.oga"
-    else -> null
+fun hasRecordedAnimalSound(context: Context, animalName: String): Boolean {
+    val resourceName = recordedResourceName(animalName) ?: return false
+    return context.resources.getIdentifier(resourceName, "raw", context.packageName) != 0
 }
 
 private fun playRecordedAnimalSound(context: Context, animalName: String): Boolean {
@@ -64,66 +81,30 @@ private fun playRecordedAnimalSound(context: Context, animalName: String): Boole
 
     return runCatching {
         val player = MediaPlayer.create(context, resourceId) ?: return false
-        installPlayer(player, animalName, false)
+        synchronized(playerLock) {
+            activePlayer = player
+        }
+        player.setOnCompletionListener { completed ->
+            synchronized(playerLock) {
+                if (activePlayer === completed) activePlayer = null
+            }
+            runCatching { completed.release() }
+        }
+        player.setOnErrorListener { failed, _, _ ->
+            synchronized(playerLock) {
+                if (activePlayer === failed) activePlayer = null
+            }
+            runCatching { failed.release() }
+            playSynthesizedAnimalSound(animalName)
+            true
+        }
         player.start()
         true
     }.getOrDefault(false)
 }
 
-private fun playRemoteAnimalSound(animalName: String): Boolean {
-    val url = remoteAnimalSoundUrl(animalName) ?: return false
-    return runCatching {
-        val player = MediaPlayer()
-        player.setAudioAttributes(
-            AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build()
-        )
-        installPlayer(player, animalName, true)
-        player.setDataSource(url)
-        player.setOnPreparedListener { prepared ->
-            synchronized(playerLock) {
-                if (activePlayer !== prepared) {
-                    runCatching { prepared.release() }
-                    return@setOnPreparedListener
-                }
-            }
-            prepared.start()
-        }
-        player.prepareAsync()
-        true
-    }.getOrElse {
-        false
-    }
-}
-
-private fun installPlayer(player: MediaPlayer, animalName: String, useSynthFallbackOnError: Boolean) {
-    synchronized(playerLock) {
-        runCatching { activePlayer?.stop() }
-        runCatching { activePlayer?.release() }
-        activePlayer = player
-    }
-
-    player.setOnCompletionListener { completed ->
-        synchronized(playerLock) {
-            if (activePlayer === completed) activePlayer = null
-        }
-        completed.release()
-    }
-
-    player.setOnErrorListener { failed, _, _ ->
-        synchronized(playerLock) {
-            if (activePlayer === failed) activePlayer = null
-        }
-        runCatching { failed.release() }
-        if (useSynthFallbackOnError) playSynthesizedAnimalSound(animalName)
-        true
-    }
-}
-
 private fun playSynthesizedAnimalSound(animalName: String) {
-    thread(name = "animal-sound", isDaemon = true) {
+    thread(name = "animal-sound-fallback", isDaemon = true) {
         val durationSeconds = when (animalName) {
             "Vaca" -> 1.2
             "Porquinho" -> 0.9
@@ -189,14 +170,20 @@ private fun playSynthesizedAnimalSound(animalName: String) {
             .setTransferMode(AudioTrack.MODE_STATIC)
             .build()
 
+        synchronized(playerLock) {
+            activeTrack = track
+        }
+
         try {
             track.write(samples, 0, samples.size)
             track.play()
-            val waitMs = (durationSeconds * 1_000).toLong() + 100L
-            Thread.sleep(waitMs)
+            Thread.sleep((durationSeconds * 1_000).toLong() + 100L)
         } finally {
+            synchronized(playerLock) {
+                if (activeTrack === track) activeTrack = null
+            }
             runCatching { track.stop() }
-            track.release()
+            runCatching { track.release() }
         }
     }
 }
