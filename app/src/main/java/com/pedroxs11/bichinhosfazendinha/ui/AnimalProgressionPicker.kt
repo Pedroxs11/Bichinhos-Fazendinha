@@ -106,11 +106,14 @@ fun AnimalProgressionPicker(
             } else {
                 (currentStars.toFloat() / nextAnimal.unlockCost.toFloat()).coerceIn(0f, 1f)
             }
+            val readyToUnlock = missing <= 0
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(26.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4B8))
+                colors = CardDefaults.cardColors(
+                    containerColor = if (readyToUnlock) Color(0xFFDDF3D5) else Color(0xFFFFF4B8)
+                )
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -132,10 +135,10 @@ fun AnimalProgressionPicker(
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Próximo bichinho",
+                                if (readyToUnlock) "Pronto para liberar!" else "Próximo bichinho",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF78651C)
+                                color = if (readyToUnlock) Color(0xFF2E7D32) else Color(0xFF78651C)
                             )
                             Text(
                                 nextAnimal.name,
@@ -158,7 +161,7 @@ fun AnimalProgressionPicker(
                             .fillMaxWidth()
                             .height(10.dp)
                             .clip(RoundedCornerShape(10.dp)),
-                        color = Color(0xFFFFC83D),
+                        color = if (readyToUnlock) Color(0xFF5BAE62) else Color(0xFFFFC83D),
                         trackColor = Color.White.copy(alpha = 0.8f)
                     )
 
@@ -218,6 +221,7 @@ fun AnimalProgressionPicker(
                     val previousUnlocked = previousAnimal == null ||
                         progression.isUnlocked(previousAnimal.id, previousAnimal.startsUnlocked)
                     val isNextTarget = nextAnimal?.id == animal.id
+                    val readyToUnlock = !unlocked && isNextTarget && previousUnlocked && missing <= 0
 
                     Card(
                         modifier = Modifier
@@ -226,11 +230,13 @@ fun AnimalProgressionPicker(
                             .border(
                                 width = when {
                                     selected -> 4.dp
+                                    readyToUnlock -> 4.dp
                                     isNextTarget -> 3.dp
                                     else -> 2.dp
                                 },
                                 color = when {
                                     selected -> Color(0xFF4CAF50)
+                                    readyToUnlock -> Color(0xFF4CAF50)
                                     isNextTarget -> Color(0xFFFFB300)
                                     else -> Color.White
                                 },
@@ -263,6 +269,7 @@ fun AnimalProgressionPicker(
                         colors = CardDefaults.cardColors(
                             containerColor = when {
                                 unlocked -> animal.color
+                                readyToUnlock -> Color(0xFFDDF3D5)
                                 isNextTarget -> Color(0xFFFFEFB0)
                                 else -> Color(0xFFE6E2E6)
                             }
