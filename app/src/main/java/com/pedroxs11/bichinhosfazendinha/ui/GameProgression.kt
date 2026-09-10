@@ -44,8 +44,52 @@ class GameProgression(private val prefs: SharedPreferences) {
     private var lastRewardDate: String? = null
     private var lastRewardResult: StarRewardResult? = null
 
+    private fun safeInt(key: String, default: Int = 0): Int {
+        val raw = prefs.all[key]
+        val value = when (raw) {
+            is Int -> raw
+            is Long -> raw.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+            is Float -> raw.toInt()
+            is String -> raw.toIntOrNull() ?: default
+            else -> default
+        }
+        if (raw != null && raw !is Int) {
+            prefs.edit().putInt(key, value).apply()
+        }
+        return value
+    }
+
+    private fun safeBoolean(key: String, default: Boolean = false): Boolean {
+        val raw = prefs.all[key]
+        val value = when (raw) {
+            is Boolean -> raw
+            is Int -> raw != 0
+            is Long -> raw != 0L
+            is String -> raw.equals("true", ignoreCase = true) || raw == "1"
+            else -> default
+        }
+        if (raw != null && raw !is Boolean) {
+            prefs.edit().putBoolean(key, value).apply()
+        }
+        return value
+    }
+
+    private fun safeDate(key: String): String? {
+        val raw = prefs.all[key] ?: return null
+        val value = when (raw) {
+            is String -> raw
+            is Int -> raw.toString()
+            is Long -> raw.toString()
+            else -> null
+        }
+        if (value != null && raw !is String) {
+            prefs.edit().putString(key, value).apply()
+        }
+        return value
+    }
+
     fun totalStars(): Int {
-        val saved = prefs.getInt(KEY_TOTAL_STARS, 0)
+        val saved = safeInt(KEY_TOTAL_STARS)
         val safe = saved.coerceAtLeast(0)
         if (safe != saved) {
             prefs.edit().putInt(KEY_TOTAL_STARS, safe).apply()
@@ -88,7 +132,7 @@ class GameProgression(private val prefs: SharedPreferences) {
         val newDaily = currentDaily + granted
         val newTotal = currentTotal + granted
 
-        if (granted > 0 || prefs.getString(KEY_DAILY_DATE, null) != rewardDate) {
+        if (granted > 0 || safeDate(KEY_DAILY_DATE) != rewardDate) {
             prefs.edit()
                 .putInt(KEY_DAILY_STARS, newDaily)
                 .putInt(KEY_TOTAL_STARS, newTotal)
@@ -113,7 +157,7 @@ class GameProgression(private val prefs: SharedPreferences) {
     fun isUnlocked(animalId: String, startsUnlocked: Boolean = unlockCost(animalId) == 0): Boolean {
         if (!ANIMAL_UNLOCK_COSTS.containsKey(animalId)) return false
         val canonicallyStartsUnlocked = unlockCost(animalId) == 0
-        return canonicallyStartsUnlocked || prefs.getBoolean(KEY_UNLOCK_PREFIX + animalId, false)
+        return canonicallyStartsUnlocked || safeBoolean(KEY_UNLOCK_PREFIX + animalId)
     }
 
     fun canUnlock(animalId: String): Boolean {
@@ -157,7 +201,7 @@ class GameProgression(private val prefs: SharedPreferences) {
     }
 
     private fun sanitizedDailyStars(): Int {
-        val saved = prefs.getInt(KEY_DAILY_STARS, 0)
+        val saved = safeInt(KEY_DAILY_STARS)
         val safe = saved.coerceIn(0, DAILY_STAR_LIMIT)
         if (safe != saved) {
             prefs.edit().putInt(KEY_DAILY_STARS, safe).apply()
@@ -166,7 +210,7 @@ class GameProgression(private val prefs: SharedPreferences) {
     }
 
     private fun resetDailyCounterIfNeeded(today: String) {
-        val savedDate = prefs.getString(KEY_DAILY_DATE, null)
+        val savedDate = safeDate(KEY_DAILY_DATE)
         when {
             savedDate == null -> {
                 prefs.edit()
@@ -181,8 +225,6 @@ class GameProgression(private val prefs: SharedPreferences) {
                     .apply()
             }
             savedDate > today -> {
-                // Clock moved backwards: preserve the current daily progress instead of
-                // granting a fresh daily allowance for an earlier date.
                 return
             }
         }
