@@ -39,7 +39,7 @@ private val dragActionTitles = setOf(
 )
 
 private fun interactionText(title: String, done: Boolean, current: Int, total: Int): String = when {
-    done -> "✓ Pronto!"
+    done -> "⭐ Muito bem!"
     title == "Alimentar" -> "Arraste a comida até o bichinho ↑\n${current + 1}/$total"
     title == "Dar banho" -> "Esfregue a esponja ↔\n${current + 1}/$total"
     title == "Secar" -> "Esfregue a toalha ↔\n${current + 1}/$total"
@@ -323,7 +323,7 @@ fun DragActionPanel(
                     modifier = Modifier.size(60.dp)
                 )
                 Text(
-                    if (moves >= requiredMoves) "✓ Pronto!" else "Arraste o dedo aqui ↔",
+                    if (moves >= requiredMoves) "⭐ Muito bem!" else "Arraste o dedo aqui ↔",
                     fontSize = 21.sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFF315B75),
@@ -345,7 +345,7 @@ fun DragActionPanel(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                if (moves >= requiredMoves) "Concluído!" else "Se precisar, toque aqui",
+                if (moves >= requiredMoves) "Concluído! ✓" else "Se precisar, toque aqui",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF4F6B4D)
