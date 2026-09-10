@@ -83,7 +83,9 @@ class GameProgression(private val prefs: SharedPreferences) {
         val remainingToday = (DAILY_STAR_LIMIT - currentDaily).coerceAtLeast(0)
         val granted = amount.coerceAtLeast(0).coerceAtMost(remainingToday)
         val newDaily = currentDaily + granted
-        val newTotal = currentTotal + granted
+        val newTotal = (currentTotal.toLong() + granted.toLong())
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
 
         prefs.edit()
             .putInt(KEY_DAILY_STARS, newDaily)
