@@ -304,7 +304,7 @@ fun ProgressionWardrobeScreen(onBack: () -> Unit) {
                         when {
                             outfit.temporary && !royalAvailable -> "🔒"
                             equipped -> "✅"
-                            else -> "✓"
+                            else -> "›"
                         },
                         fontSize = 22.sp
                     )
