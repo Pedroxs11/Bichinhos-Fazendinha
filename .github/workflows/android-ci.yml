@@ -1,0 +1,97 @@
+name: Android CI
+
+on:
+  push:
+    branches:
+      - feat/v1-base
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Restore stable debug signing key
+        run: |
+          mkdir -p "$HOME/.android"
+          base64 --decode .github/test-signing/bichinhos-debug.keystore.b64 > "$HOME/.android/debug.keystore"
+
+      - name: Install audio tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Bundle normalized real animal recordings
+        run: |
+          set -euo pipefail
+          mkdir -p .ci-audio app/src/main/res/raw
+
+          fetch() {
+            local file="$1"
+            local out="$2"
+            curl -fL --retry 3 --retry-delay 2 \
+              "https://commons.wikimedia.org/wiki/Special:Redirect/file/${file}" \
+              -o ".ci-audio/${out}"
+          }
+
+          normalize() {
+            local input="$1"
+            local output="$2"
+            local duration="$3"
+            ffmpeg -hide_banner -loglevel error -y \
+              -i ".ci-audio/${input}" \
+              -t "$duration" -ac 1 -ar 44100 \
+              -af "volume=0.58,alimiter=limit=0.90" \
+              -c:a pcm_s16le "app/src/main/res/raw/${output}.wav"
+          }
+
+          fetch "George_vuf_1996.ogg" dog.ogg
+          fetch "Mudchute_cow_1.ogg" cow.ogg
+          fetch "Pig_grunt_-_Erdie.ogg" pig.ogg
+          fetch "Sheep_bleat.ogg" sheep.ogg
+          fetch "Herd_of_goats_bleating.ogg" goat.ogg
+          fetch "Wiehern.ogg" horse.ogg
+          fetch "Hen_announcing_shes_lain_an_egg.ogg" chicken.ogg
+          fetch "Braying_donkey_(Equus_africanus_asinus).webm" donkey.webm
+
+          normalize dog.ogg sound_dog 1.0
+          normalize cow.ogg sound_cow 2.5
+          normalize pig.ogg sound_pig 1.0
+          normalize sheep.ogg sound_sheep 1.0
+          normalize goat.ogg sound_goat 2.0
+          normalize horse.ogg sound_horse 2.5
+          normalize chicken.ogg sound_chicken 2.0
+          normalize donkey.webm sound_donkey 2.5
+
+          for f in app/src/main/res/raw/sound_*.wav; do
+            test -s "$f"
+          done
+          ls -lh app/src/main/res/raw/sound_*.wav
+
+      - name: Build debug APK
+        run: gradle --no-daemon :app:assembleDebug
+
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bichinhos-fazendinha-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

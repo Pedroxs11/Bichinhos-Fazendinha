@@ -1,0 +1,400 @@
+package com.pedroxs11.bichinhosfazendinha.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun AnimalProgressionPicker(
+    selectedAnimalId: String,
+    progression: GameProgression,
+    onAnimalSelected: (FarmAnimal) -> Unit,
+    onStarsChanged: (Int) -> Unit,
+    onMessage: (String) -> Unit
+) {
+    var celebrationAnimal by remember { mutableStateOf<FarmAnimal?>(null) }
+    val unlockedCount = FARM_ANIMALS.count { animal ->
+        progression.isUnlocked(animal.id, animal.startsUnlocked)
+    }
+    val remainingAnimals = (FARM_ANIMALS.size - unlockedCount).coerceAtLeast(0)
+    val collectionProgress = if (FARM_ANIMALS.isEmpty()) 0f else {
+        (unlockedCount.toFloat() / FARM_ANIMALS.size.toFloat()).coerceIn(0f, 1f)
+    }
+
+    val nextAnimal = FARM_ANIMALS.firstOrNull { animal ->
+        if (progression.isUnlocked(animal.id, animal.startsUnlocked)) return@firstOrNull false
+        val index = FARM_ANIMALS.indexOfFirst { it.id == animal.id }
+        val previous = FARM_ANIMALS.getOrNull(index - 1)
+        previous == null || progression.isUnlocked(previous.id, previous.startsUnlocked)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = when {
+                remainingAnimals == 0 -> "🏆 Coleção completa • ${FARM_ANIMALS.size}/${FARM_ANIMALS.size}"
+                remainingAnimals == 1 -> "$unlockedCount de ${FARM_ANIMALS.size} liberados • falta só 1"
+                else -> "$unlockedCount de ${FARM_ANIMALS.size} liberados • faltam $remainingAnimals"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF4B5C43)
+        )
+        LinearProgressIndicator(
+            progress = { collectionProgress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(9.dp)
+                .clip(RoundedCornerShape(9.dp)),
+            color = Color(0xFF5BAE62),
+            trackColor = Color.White.copy(alpha = 0.8f)
+        )
+
+        celebrationAnimal?.let { animal ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { celebrationAnimal = null },
+                shape = RoundedCornerShape(30.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE98A))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("🎉✨ NOVO BICHINHO! ✨🎉", fontSize = 21.sp, fontWeight = FontWeight.Black)
+                    AnimalArt(
+                        animalName = animal.name,
+                        fallbackEmoji = animal.emoji,
+                        modifier = Modifier.size(96.dp)
+                    )
+                    Text(
+                        animal.name,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF4F461F)
+                    )
+                    Text(
+                        "Agora ele faz parte da sua fazendinha!",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFF6A6045)
+                    )
+                    Text(
+                        "Toque aqui para continuar",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF78651C)
+                    )
+                }
+            }
+        }
+
+        if (nextAnimal != null) {
+            val currentStars = progression.totalStars()
+            val missing = progression.starsMissingFor(nextAnimal.unlockCost)
+            val dailyStars = progression.dailyStars()
+            val remainingToday = (DAILY_STAR_LIMIT - dailyStars).coerceAtLeast(0)
+            val minimumPlayDays = when {
+                missing <= 0 -> 0
+                remainingToday <= 0 -> (missing + DAILY_STAR_LIMIT - 1) / DAILY_STAR_LIMIT
+                missing <= remainingToday -> 1
+                else -> 1 + (missing - remainingToday + DAILY_STAR_LIMIT - 1) / DAILY_STAR_LIMIT
+            }
+            val unlockProgress = if (nextAnimal.unlockCost <= 0) {
+                1f
+            } else {
+                (currentStars.toFloat() / nextAnimal.unlockCost.toFloat()).coerceIn(0f, 1f)
+            }
+            val readyToUnlock = missing <= 0
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (readyToUnlock) Color(0xFFDDF3D5) else Color(0xFFFFF4B8)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color.White.copy(alpha = 0.75f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(nextAnimal.emoji, fontSize = 35.sp)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (readyToUnlock) "Pronto para liberar!" else "Próximo bichinho",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (readyToUnlock) Color(0xFF2E7D32) else Color(0xFF78651C)
+                            )
+                            Text(
+                                nextAnimal.name,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF4F461F)
+                            )
+                        }
+                        Text(
+                            "${nextAnimal.unlockCost} ⭐",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF6A5B21)
+                        )
+                    }
+
+                    LinearProgressIndicator(
+                        progress = { unlockProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        color = if (readyToUnlock) Color(0xFF5BAE62) else Color(0xFFFFC83D),
+                        trackColor = Color.White.copy(alpha = 0.8f)
+                    )
+
+                    Text(
+                        text = if (missing > 0) {
+                            "Você tem $currentStars ⭐ • ${if (missing == 1) "falta" else "faltam"} $missing ⭐"
+                        } else {
+                            "🎉 Já dá para liberar ${nextAnimal.name}! Toque nele abaixo."
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (missing > 0) Color(0xFF6A6045) else Color(0xFF2E7D32)
+                    )
+
+                    if (missing > 0) {
+                        Text(
+                            text = "Mínimo: $minimumPlayDays ${if (minimumPlayDays == 1) "dia" else "dias"} no ritmo máximo ⭐",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF78651C)
+                        )
+                    }
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFDDF3D5))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "🏆 Fazendinha completa!",
+                        textAlign = TextAlign.Center,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF315337)
+                    )
+                    Text(
+                        "Todos os bichinhos foram liberados 🎉",
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4B5C43)
+                    )
+                }
+            }
+        }
+
+        FARM_ANIMALS.chunked(2).forEach { rowAnimals ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowAnimals.forEach { animal ->
+                    val unlocked = progression.isUnlocked(animal.id, animal.startsUnlocked)
+                    val selected = unlocked && animal.id == selectedAnimalId
+                    val missing = progression.starsMissingFor(animal.unlockCost)
+                    val animalIndex = FARM_ANIMALS.indexOfFirst { it.id == animal.id }
+                    val previousAnimal = FARM_ANIMALS.getOrNull(animalIndex - 1)
+                    val previousUnlocked = previousAnimal == null ||
+                        progression.isUnlocked(previousAnimal.id, previousAnimal.startsUnlocked)
+                    val isNextTarget = nextAnimal?.id == animal.id
+                    val readyToUnlock = !unlocked && isNextTarget && previousUnlocked && missing <= 0
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(174.dp)
+                            .border(
+                                width = when {
+                                    selected -> 4.dp
+                                    readyToUnlock -> 4.dp
+                                    isNextTarget -> 3.dp
+                                    else -> 2.dp
+                                },
+                                color = when {
+                                    selected -> Color(0xFF4CAF50)
+                                    readyToUnlock -> Color(0xFF4CAF50)
+                                    isNextTarget -> Color(0xFFFFB300)
+                                    else -> Color.White
+                                },
+                                shape = RoundedCornerShape(28.dp)
+                            )
+                            .clickable {
+                                when {
+                                    unlocked -> {
+                                        onAnimalSelected(animal)
+                                        onMessage("${animal.name} escolhido! Vamos brincar?")
+                                    }
+                                    !previousUnlocked && previousAnimal != null -> {
+                                        onMessage("🔒 Primeiro libere ${previousAnimal.name} para chegar em ${animal.name}.")
+                                    }
+                                    missing > 0 -> {
+                                        onMessage("🔒 ${if (missing == 1) "Falta" else "Faltam"} $missing ⭐ para liberar ${animal.name}.")
+                                    }
+                                    else -> {
+                                        val success = progression.unlock(animal.id, animal.unlockCost)
+                                        if (success) {
+                                            celebrationAnimal = animal
+                                            onStarsChanged(progression.totalStars())
+                                            onAnimalSelected(animal)
+                                            onMessage("🎉✨ NOVO BICHINHO! ${animal.name} foi liberado! ✨🎉")
+                                        }
+                                    }
+                                }
+                            },
+                        shape = RoundedCornerShape(28.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = when {
+                                unlocked -> animal.color
+                                readyToUnlock -> Color(0xFFDDF3D5)
+                                isNextTarget -> Color(0xFFFFEFB0)
+                                else -> Color(0xFFE6E2E6)
+                            }
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(76.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        if (unlocked || readyToUnlock) Color.White.copy(alpha = 0.45f)
+                                        else Color.White.copy(alpha = 0.65f)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                when {
+                                    unlocked -> AnimalArt(
+                                        animalName = animal.name,
+                                        fallbackEmoji = animal.emoji,
+                                        modifier = Modifier.size(68.dp)
+                                    )
+                                    readyToUnlock -> Text("✨ ${animal.emoji}", fontSize = 32.sp)
+                                    isNextTarget -> Text("${animal.emoji} 🔒", fontSize = 30.sp)
+                                    else -> Text("🔒", fontSize = 38.sp)
+                                }
+                            }
+
+                            Text(
+                                animal.name,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Black,
+                                textAlign = TextAlign.Center
+                            )
+
+                            when {
+                                unlocked && selected -> Text(
+                                    "✓ escolhido",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2E7D32)
+                                )
+                                unlocked -> Text(
+                                    "Liberado",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2E7D32)
+                                )
+                                !previousUnlocked && previousAnimal != null -> Text(
+                                    "Libere ${previousAnimal.name} primeiro",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = Color(0xFF6B5A6D)
+                                )
+                                missing > 0 -> Text(
+                                    "${animal.unlockCost} ⭐\n${if (missing == 1) "Falta" else "Faltam"} $missing",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = Color(0xFF6B5A6D)
+                                )
+                                else -> Text(
+                                    "🎉 Pode liberar!\n${animal.unlockCost} ⭐",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    textAlign = TextAlign.Center,
+                                    color = Color(0xFF2E7D32)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (rowAnimals.size == 1) {
+                    Box(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
