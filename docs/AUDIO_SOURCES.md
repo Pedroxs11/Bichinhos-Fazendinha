@@ -9,12 +9,22 @@ Objetivo: substituir todos os sons sintetizados por gravações reais, curtas e 
 - Manter clipes curtos, sem fala, música ou ruído excessivo.
 - O app procura recursos em `res/raw` com estes nomes: `sound_cow`, `sound_pig`, `sound_chicken`, `sound_chick`, `sound_dog`, `sound_duck`, `sound_sheep`, `sound_goat`, `sound_horse`, `sound_donkey`, `sound_rabbit`.
 
-## Fontes já verificadas por licença e conteúdo descrito
+## Pacote CC0 integrado ao APK de CI
 
-### Cachorro
-- Wikimedia Commons: `File:George vuf 1996.ogg`
-- Conteúdo: latido de cachorro (Labrador).
-- Licença: domínio público.
+Fonte: OpenGameArt — `Baby Animals - Sounds Pack`, autor Technopeasant, publicado em 9 de abril de 2023.
+Licença: CC0. A página do pacote informa que todos os assets foram liberados sob CC0.
+URL de referência: `https://opengameart.org/content/baby-animals-sounds-pack`
+
+Mapeamento usado no build:
+- `Bark.ogg` -> `sound_dog.ogg` — Cachorro
+- `Moo.ogg` -> `sound_cow.ogg` — Vaca
+- `Peeps.ogg` -> `sound_chick.ogg` — Pintinho
+- `Squeal.ogg` -> `sound_pig.ogg` — Porquinho
+- `Whinny.ogg` -> `sound_horse.ogg` — Cavalo
+
+Esses cinco arquivos são copiados para `app/src/main/res/raw/` durante o CI antes da compilação e ficam embutidos no APK, portanto funcionam offline.
+
+## Outras fontes já verificadas por licença e conteúdo descrito
 
 ### Cavalo
 - Wikimedia Commons: `File:Wiehern.ogg`
@@ -37,13 +47,13 @@ Objetivo: substituir todos os sons sintetizados por gravações reais, curtas e 
 - Licença: domínio público (U.S. Fish and Wildlife Service).
 - Alternativa a validar: `File:Ducks snatching.ogg` — CC0.
 
-## Ainda precisam de gravação aprovada
-- Vaca
-- Porquinho
+## Ainda precisam de gravação aprovada/integrada
 - Galinha
-- Pintinho
+- Pato
+- Ovelha
+- Cabra
 - Burrinho
 - Coelho — usar somente vocalização real; se não houver um som infantilmente reconhecível, é melhor não inventar.
 
 ## Observação de qualidade
-Antes de entrar em uma build de teste, cada arquivo deve ser ouvido e cortado para o trecho mais reconhecível do animal. A tela `Sons` depende de áudio inequívoco, então qualidade/identificação vale mais que quantidade.
+Antes de considerar a V1 funcional fechada, cada arquivo deve ser ouvido no aparelho e o som precisa ser reconhecível sem depender do nome escrito. A tela `Sons` depende de áudio inequívoco, então qualidade/identificação vale mais que quantidade.
