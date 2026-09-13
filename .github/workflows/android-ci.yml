@@ -33,6 +33,11 @@ jobs:
           mkdir -p "$HOME/.android"
           base64 --decode .github/test-signing/bichinhos-debug.keystore.b64 > "$HOME/.android/debug.keystore"
 
+      - name: Install audio tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
       - name: Bundle normalized real animal recordings
         run: |
           set -euo pipefail
