@@ -33,14 +33,27 @@ jobs:
           mkdir -p "$HOME/.android"
           base64 --decode .github/test-signing/bichinhos-debug.keystore.b64 > "$HOME/.android/debug.keystore"
 
-      - name: Inspect CC0 baby animal audio pack
+      - name: Bundle verified CC0 animal recordings
         run: |
           set -euo pipefail
-          mkdir -p .ci-audio
+          mkdir -p .ci-audio app/src/main/res/raw
           curl -fL --retry 3 --retry-delay 2 \
             "https://opengameart.org/sites/default/files/baby-animals_0.zip" \
             -o .ci-audio/baby-animals.zip
-          unzip -l .ci-audio/baby-animals.zip
+          unzip -jo .ci-audio/baby-animals.zip \
+            Bark.ogg Moo.ogg Peeps.ogg Squeal.ogg Whinny.ogg \
+            -d .ci-audio/extracted
+          cp .ci-audio/extracted/Bark.ogg app/src/main/res/raw/sound_dog.ogg
+          cp .ci-audio/extracted/Moo.ogg app/src/main/res/raw/sound_cow.ogg
+          cp .ci-audio/extracted/Peeps.ogg app/src/main/res/raw/sound_chick.ogg
+          cp .ci-audio/extracted/Squeal.ogg app/src/main/res/raw/sound_pig.ogg
+          cp .ci-audio/extracted/Whinny.ogg app/src/main/res/raw/sound_horse.ogg
+          test -s app/src/main/res/raw/sound_dog.ogg
+          test -s app/src/main/res/raw/sound_cow.ogg
+          test -s app/src/main/res/raw/sound_chick.ogg
+          test -s app/src/main/res/raw/sound_pig.ogg
+          test -s app/src/main/res/raw/sound_horse.ogg
+          ls -lh app/src/main/res/raw/sound_*.ogg
 
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
