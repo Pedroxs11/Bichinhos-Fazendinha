@@ -33,27 +33,52 @@ jobs:
           mkdir -p "$HOME/.android"
           base64 --decode .github/test-signing/bichinhos-debug.keystore.b64 > "$HOME/.android/debug.keystore"
 
-      - name: Bundle verified CC0 animal recordings
+      - name: Bundle normalized real animal recordings
         run: |
           set -euo pipefail
           mkdir -p .ci-audio app/src/main/res/raw
-          curl -fL --retry 3 --retry-delay 2 \
-            "https://opengameart.org/sites/default/files/baby-animals_0.zip" \
-            -o .ci-audio/baby-animals.zip
-          unzip -jo .ci-audio/baby-animals.zip \
-            Bark.ogg Moo.ogg Peeps.ogg Squeal.ogg Whinny.ogg \
-            -d .ci-audio/extracted
-          cp .ci-audio/extracted/Bark.ogg app/src/main/res/raw/sound_dog.ogg
-          cp .ci-audio/extracted/Moo.ogg app/src/main/res/raw/sound_cow.ogg
-          cp .ci-audio/extracted/Peeps.ogg app/src/main/res/raw/sound_chick.ogg
-          cp .ci-audio/extracted/Squeal.ogg app/src/main/res/raw/sound_pig.ogg
-          cp .ci-audio/extracted/Whinny.ogg app/src/main/res/raw/sound_horse.ogg
-          test -s app/src/main/res/raw/sound_dog.ogg
-          test -s app/src/main/res/raw/sound_cow.ogg
-          test -s app/src/main/res/raw/sound_chick.ogg
-          test -s app/src/main/res/raw/sound_pig.ogg
-          test -s app/src/main/res/raw/sound_horse.ogg
-          ls -lh app/src/main/res/raw/sound_*.ogg
+
+          fetch() {
+            local file="$1"
+            local out="$2"
+            curl -fL --retry 3 --retry-delay 2 \
+              "https://commons.wikimedia.org/wiki/Special:Redirect/file/${file}" \
+              -o ".ci-audio/${out}"
+          }
+
+          normalize() {
+            local input="$1"
+            local output="$2"
+            local duration="$3"
+            ffmpeg -hide_banner -loglevel error -y \
+              -i ".ci-audio/${input}" \
+              -t "$duration" -ac 1 -ar 44100 \
+              -af "volume=0.58,alimiter=limit=0.90" \
+              -c:a pcm_s16le "app/src/main/res/raw/${output}.wav"
+          }
+
+          fetch "George_vuf_1996.ogg" dog.ogg
+          fetch "Mudchute_cow_1.ogg" cow.ogg
+          fetch "Pig_grunt_-_Erdie.ogg" pig.ogg
+          fetch "Sheep_bleat.ogg" sheep.ogg
+          fetch "Herd_of_goats_bleating.ogg" goat.ogg
+          fetch "Wiehern.ogg" horse.ogg
+          fetch "Hen_announcing_shes_lain_an_egg.ogg" chicken.ogg
+          fetch "Braying_donkey_(Equus_africanus_asinus).webm" donkey.webm
+
+          normalize dog.ogg sound_dog 1.0
+          normalize cow.ogg sound_cow 2.5
+          normalize pig.ogg sound_pig 1.0
+          normalize sheep.ogg sound_sheep 1.0
+          normalize goat.ogg sound_goat 2.0
+          normalize horse.ogg sound_horse 2.5
+          normalize chicken.ogg sound_chicken 2.0
+          normalize donkey.webm sound_donkey 2.5
+
+          for f in app/src/main/res/raw/sound_*.wav; do
+            test -s "$f"
+          done
+          ls -lh app/src/main/res/raw/sound_*.wav
 
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
