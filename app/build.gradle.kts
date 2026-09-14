@@ -1,6 +1,29 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+val generatedAudioRes = layout.buildDirectory.dir("generated/res/audioRaw")
+
+val decodeAnimalAudio by tasks.registering {
+    val sourceDir = layout.projectDirectory.dir("src/main/audio_b64")
+    inputs.dir(sourceDir)
+    outputs.dir(generatedAudioRes)
+
+    doLast {
+        val rawDir = generatedAudioRes.get().dir("raw").asFile
+        rawDir.mkdirs()
+
+        sourceDir.asFile.walkTopDown()
+            .filter { it.isFile && it.name.endsWith(".b64") }
+            .forEach { encoded ->
+                val outputName = encoded.name.removeSuffix(".b64")
+                val base64 = encoded.readText().filterNot(Char::isWhitespace)
+                rawDir.resolve(outputName).writeBytes(Base64.getDecoder().decode(base64))
+            }
+    }
 }
 
 android {
@@ -15,6 +38,8 @@ android {
         versionName = "0.4.0"
     }
 
+    sourceSets["main"].res.srcDir(generatedAudioRes)
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -23,6 +48,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn(decodeAnimalAudio)
 }
 
 dependencies {
