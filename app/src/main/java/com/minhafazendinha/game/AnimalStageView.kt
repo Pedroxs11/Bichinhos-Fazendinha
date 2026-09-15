@@ -12,9 +12,9 @@ import android.widget.TextView
 
 class AnimalStageView @JvmOverloads constructor(context:Context,attrs:AttributeSet?=null):FrameLayout(context,attrs){
     private val shadow=TextView(context);private val animal=TextView(context);private val hint=TextView(context)
-    private var baseRotationY=-8f;private var idle:ObjectAnimator?=null;private var baseY=0f;private var soundBoardMode=false
+    private var baseRotationY=-8f;private var idle:ObjectAnimator?=null;private var baseY=0f;private var soundBoardMode=false;private var downX=0f;private var downY=0f
     init{
-        clipChildren=false;clipToPadding=false;minimumHeight=320;setPadding(24,20,24,20)
+        clipChildren=false;clipToPadding=false;minimumHeight=320;setPadding(24,20,24,20);isClickable=true
         background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.rgb(184,232,255),Color.rgb(224,246,190))).apply{cornerRadius=36f}
         shadow.apply{text="●";textSize=74f;gravity=Gravity.CENTER;alpha=.13f;scaleX=1.7f;scaleY=.38f;translationY=78f}
         animal.apply{text="🐮";textSize=110f;gravity=Gravity.CENTER;elevation=18f;rotationY=baseRotationY;cameraDistance=resources.displayMetrics.density*8000f}
@@ -36,7 +36,7 @@ class AnimalStageView @JvmOverloads constructor(context:Context,attrs:AttributeS
         startIdle();ObjectAnimator.ofFloat(animal,"rotationY",animal.rotationY,14f,baseRotationY).apply{duration=430;start()}
     }
     fun celebrate(){ObjectAnimator.ofFloat(animal,"scaleX",1f,1.18f,.96f,1f).apply{duration=380;start()};ObjectAnimator.ofFloat(animal,"scaleY",1f,1.18f,.96f,1f).apply{duration=380;start()};ObjectAnimator.ofFloat(animal,"rotationY",baseRotationY,25f,-20f,baseRotationY).apply{duration=560;start()}}
-    override fun onTouchEvent(e:MotionEvent):Boolean{when(e.actionMasked){MotionEvent.ACTION_DOWN->{animal.scaleX=.96f;animal.scaleY=.96f};MotionEvent.ACTION_MOVE->{val center=width/2f;if(center>0)animal.rotationY=((e.x-center)/center*24f).coerceIn(-24f,24f)};MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->{animal.scaleX=1f;animal.scaleY=1f;ObjectAnimator.ofFloat(animal,"rotationY",animal.rotationY,baseRotationY).apply{duration=220;start()};performClick()}};return true}
+    override fun onTouchEvent(e:MotionEvent):Boolean{when(e.actionMasked){MotionEvent.ACTION_DOWN->{downX=e.x;downY=e.y;animal.scaleX=.96f;animal.scaleY=.96f;return true};MotionEvent.ACTION_MOVE->{val center=width/2f;if(center>0)animal.rotationY=((e.x-center)/center*24f).coerceIn(-24f,24f)};MotionEvent.ACTION_UP->{animal.scaleX=1f;animal.scaleY=1f;ObjectAnimator.ofFloat(animal,"rotationY",animal.rotationY,baseRotationY).apply{duration=220;start()};val moved=kotlin.math.abs(e.x-downX)+kotlin.math.abs(e.y-downY);if(moved<48f)performClick();return true};MotionEvent.ACTION_CANCEL->{animal.scaleX=1f;animal.scaleY=1f;ObjectAnimator.ofFloat(animal,"rotationY",animal.rotationY,baseRotationY).apply{duration=220;start()};return true}};return true}
     override fun performClick():Boolean{super.performClick();celebrate();return true}
     override fun onDetachedFromWindow(){idle?.cancel();idle=null;super.onDetachedFromWindow()}
     override fun onAttachedToWindow(){super.onAttachedToWindow();if(idle==null)startIdle()}
