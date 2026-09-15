@@ -3,5 +3,11 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowFullscreen">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorAccent">#6DAE45</item>
+        <item name="android:navigationBarColor">#EAF7D5</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 </resources>
