@@ -46,8 +46,8 @@ android {
         applicationId = "com.minhafazendinha.game"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.5.0"
+        versionCode = 6
+        versionName = "0.6.0"
     }
 
     sourceSets["main"].res.srcDir(generatedAudioRes)
