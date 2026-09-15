@@ -1,51 +1,43 @@
 package com.minhafazendinha.game
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.cos
 import kotlin.math.sin
 
-class Cow3DView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val paint=Paint(Paint.ANTI_ALIAS_FLAG)
-    private var angleY=-.35f; private var lastX=0f; private var accessory=""
-    private val vertices=arrayOf(floatArrayOf(-1.25f,-.65f,-.55f),floatArrayOf(1.25f,-.65f,-.55f),floatArrayOf(1.25f,.65f,-.55f),floatArrayOf(-1.25f,.65f,-.55f),floatArrayOf(-1.25f,-.65f,.55f),floatArrayOf(1.25f,-.65f,.55f),floatArrayOf(1.25f,.65f,.55f),floatArrayOf(-1.25f,.65f,.55f))
-    private val faces=arrayOf(intArrayOf(0,1,2,3),intArrayOf(4,7,6,5),intArrayOf(0,4,5,1),intArrayOf(3,2,6,7),intArrayOf(1,5,6,2),intArrayOf(0,3,7,4))
-
-    fun setAccessory(value:String){accessory=value.trim();invalidate()}
-
-    override fun onDraw(canvas:Canvas){
-        super.onDraw(canvas)
-        val cx=width/2f;val cy=height*.55f;val s=width.coerceAtMost(height)*.23f
-        canvas.drawColor(0xFFC9EEFF.toInt())
-        paint.color=0xFF91D36D.toInt();canvas.drawRect(0f,height*.73f,width.toFloat(),height.toFloat(),paint)
-        paint.color=0xFFFFFFFF.toInt();canvas.drawCircle(width*.16f,height*.18f,s*.22f,paint);canvas.drawCircle(width*.23f,height*.17f,s*.29f,paint);canvas.drawCircle(width*.31f,height*.19f,s*.2f,paint)
-        paint.color=0x22000000;canvas.drawOval(cx-s*1.55f,cy+s*.88f,cx+s*1.55f,cy+s*1.24f,paint)
-        val pts=vertices.map{v->val x=v[0]*cos(angleY)-v[2]*sin(angleY);val z=v[0]*sin(angleY)+v[2]*cos(angleY);val p=4.8f/(4.8f+z);floatArrayOf(cx+x*s*p,cy-v[1]*s*p,z)}
-        faces.sortedBy{f->f.map{pts[it][2]}.average()}.forEachIndexed{i,f->val p=Path();f.forEachIndexed{j,id->val q=pts[id];if(j==0)p.moveTo(q[0],q[1])else p.lineTo(q[0],q[1])};p.close();paint.color=if(i%3==0)Color.WHITE else if(i%3==1)0xFFE9E9E9.toInt() else 0xFFF8F8F8.toInt();canvas.drawPath(p,paint)}
-        paint.color=Color.BLACK;canvas.drawOval(cx-s*.82f,cy-s*.35f,cx-s*.3f,cy+s*.05f,paint);canvas.drawOval(cx-s*.05f,cy+s*.08f,cx+s*.45f,cy+s*.42f,paint)
-        paint.color=Color.WHITE;canvas.drawCircle(cx+s*.92f,cy-s*.18f,s*.57f,paint)
-        paint.color=0xFFFFB7C8.toInt();canvas.drawOval(cx+s*.7f,cy-s*.02f,cx+s*1.38f,cy+s*.36f,paint)
-        paint.color=0xFFF1A0B6.toInt();canvas.drawCircle(cx+s*.9f,cy+s*.16f,s*.045f,paint);canvas.drawCircle(cx+s*1.18f,cy+s*.16f,s*.045f,paint)
-        paint.color=Color.BLACK;canvas.drawCircle(cx+s*.77f,cy-s*.28f,s*.07f,paint);canvas.drawCircle(cx+s*1.08f,cy-s*.28f,s*.07f,paint)
-        paint.color=0xFF7A4B2B.toInt();val earY=cy-s*.48f;canvas.drawOval(cx+s*.48f,earY,cx+s*.75f,earY+s*.16f,paint);canvas.drawOval(cx+s*1.13f,earY,cx+s*1.4f,earY+s*.16f,paint)
-        paint.color=Color.BLACK;paint.strokeWidth=s*.18f;paint.strokeCap=Paint.Cap.ROUND;for(dx in floatArrayOf(-.72f,-.28f,.48f,.82f))canvas.drawLine(cx+s*dx,cy+s*.5f,cx+s*dx,cy+s*1.05f,paint)
-        paint.strokeWidth=s*.055f;paint.style=Paint.Style.STROKE;val tail=Path();tail.moveTo(cx-s*1.18f,cy);tail.cubicTo(cx-s*1.55f,cy-s*.18f,cx-s*1.45f,cy+s*.38f,cx-s*1.7f,cy+s*.32f);canvas.drawPath(tail,paint);paint.style=Paint.Style.FILL;canvas.drawCircle(cx-s*1.7f,cy+s*.32f,s*.09f,paint)
-        drawAccessory(canvas,cx+s*.92f,cy-s*.65f,s)
-    }
-
-    private fun drawAccessory(c:Canvas,x:Float,y:Float,s:Float){when(accessory){
-        "👒","🧢","🎩"->{paint.color=when(accessory){"🧢"->0xFF4285F4.toInt();"🎩"->0xFF292929.toInt();else->0xFFFFD45C.toInt()};c.drawOval(x-s*.55f,y-s*.12f,x+s*.55f,y+s*.08f,paint);c.drawRoundRect(x-s*.32f,y-s*.48f,x+s*.32f,y,s*.12f,s*.12f,paint)}
-        "👑"->{paint.color=0xFFFFC928.toInt();val p=Path();p.moveTo(x-s*.42f,y);p.lineTo(x-s*.38f,y-s*.45f);p.lineTo(x-s*.12f,y-s*.2f);p.lineTo(x,y-s*.55f);p.lineTo(x+s*.14f,y-s*.2f);p.lineTo(x+s*.4f,y-s*.45f);p.lineTo(x+s*.42f,y);p.close();c.drawPath(p,paint)}
-        "🎀"->{paint.color=0xFFFF5B91.toInt();c.drawCircle(x-s*.18f,y,s*.22f,paint);c.drawCircle(x+s*.18f,y,s*.22f,paint);paint.color=0xFFFF8FB4.toInt();c.drawCircle(x,y,s*.12f,paint)}
-        "🕶️"->{paint.style=Paint.Style.STROKE;paint.strokeWidth=s*.1f;paint.color=Color.BLACK;c.drawCircle(x-s*.16f,y+s*.42f,s*.18f,paint);c.drawCircle(x+s*.16f,y+s*.42f,s*.18f,paint);c.drawLine(x-s*.02f,y+s*.42f,x+s*.02f,y+s*.42f,paint);paint.style=Paint.Style.FILL}
-        "🧣"->{paint.color=0xFFE84D4D.toInt();c.drawRoundRect(x-s*.42f,y+s*.68f,x+s*.42f,y+s*.9f,s*.1f,s*.1f,paint);c.drawRect(x+s*.2f,y+s*.82f,x+s*.38f,y+s*1.3f,paint)}
-    }}
-    override fun onTouchEvent(e:MotionEvent):Boolean{when(e.actionMasked){MotionEvent.ACTION_DOWN->lastX=e.x;MotionEvent.ACTION_MOVE->{angleY+=(e.x-lastX)/260f;lastX=e.x;invalidate()};MotionEvent.ACTION_UP->performClick()};return true}
-    override fun performClick():Boolean{super.performClick();return true}
+class Cow3DView @JvmOverloads constructor(context:Context,attrs:AttributeSet?=null):View(context,attrs){
+ private val p=Paint(Paint.ANTI_ALIAS_FLAG);private var angle=-.25f;private var lastX=0f;private var accessory=""
+ fun setAccessory(v:String){accessory=v.trim();invalidate()}
+ override fun onDraw(c:Canvas){super.onDraw(c);val w=width.toFloat();val h=height.toFloat();val s=minOf(w,h)*.22f;val cx=w*.49f;val cy=h*.58f
+  c.drawColor(Color.rgb(166,224,255));p.color=0xFFFFE36E.toInt();c.drawCircle(w*.84f,h*.14f,s*.25f,p);p.color=Color.WHITE;cloud(c,w*.16f,h*.16f,s);cloud(c,w*.7f,h*.25f,s*.72f)
+  p.color=0xFF76C95A.toInt();c.drawRect(0f,h*.66f,w,h,p);p.color=0xFF5FA947.toInt();c.drawOval(-w*.1f,h*.6f,w*.6f,h*.82f,p);c.drawOval(w*.42f,h*.61f,w*1.1f,h*.82f,p)
+  barn(c,w*.08f,h*.39f,s);fence(c,w,h,s);p.color=0x26000000;c.drawOval(cx-s*1.65f,cy+s*.72f,cx+s*1.55f,cy+s*1.12f,p)
+  // corpo arredondado, com profundidade variando conforme o giro
+  val turn=sin(angle);val bodyShift=turn*s*.13f;p.color=0xFFF7F4E9.toInt();c.drawOval(cx-s*1.28f+bodyShift,cy-s*.55f,cx+s*.92f+bodyShift,cy+s*.62f,p)
+  p.color=0xFF242424.toInt();c.drawOval(cx-s*.9f+bodyShift,cy-s*.42f,cx-s*.32f+bodyShift,cy+s*.08f,p);c.drawOval(cx-s*.12f+bodyShift,cy+s*.04f,cx+s*.48f+bodyShift,cy+s*.48f,p);c.drawOval(cx+s*.35f+bodyShift,cy-s*.42f,cx+s*.72f+bodyShift,cy-s*.08f,p)
+  // pernas e cascos
+  for(dx in floatArrayOf(-.78f,-.38f,.35f,.68f)){p.color=0xFFF3F0E6.toInt();c.drawRoundRect(cx+s*dx-s*.11f,cy+s*.42f,cx+s*dx+s*.11f,cy+s*1.03f,s*.1f,s*.1f,p);p.color=0xFF343434.toInt();c.drawRoundRect(cx+s*dx-s*.13f,cy+s*.91f,cx+s*dx+s*.13f,cy+s*1.08f,s*.08f,s*.08f,p)}
+  // cabeça grande e amigável
+  val hx=cx+s*(.91f+turn*.12f);val hy=cy-s*.35f;p.color=0xFFFFFCF2.toInt();c.drawOval(hx-s*.55f,hy-s*.62f,hx+s*.55f,hy+s*.48f,p)
+  // orelhas
+  p.color=0xFF7D5539.toInt();c.drawOval(hx-s*.72f,hy-s*.42f,hx-s*.38f,hy-s*.18f,p);c.drawOval(hx+s*.38f,hy-s*.42f,hx+s*.72f,hy-s*.18f,p)
+  // chifres
+  p.color=0xFFFFD78A.toInt();c.drawOval(hx-s*.4f,hy-s*.72f,hx-s*.2f,hy-s*.43f,p);c.drawOval(hx+s*.2f,hy-s*.72f,hx+s*.4f,hy-s*.43f,p)
+  // olhos grandes
+  p.color=Color.WHITE;c.drawCircle(hx-s*.2f,hy-s*.18f,s*.14f,p);c.drawCircle(hx+s*.2f,hy-s*.18f,s*.14f,p);p.color=0xFF242424.toInt();c.drawCircle(hx-s*.18f,hy-s*.16f,s*.065f,p);c.drawCircle(hx+s*.18f,hy-s*.16f,s*.065f,p);p.color=Color.WHITE;c.drawCircle(hx-s*.155f,hy-s*.19f,s*.022f,p);c.drawCircle(hx+s*.205f,hy-s*.19f,s*.022f,p)
+  // focinho
+  p.color=0xFFFFB5C5.toInt();c.drawOval(hx-s*.42f,hy+s*.05f,hx+s*.42f,hy+s*.42f,p);p.color=0xFFD87F98.toInt();c.drawCircle(hx-s*.18f,hy+s*.23f,s*.045f,p);c.drawCircle(hx+s*.18f,hy+s*.23f,s*.045f,p)
+  // cauda
+  p.style=Paint.Style.STROKE;p.strokeCap=Paint.Cap.ROUND;p.strokeWidth=s*.055f;p.color=0xFF3B302A.toInt();val tail=Path();tail.moveTo(cx-s*1.2f,cy-s*.05f);tail.cubicTo(cx-s*1.62f,cy-s*.3f,cx-s*1.55f,cy+s*.3f,cx-s*1.72f,cy+s*.25f);c.drawPath(tail,p);p.style=Paint.Style.FILL;c.drawCircle(cx-s*1.72f,cy+s*.25f,s*.1f,p)
+  accessory(c,hx,hy-s*.72f,s);p.color=0xFF4B7B38.toInt();p.textSize=s*.16f;p.textAlign=Paint.Align.CENTER;c.drawText("↔ arraste para girar",cx,h*.96f,p)
+ }
+ private fun cloud(c:Canvas,x:Float,y:Float,s:Float){p.color=Color.WHITE;c.drawCircle(x-s*.22f,y,s*.2f,p);c.drawCircle(x,y-s*.08f,s*.28f,p);c.drawCircle(x+s*.25f,y,s*.19f,p);c.drawOval(x-s*.38f,y,x+s*.42f,y+s*.2f,p)}
+ private fun barn(c:Canvas,x:Float,y:Float,s:Float){p.color=0xFFD85845.toInt();c.drawRect(x,y,x+s*.95f,y+s*.7f,p);val r=Path();r.moveTo(x-s*.12f,y);r.lineTo(x+s*.48f,y-s*.42f);r.lineTo(x+s*1.08f,y);r.close();p.color=0xFF8D3C32.toInt();c.drawPath(r,p);p.color=0xFFF8E7C4.toInt();c.drawRect(x+s*.32f,y+s*.28f,x+s*.65f,y+s*.7f,p)}
+ private fun fence(c:Canvas,w:Float,h:Float,s:Float){p.color=0xFFF4D29B.toInt();for(x in listOf(w*.03f,w*.26f,w*.74f,w*.94f))c.drawRoundRect(x,h*.58f,x+s*.1f,h*.8f,s*.03f,s*.03f,p);c.drawRect(0f,h*.66f,w,h*.7f,p);c.drawRect(0f,h*.75f,w,h*.79f,p)}
+ private fun accessory(c:Canvas,x:Float,y:Float,s:Float){when(accessory){"👒","🧢","🎩"->{p.color=if(accessory=="🧢")0xFF4285F4.toInt()else if(accessory=="🎩")0xFF292929.toInt()else 0xFFFFD45C.toInt();c.drawOval(x-s*.52f,y-s*.05f,x+s*.52f,y+s*.12f,p);c.drawRoundRect(x-s*.3f,y-s*.38f,x+s*.3f,y+s*.03f,s*.1f,s*.1f,p)};"👑"->{p.color=0xFFFFC928.toInt();val q=Path();q.moveTo(x-s*.42f,y+s*.08f);q.lineTo(x-s*.36f,y-s*.35f);q.lineTo(x-s*.12f,y-s*.12f);q.lineTo(x,y-s*.46f);q.lineTo(x+s*.14f,y-s*.12f);q.lineTo(x+s*.38f,y-s*.35f);q.lineTo(x+s*.42f,y+s*.08f);q.close();c.drawPath(q,p)};"🎀"->{p.color=0xFFFF5B91.toInt();c.drawCircle(x-s*.18f,y,s*.21f,p);c.drawCircle(x+s*.18f,y,s*.21f,p);p.color=0xFFFF9BBA.toInt();c.drawCircle(x,y,s*.11f,p)};"🕶️"->{p.style=Paint.Style.STROKE;p.strokeWidth=s*.09f;p.color=Color.BLACK;c.drawCircle(x-s*.2f,y+s*.65f,s*.17f,p);c.drawCircle(x+s*.2f,y+s*.65f,s*.17f,p);c.drawLine(x-s*.03f,y+s*.65f,x+s*.03f,y+s*.65f,p);p.style=Paint.Style.FILL};"🧣"->{p.color=0xFFE84D4D.toInt();c.drawRoundRect(x-s*.4f,y+s*1.12f,x+s*.4f,y+s*1.3f,s*.08f,s*.08f,p)}}}
+ override fun onTouchEvent(e:MotionEvent):Boolean{when(e.actionMasked){MotionEvent.ACTION_DOWN->lastX=e.x;MotionEvent.ACTION_MOVE->{angle=(angle+(e.x-lastX)/230f).coerceIn(-1.1f,1.1f);lastX=e.x;invalidate()};MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->performClick()};return true}
+ override fun performClick():Boolean{super.performClick();return true}
 }
