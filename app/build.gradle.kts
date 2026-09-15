@@ -14,14 +14,26 @@ val decodeAnimalAudio by tasks.registering {
 
     doLast {
         val rawDir = generatedAudioRes.get().dir("raw").asFile
+        rawDir.deleteRecursively()
         rawDir.mkdirs()
 
-        sourceDir.asFile.walkTopDown()
-            .filter { it.isFile && it.name.endsWith(".b64") }
-            .forEach { encoded ->
-                val outputName = encoded.name.removeSuffix(".b64")
-                val base64 = encoded.readText().filterNot(Char::isWhitespace)
-                rawDir.resolve(outputName).writeBytes(Base64.getDecoder().decode(base64))
+        sourceDir.asFile.listFiles()
+            ?.filter { it.isDirectory }
+            ?.sortedBy { it.name }
+            ?.forEach { animalDir ->
+                val parts = animalDir.listFiles()
+                    ?.filter { it.isFile && it.name.matches(Regex("part\\d+\\.txt")) }
+                    ?.sortedBy { it.name }
+                    .orEmpty()
+
+                if (parts.isEmpty()) return@forEach
+
+                val encoded = buildString {
+                    parts.forEach { append(it.readText().filterNot(Char::isWhitespace)) }
+                }
+                val decoded = Base64.getDecoder().decode(encoded)
+                rawDir.resolve("sound_${animalDir.name}.ogg").writeBytes(decoded)
+                println("Audio ${animalDir.name}: ${parts.size} blocos -> ${decoded.size} bytes")
             }
     }
 }
