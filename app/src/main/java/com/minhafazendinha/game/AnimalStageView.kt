@@ -24,9 +24,9 @@ class AnimalStageView @JvmOverloads constructor(context:Context,attrs:AttributeS
     private fun startIdle(){idle?.cancel();idle=ObjectAnimator.ofFloat(animal,"translationY",baseY-5f,baseY+8f,baseY-5f).apply{duration=1800;repeatCount=ObjectAnimator.INFINITE;start()}}
     fun setAnimal(emoji:String,accessory:String=""){
         animal.text=emoji+accessory
-        animal.textSize=when(emoji){"🐮"->112f;"🐑"->124f;else->110f}
-        baseY=when(emoji){"🐑"->-24f;"🐮"->-8f;else->0f}
-        animal.translationY=baseY;shadow.translationY=if(emoji=="🐑")64f else 78f
+        animal.textSize=when(emoji){"🐮"->112f;"🐑"->132f;else->110f}
+        baseY=when(emoji){"🐑"->-58f;"🐮"->-8f;else->0f}
+        animal.translationY=baseY;shadow.translationY=if(emoji=="🐑")46f else 78f
         startIdle();ObjectAnimator.ofFloat(animal,"rotationY",animal.rotationY,14f,baseRotationY).apply{duration=430;start()}
     }
     fun celebrate(){ObjectAnimator.ofFloat(animal,"scaleX",1f,1.18f,.96f,1f).apply{duration=380;start()};ObjectAnimator.ofFloat(animal,"scaleY",1f,1.18f,.96f,1f).apply{duration=380;start()};ObjectAnimator.ofFloat(animal,"rotationY",baseRotationY,25f,-20f,baseRotationY).apply{duration=560;start()}}
