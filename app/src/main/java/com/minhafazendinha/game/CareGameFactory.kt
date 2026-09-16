@@ -44,8 +44,14 @@ object CareGameFactory {
     )
 
     /** Registry is the entry point for future games/animals: register definition, reuse engine + UI. */
-    private val pets=linkedMapOf(mimosa.id to mimosa)
-    fun pet(id:String):CarePetDefinition?=pets[id]
-    fun allPets():List<CarePetDefinition>=pets.values.toList()
-    fun stateFor(pet:CarePetDefinition)=MimosaCareState(pet.initialStats.hunger,pet.initialStats.hygiene,pet.initialStats.happiness,pet.initialStats.energy,pet.initialStats.coins)
+    private val pets = linkedMapOf(mimosa.id to mimosa)
+    fun pet(id: String): CarePetDefinition? = pets[id]
+    fun allPets(): List<CarePetDefinition> = pets.values.toList()
+    fun stateFor(pet: CarePetDefinition) = MimosaCareState(
+        pet.initialStats.hunger,
+        pet.initialStats.hygiene,
+        pet.initialStats.happiness,
+        pet.initialStats.energy,
+        pet.initialStats.coins
+    )
 }
