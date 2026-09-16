@@ -7,6 +7,20 @@ package com.minhafazendinha.game
 object GameConfig {
     const val TITLE = "🌻 BICHINHOS & FAZENDINHA"
     const val SUBTITLE = "Vamos cuidar dos nossos amigos!"
+    const val SOUNDS_TITLE = "🎵 SONS"
+    const val SOUNDS_SUBTITLE = "Toque no bichinho e ouça o som!"
+    const val CARE_TITLE = "❤️ CUIDAR"
+    const val CARE_DONE_TITLE = "⭐ MUITO BEM!"
+    const val CARE_DONE_SUBTITLE = "Você cuidou da vaquinha!"
+    const val FARM_TITLE = "🚜 FAZENDINHA"
+    const val COOP_TITLE = "🐔 GALINHEIRO"
+    const val REWARD_TITLE = "🎉 TAREFA CONCLUÍDA!"
+    const val WARDROBE_TITLE = "👕 ARMÁRIO"
+    const val WARDROBE_SUBTITLE = "Escolha um bichinho e monte o visual!"
+    const val BONUS_TITLE = "🦆 LAGO"
+    const val BONUS_SUBTITLE = "Área bônus desbloqueada!"
+    const val BONUS_LOCK_MESSAGE = "Ganhe estrelas cuidando da fazendinha! ⭐"
+    const val HOME_LABEL = "🏠 Voltar ao mapa"
     const val LAKE_UNLOCK_STARS = 15
     const val CARE_STAR_REWARD = 5
     const val CARE_HEART_REWARD = 1
@@ -19,14 +33,10 @@ object GameConfig {
     data class FarmStep(val icon: String, val title: String, val action: String, val progressIcon: String, val taps: Int, val scene: String)
 
     val animals = listOf(
-        Animal("🐮", "Vaca", "vaca"),
-        Animal("🐔", "Galinha", "galinha"),
-        Animal("🐶", "Cachorro", "cachorro"),
-        Animal("🐴", "Cavalo", "cavalo"),
-        Animal("🐷", "Porco", "porco"),
-        Animal("🐑", "Ovelha", "ovelha"),
-        Animal("🐐", "Cabra", "cabra"),
-        Animal("🫏", "Burro", "burro")
+        Animal("🐮", "Vaca", "vaca"), Animal("🐔", "Galinha", "galinha"),
+        Animal("🐶", "Cachorro", "cachorro"), Animal("🐴", "Cavalo", "cavalo"),
+        Animal("🐷", "Porco", "porco"), Animal("🐑", "Ovelha", "ovelha"),
+        Animal("🐐", "Cabra", "cabra"), Animal("🫏", "Burro", "burro")
     )
 
     val homeActions = listOf(
