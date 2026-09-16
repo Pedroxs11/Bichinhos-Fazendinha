@@ -9,12 +9,12 @@ import android.widget.ImageView
 
 /**
  * Cena de producao da Mimosa baseada em assets renderizados.
- * Os nomes dos drawables seguem ProductionVisuals.mimosa; assim a arte pode
- * evoluir sem alterar a logica de cuidado do jogo.
+ * Funciona em duas fases: primeiro com um render completo aprovado e,
+ * conforme os assets separados chegam, migra automaticamente para camadas.
  */
 class MimosaProductionView(context: Context) : FrameLayout(context) {
     private val background = layer(ImageView.ScaleType.CENTER_CROP)
-    private val character = layer(ImageView.ScaleType.CENTER_INSIDE)
+    private val character = layer(ImageView.ScaleType.CENTER_CROP)
     private val foreground = layer(ImageView.ScaleType.CENTER_CROP)
     private var careState = 0
 
@@ -33,24 +33,28 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
         render()
     }
 
-    /** Retorna false enquanto os renders finais ainda nao estiverem no APK. */
-    fun hasProductionAssets(): Boolean = drawable(ProductionVisuals.mimosa.backgroundAsset) != null &&
-        drawable(ProductionVisuals.mimosa.characterAsset) != null
+    /** O primeiro render real ja e suficiente para ativar o piloto no APK. */
+    fun hasProductionAssets(): Boolean = drawable(ProductionVisuals.mimosa.characterAsset) != null
 
     private fun render() {
         val spec = ProductionVisuals.mimosa
-        background.setImageDrawable(drawable(spec.backgroundAsset))
+        val scene = drawable(spec.backgroundAsset)
+        val idle = drawable(spec.characterAsset)
+
+        // Enquanto temos apenas a referencia completa, ela ocupa a cena inteira.
+        // Quando background/foreground separados forem adicionados, o mesmo view
+        // passa a compor as camadas sem nenhuma mudanca na Activity.
+        background.setImageDrawable(scene)
         foreground.setImageDrawable(drawable(spec.foregroundAsset))
+
         val stateKey = when (careState) {
             0 -> "feed"
             1 -> "bath"
             2 -> "brush"
             else -> "happy"
         }
-        character.setImageDrawable(
-            drawable(spec.interactionAssets[stateKey] ?: spec.characterAsset)
-                ?: drawable(spec.characterAsset)
-        )
+        character.scaleType = if (scene == null) ImageView.ScaleType.CENTER_CROP else ImageView.ScaleType.CENTER_INSIDE
+        character.setImageDrawable(drawable(spec.interactionAssets[stateKey] ?: spec.characterAsset) ?: idle)
     }
 
     private fun layer(scale: ImageView.ScaleType) = ImageView(context).apply {
