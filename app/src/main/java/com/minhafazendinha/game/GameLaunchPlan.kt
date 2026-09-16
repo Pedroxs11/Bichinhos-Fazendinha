@@ -24,7 +24,7 @@ object GameLaunchPlanner {
         val kit = GameKitFactory.create(template)
         val visuals = buildSet {
             add(kit.character.visual.sceneKey)
-            add(kit.character.visual.idleKey)
+            add(kit.character.visual.idleAssetKey)
             addAll(kit.visualKeys.values)
         }.filter { it.isNotBlank() }.toSet()
         val sounds = kit.soundKeys.values.filter { it.isNotBlank() }.toSet()
