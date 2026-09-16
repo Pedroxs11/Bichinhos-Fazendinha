@@ -7,32 +7,23 @@ data class MimosaCareState(
     var energy: Int = 90,
     var coins: Int = 120
 ) {
-    fun feed(): CareReaction {
-        val before = hunger
-        hunger = (hunger + 10).coerceAtMost(100)
-        val gained = if (hunger > before) 2 else 0
-        coins += gained
-        return CareReaction("🍎", "Muuu! Que delícia!", gained)
+    fun apply(action: CareActionDefinition): CareReaction {
+        val d = action.delta
+        val old = CareStats(hunger, hygiene, happiness, energy, coins)
+        hunger = (hunger + d.hunger).coerceIn(0, 100)
+        hygiene = (hygiene + d.hygiene).coerceIn(0, 100)
+        happiness = (happiness + d.happiness).coerceIn(0, 100)
+        energy = (energy + d.energy).coerceIn(0, 100)
+        val changed = hunger != old.hunger || hygiene != old.hygiene || happiness != old.happiness || energy != old.energy
+        val gained = if (changed || d.coins < 0) d.coins else 0
+        coins = (coins + gained).coerceAtLeast(0)
+        return CareReaction(action.icon, action.message, gained)
     }
 
-    fun bathe(): CareReaction {
-        val before = hygiene
-        hygiene = (hygiene + 15).coerceAtMost(100)
-        val gained = if (hygiene > before) 2 else 0
-        coins += gained
-        return CareReaction("🚿", "Muuu! Estou limpinha!", gained)
-    }
-
-    fun brush(): CareReaction {
-        happiness = (happiness + 8).coerceAtMost(100)
-        return CareReaction("🧹", "Que carinho gostoso!", 1).also { coins += it.coins }
-    }
-
-    fun play(): CareReaction {
-        happiness = (happiness + 12).coerceAtMost(100)
-        energy = (energy - 8).coerceAtLeast(0)
-        return CareReaction("🏐", "Muuu! Vamos brincar!", 2).also { coins += it.coins }
-    }
+    fun feed() = apply(CareGameFactory.mimosa.actions.first { it.id == "feed" })
+    fun bathe() = apply(CareGameFactory.mimosa.actions.first { it.id == "bathe" })
+    fun brush() = apply(CareGameFactory.mimosa.actions.first { it.id == "brush" })
+    fun play() = apply(CareGameFactory.mimosa.actions.first { it.id == "play" })
 }
 
 data class CareReaction(val icon: String, val message: String, val coins: Int)
