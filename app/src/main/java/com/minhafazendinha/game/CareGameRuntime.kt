@@ -40,12 +40,11 @@ class CareGameRuntime(
     }
 
     private fun publishProgress() {
-        val session = controller.session
-        val completed = session.completedActionIds().size
+        val completed = controller.session.completedActionIds.size
         val total = controller.template.actions.size
         val progress = if (total == 0) 1f else completed.toFloat() / total
         renderer.renderProgress(completed, total, progress)
-        if (session.isRoundCompleted()) renderer.renderCompletion()
+        if (controller.session.roundCompleted) renderer.renderCompletion()
     }
 
     private fun String.toCareVisualState(): CareVisualState = when (lowercase()) {
