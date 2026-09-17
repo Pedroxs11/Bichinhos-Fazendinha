@@ -11,7 +11,7 @@ data class CareGameBindings(
 )
 
 data class CareGameInstance(
-    val template: CareGameTemplate,
+    val template: CareTemplate,
     val controller: CareGameController,
     val runtime: CareGameRuntime
 ) {
@@ -22,18 +22,12 @@ data class CareGameInstance(
 
 object CareGameBootstrap {
     fun create(templateId: String, bindings: CareGameBindings): CareGameInstance {
-        val template = requireNotNull(CareTemplateCatalog.byId(templateId)) {
-            "Unknown care-game template: $templateId"
-        }
-        return create(template, bindings)
-    }
-
-    fun create(template: CareGameTemplate, bindings: CareGameBindings): CareGameInstance {
-        val controller = CareGameController(template)
+        val template = CareTemplateCatalog.require(templateId)
+        val controller = CareGameController(template.id)
         val runtime = CareGameRuntime(controller, bindings.renderer, bindings.audio)
         return CareGameInstance(template, controller, runtime)
     }
 
     /** Useful for launchers/catalog screens and future game packs. */
-    fun availableTemplates(): List<CareGameTemplate> = CareTemplateCatalog.all()
+    fun availableTemplates(): List<CareTemplate> = CareTemplateCatalog.all()
 }
