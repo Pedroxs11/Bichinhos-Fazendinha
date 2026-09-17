@@ -26,11 +26,11 @@ class CareGameRuntime(
     }
 
     fun perform(actionId: String): Boolean {
-        val event = controller.perform(actionId) ?: return false
-        renderer.renderCareState(event.visualState)
+        val event = runCatching { controller.perform(actionId) }.getOrNull() ?: return false
+        renderer.renderCareState(event.visualState.toCareVisualState())
         event.soundKey?.takeIf { it.isNotBlank() }?.let { audio?.play(it) }
-        renderer.renderProgress(event.completedActions, event.totalActions, event.progress)
-        if (event.completed) renderer.renderCompletion()
+        renderer.renderProgress(event.completedActions, event.actionGoal, event.progress)
+        if (event.roundCompleted) renderer.renderCompletion()
         return true
     }
 
@@ -40,8 +40,19 @@ class CareGameRuntime(
     }
 
     private fun publishProgress() {
-        val snapshot = controller.snapshot()
-        renderer.renderProgress(snapshot.completedActions, snapshot.totalActions, snapshot.progress)
-        if (snapshot.completed) renderer.renderCompletion()
+        val session = controller.session
+        val completed = session.completedActionIds().size
+        val total = controller.template.actions.size
+        val progress = if (total == 0) 1f else completed.toFloat() / total
+        renderer.renderProgress(completed, total, progress)
+        if (session.isRoundCompleted()) renderer.renderCompletion()
+    }
+
+    private fun String.toCareVisualState(): CareVisualState = when (lowercase()) {
+        "feed" -> CareVisualState.FEED
+        "bath", "wash" -> CareVisualState.BATHE
+        "brush", "hair", "polish" -> CareVisualState.BRUSH
+        "play", "dress", "makeup", "repair", "customize" -> CareVisualState.PLAY
+        else -> CareVisualState.IDLE
     }
 }
