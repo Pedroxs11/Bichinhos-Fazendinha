@@ -9,10 +9,21 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 
+enum class CareVisualState(val assetKey: String) {
+    FEED("feed"), BATH("bath"), BRUSH("brush"), PLAY("play")
+}
+
+data class CareUiAction(
+    val state: CareVisualState,
+    val label: String,
+    val color: Int,
+    val apply: MimosaCareState.() -> CareReaction
+)
+
 class MimosaCarePanel(
     context: Context,
     private val state: MimosaCareState = MimosaCareState(),
-    private val onAction: (CareReaction) -> Unit
+    private val onAction: (CareVisualState, CareReaction) -> Unit
 ) : LinearLayout(context) {
     private val hunger = stat("🍎 Fome")
     private val hygiene = stat("💧 Higiene")
@@ -20,6 +31,13 @@ class MimosaCarePanel(
     private val energy = stat("⚡ Energia")
     private val reaction = TextView(context)
     private val coins = TextView(context)
+
+    private val actions = listOf(
+        CareUiAction(CareVisualState.FEED, "🍎\nAlimentar", 0xFFFF625C.toInt()) { feed() },
+        CareUiAction(CareVisualState.BATH, "🚿\nBanho", 0xFF55B8FF.toInt()) { bathe() },
+        CareUiAction(CareVisualState.BRUSH, "🧹\nEscovar", 0xFFFFC83D.toInt()) { brush() },
+        CareUiAction(CareVisualState.PLAY, "🏐\nBrincar", 0xFFFF65B7.toInt()) { play() }
+    )
 
     init {
         orientation = VERTICAL
@@ -39,12 +57,11 @@ class MimosaCarePanel(
         addView(energy.root, lp())
         addView(reaction, lp())
 
-        val actions = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
-        actions.addView(action("🍎\nAlimentar", 0xFFFF625C.toInt()) { state.feed() }, weight())
-        actions.addView(action("🚿\nBanho", 0xFF55B8FF.toInt()) { state.bathe() }, weight())
-        actions.addView(action("🧹\nEscovar", 0xFFFFC83D.toInt()) { state.brush() }, weight())
-        actions.addView(action("🏐\nBrincar", 0xFFFF65B7.toInt()) { state.play() }, weight())
-        addView(actions, lp())
+        val actionRow = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
+        actions.forEach { spec ->
+            actionRow.addView(action(spec), weight())
+        }
+        addView(actionRow, lp())
         refresh()
     }
 
@@ -61,19 +78,19 @@ class MimosaCarePanel(
         return Stat(row, bar, value)
     }
 
-    private fun action(textValue: String, color: Int, apply: () -> CareReaction) = Button(context).apply {
-        text = textValue
+    private fun action(spec: CareUiAction) = Button(context).apply {
+        text = spec.label
         textSize = 14f
         isAllCaps = false
         setTextColor(Color.WHITE)
         backgroundTintList = null
-        background = GradientDrawable().apply { setColor(color); cornerRadius = 24f }
+        background = GradientDrawable().apply { setColor(spec.color); cornerRadius = 24f }
         setOnClickListener {
-            val result = apply()
+            val result = spec.apply(state)
             reaction.text = "${result.icon} ${result.message}${if (result.coins > 0) "   +${result.coins} 🪙" else ""}"
             refresh()
             animate().scaleX(1.05f).scaleY(1.05f).setDuration(90).withEndAction { animate().scaleX(1f).scaleY(1f).duration = 90 }
-            onAction(result)
+            onAction(spec.state, result)
         }
     }
 
