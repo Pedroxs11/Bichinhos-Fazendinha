@@ -1,11 +1,6 @@
 package com.minhafazendinha.game
 
-/**
- * Render-plan layer shared by every care game.
- * Converts the visual runtime state into ordered render commands so screens only
- * need to execute a stable plan instead of rebuilding layering, motion and touch
- * behaviour for every new character/game.
- */
+/** Stable render commands shared by every care-game screen. */
 data class CareGameRenderCommand(
     val layer: CareVisualLayer,
     val drawableKey: String?,
@@ -32,27 +27,25 @@ data class CareGameRenderPlan(
     }
 }
 
-class CareGameRenderPlanner(
-    private val runtime: CareGameVisualRuntime
-) {
+class CareGameRenderPlanner(private val runtime: CareGameVisualRuntime) {
     fun idle(): CareGameRenderPlan = from(runtime.idle())
-
     fun forAction(actionId: String): CareGameRenderPlan = from(runtime.forAction(actionId))
-
     fun forState(state: String): CareGameRenderPlan = from(runtime.resolve(state))
 
     fun from(visual: CareGameVisualState): CareGameRenderPlan {
         val commands = visual.layers.map { layer ->
+            val drawable = when (layer) {
+                CareVisualLayer.BACKGROUND -> visual.sceneDrawableKey
+                CareVisualLayer.CHARACTER -> visual.drawableKey
+                else -> null
+            }
             CareGameRenderCommand(
                 layer = layer,
-                drawableKey = when (layer) {
-                    CareVisualLayer.CHARACTER -> visual.drawableKey
-                    else -> null
-                },
-                anchorX = visual.anchorX,
-                anchorY = visual.anchorY,
-                scale = visual.scale,
-                transitionMs = visual.transitionMs
+                drawableKey = drawable,
+                anchorX = if (layer == CareVisualLayer.CHARACTER) visual.anchorX else .5f,
+                anchorY = if (layer == CareVisualLayer.CHARACTER) visual.anchorY else .5f,
+                scale = if (layer == CareVisualLayer.CHARACTER) visual.scale else 1f,
+                transitionMs = if (layer == CareVisualLayer.CHARACTER) visual.transitionMs else 0
             )
         }
         return CareGameRenderPlan(
@@ -70,9 +63,7 @@ class CareGameRenderPlanner(
 }
 
 object CareGameRenderPlannerFactory {
-    fun create(gameId: String): CareGameRenderPlanner =
-        CareGameRenderPlanner(CareGameVisualRuntimeFactory.create(gameId))
-
+    fun create(gameId: String): CareGameRenderPlanner = CareGameRenderPlanner(CareGameVisualRuntimeFactory.create(gameId))
     fun catalog(): Map<String, CareGameRenderPlanner> =
         CareGameVisualRuntimeFactory.catalog().mapValues { (_, runtime) -> CareGameRenderPlanner(runtime) }
 }
