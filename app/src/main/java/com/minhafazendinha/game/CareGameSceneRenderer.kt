@@ -31,7 +31,7 @@ class CareGameSceneRenderer(
         views.forEach { (layer, view) ->
             val command = byLayer[layer]
             view.visibility = if (command == null) ImageView.GONE else ImageView.VISIBLE
-            if (command != null) apply(view, command, scene.animated)
+            if (command != null) apply(view, command, scene.animated)\n            else view.setImageDrawable(null)
         }
     }
 
@@ -46,7 +46,7 @@ class CareGameSceneRenderer(
     fun view(layer: CareVisualLayer): ImageView = requireNotNull(views[layer])
 
     private fun apply(view: ImageView, command: CareGameRenderCommand, animated: Boolean) {
-        command.drawableKey?.let { view.setImageDrawable(drawable(it)) }
+        view.setImageDrawable(command.drawableKey?.let(::drawable))
         view.pivotX = view.width * command.anchorX
         view.pivotY = view.height * command.anchorY
 
