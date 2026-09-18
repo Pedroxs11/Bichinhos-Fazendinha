@@ -9,6 +9,51 @@ data class CareProductionBatch(
     val isEmpty: Boolean get() = tasks.isEmpty()
 }
 
+/** Snapshot used by tooling/UI to show how much of a production wave is complete. */
+data class CareProductionProgress(
+    val total: Int,
+    val completed: Int,
+    val remaining: Int,
+    val percent: Int,
+    val next: CareProductionTask?
+)
+
+/**
+ * A resumable production wave. Completed asset keys can be persisted by callers,
+ * allowing the same reusable factory to resume work without rebuilding manual lists.
+ */
+data class CareProductionWave(
+    val plan: CareProductionPlan,
+    val completedKeys: Set<String> = emptySet()
+) {
+    private fun key(task: CareProductionTask) = "${task.gameId}:${task.assetKey}"
+
+    val remainingPlan: CareProductionPlan
+        get() = CareProductionPlan(plan.tasks.filterNot { key(it) in completedKeys })
+
+    fun markCompleted(task: CareProductionTask): CareProductionWave =
+        copy(completedKeys = completedKeys + key(task))
+
+    fun markCompleted(gameId: String, assetKey: String): CareProductionWave =
+        copy(completedKeys = completedKeys + "$gameId:$assetKey")
+
+    fun progress(): CareProductionProgress {
+        val remaining = remainingPlan.tasks
+        val total = plan.tasks.size
+        val done = total - remaining.size
+        return CareProductionProgress(
+            total = total,
+            completed = done,
+            remaining = remaining.size,
+            percent = if (total == 0) 100 else (done * 100 / total),
+            next = remaining.firstOrNull()
+        )
+    }
+
+    fun nextBatch(maxTasks: Int = 4): CareProductionBatch =
+        CareGameProductionBatcher.next(remainingPlan, maxTasks)
+}
+
 /**
  * Turns the global backlog into deterministic work batches.
  * Blocking assets always win; afterwards work is spread across games so a new
