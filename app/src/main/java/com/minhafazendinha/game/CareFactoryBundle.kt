@@ -17,6 +17,60 @@ data class CareFactoryBundle(
 
     fun requiredVisualAssets(): List<String> =
         artManifest.slots.filter { it.required }.map { it.key }
+
+    /**
+     * Stable, tool-friendly handoff for the next title in the factory.
+     * Keeps implementation, art export and polish work in one ordered queue so a
+     * cloned blueprint can move straight into production without rebuilding a checklist.
+     */
+    fun productionHandoff(): CareProductionHandoff = CareProductionHandoff(
+        gameId = gameId,
+        ready = readyForProduction,
+        runtimeEntryPoint = scaffold.runtimeEntryPoint,
+        assetDirectories = scaffold.assetDirectories,
+        visualAssets = artManifest.slots.map { slot ->
+            CareProductionAsset(
+                key = slot.key,
+                role = slot.role,
+                transparent = slot.transparent,
+                required = slot.required
+            )
+        },
+        implementationQueue = scaffold.implementationSteps.distinct(),
+        polishQueue = (artManifest.qualityChecks + scaffold.polishChecks).distinct(),
+        blockers = blockingIssues
+    )
+}
+
+data class CareProductionAsset(
+    val key: String,
+    val role: String,
+    val transparent: Boolean,
+    val required: Boolean
+)
+
+data class CareProductionHandoff(
+    val gameId: String,
+    val ready: Boolean,
+    val runtimeEntryPoint: String,
+    val assetDirectories: List<String>,
+    val visualAssets: List<CareProductionAsset>,
+    val implementationQueue: List<String>,
+    val polishQueue: List<String>,
+    val blockers: List<String>
+) {
+    val requiredVisualCount: Int get() = visualAssets.count { it.required }
+    val hasPolishPlan: Boolean get() = polishQueue.isNotEmpty()
+
+    fun validate(): List<String> = buildList {
+        if (gameId.isBlank()) add("handoff.game_id")
+        if (runtimeEntryPoint.isBlank()) add("handoff.runtime")
+        if (assetDirectories.isEmpty()) add("handoff.asset_directories")
+        if (visualAssets.none { it.required }) add("handoff.required_visuals")
+        if (implementationQueue.isEmpty()) add("handoff.implementation_queue")
+        if (polishQueue.isEmpty()) add("handoff.polish_queue")
+        if (ready && blockers.isNotEmpty()) add("handoff.ready_with_blockers")
+    }
 }
 
 object CareFactoryBundleFactory {
@@ -47,8 +101,13 @@ object CareFactoryBundleFactory {
 
     /** CI/tooling gate. Empty means every factory title has a complete production handoff. */
     fun validateCatalog(): Map<String, List<String>> =
-        catalog().mapValues { (_, bundle) -> bundle.blockingIssues }
-            .filterValues { it.isNotEmpty() }
+        catalog().mapValues { (_, bundle) ->
+            (bundle.blockingIssues + bundle.productionHandoff().validate()).distinct()
+        }.filterValues { it.isNotEmpty() }
+
+    /** Ready-to-consume production plans for automation, art and QA tooling. */
+    fun productionCatalog(): Map<String, CareProductionHandoff> =
+        catalog().mapValues { (_, bundle) -> bundle.productionHandoff() }
 
     private fun manifestFor(product: CareBlueprintProduct): CareGameArtManifest {
         val blueprint = product.blueprint
