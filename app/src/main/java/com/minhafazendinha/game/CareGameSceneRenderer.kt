@@ -31,7 +31,11 @@ class CareGameSceneRenderer(
         views.forEach { (layer, view) ->
             val command = byLayer[layer]
             view.visibility = if (command == null) ImageView.GONE else ImageView.VISIBLE
-            if (command != null) apply(view, command, scene.animated)\n            else view.setImageDrawable(null)
+            if (command != null) {
+                apply(view, command, scene.animated)
+            } else {
+                view.setImageDrawable(null)
+            }
         }
     }
 
