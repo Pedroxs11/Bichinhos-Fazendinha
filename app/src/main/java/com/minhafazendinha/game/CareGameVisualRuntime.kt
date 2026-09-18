@@ -1,13 +1,10 @@
 package com.minhafazendinha.game
 
-/**
- * Resolves the reusable visual specification into a render-ready state.
- * Screens can consume this model without knowing asset naming conventions or
- * duplicating transition/touch rules, which keeps future games mostly declarative.
- */
+/** Render-ready state shared by every factory-made care game. */
 data class CareGameVisualState(
     val gameId: String,
     val state: String,
+    val sceneDrawableKey: String,
     val drawableKey: String,
     val anchorX: Float,
     val anchorY: Float,
@@ -48,6 +45,7 @@ class CareGameVisualRuntime(
         return CareGameVisualState(
             gameId = pack.id,
             state = state,
+            sceneDrawableKey = pack.assets.scene,
             drawableKey = drawable,
             anchorX = spec.character.anchorX,
             anchorY = spec.character.anchorY,
@@ -63,17 +61,14 @@ class CareGameVisualRuntime(
         addAll(spec.validate())
         addAll(pack.assets.validate())
         spec.requiredStates.forEach { state ->
-            runCatching { resolve(state) }
-                .exceptionOrNull()
-                ?.let { add("visual.asset.$state") }
+            runCatching { resolve(state) }.exceptionOrNull()?.let { add("visual.asset.$state") }
         }
     }.distinct()
 }
 
 object CareGameVisualRuntimeFactory {
     fun create(gameId: String): CareGameVisualRuntime {
-        val pack = CareGamePackFactory.catalog()[gameId]
-            ?: error("Unknown care game: $gameId")
+        val pack = CareGamePackFactory.catalog()[gameId] ?: error("Unknown care game: $gameId")
         return CareGameVisualRuntime(pack)
     }
 
