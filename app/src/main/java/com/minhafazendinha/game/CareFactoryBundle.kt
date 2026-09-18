@@ -8,7 +8,7 @@ package com.minhafazendinha.game
 data class CareFactoryBundle(
     val gameId: String,
     val blueprint: CareGameBlueprint,
-    val launchPlan: CareBlueprintLaunchPlan,
+    val launchPlan: CareGameLaunchPlan,
     val scaffold: CareGameScaffold,
     val artManifest: CareGameArtManifest,
     val blockingIssues: List<String>
