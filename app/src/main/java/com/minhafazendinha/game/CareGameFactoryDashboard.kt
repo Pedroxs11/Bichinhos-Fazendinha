@@ -31,10 +31,11 @@ object CareGameFactoryDashboard {
     ): CareFactoryDashboard {
         val snapshots = CareGamePackFactory.catalog().keys.sorted().map { gameId ->
             val manifest = CareGameArtManifestFactory.create(gameId)
+            val required = manifest.requiredKeys()
             val readiness = readinessByGame[gameId] ?: CareGameAssetReadiness(
                 gameId = gameId,
-                required = manifest.requiredKeys(),
-                available = emptySet()
+                available = emptySet(),
+                missing = required
             )
             val production = CareGameArtPipeline.status(gameId, readiness)
             val release = CareGameVisualReleaseGate.evaluate(
