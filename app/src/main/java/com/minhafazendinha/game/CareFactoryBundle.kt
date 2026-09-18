@@ -18,23 +18,13 @@ data class CareFactoryBundle(
     fun requiredVisualAssets(): List<String> =
         artManifest.slots.filter { it.required }.map { it.key }
 
-    /**
-     * Stable, tool-friendly handoff for the next title in the factory.
-     * Keeps implementation, art export and polish work in one ordered queue so a
-     * cloned blueprint can move straight into production without rebuilding a checklist.
-     */
     fun productionHandoff(): CareProductionHandoff = CareProductionHandoff(
         gameId = gameId,
         ready = readyForProduction,
         runtimeEntryPoint = scaffold.runtimeEntryPoint,
         assetDirectories = scaffold.assetDirectories,
         visualAssets = artManifest.slots.map { slot ->
-            CareProductionAsset(
-                key = slot.key,
-                role = slot.role,
-                transparent = slot.transparent,
-                required = slot.required
-            )
+            CareProductionAsset(slot.key, slot.role, slot.transparent, slot.required)
         },
         implementationQueue = scaffold.implementationSteps.distinct(),
         polishQueue = (artManifest.qualityChecks + scaffold.polishChecks).distinct(),
@@ -49,6 +39,29 @@ data class CareProductionAsset(
     val required: Boolean
 )
 
+data class CarePolishTask(
+    val id: String,
+    val assetKey: String?,
+    val check: String,
+    val blocking: Boolean
+)
+
+data class CarePolishPlan(
+    val gameId: String,
+    val tasks: List<CarePolishTask>
+) {
+    val blockingTasks: List<CarePolishTask> get() = tasks.filter { it.blocking }
+    val assetTasks: List<CarePolishTask> get() = tasks.filter { it.assetKey != null }
+    val globalTasks: List<CarePolishTask> get() = tasks.filter { it.assetKey == null }
+
+    fun validate(): List<String> = buildList {
+        if (gameId.isBlank()) add("polish.game_id")
+        if (tasks.isEmpty()) add("polish.tasks_empty")
+        if (tasks.map { it.id }.distinct().size != tasks.size) add("polish.duplicate_task")
+        if (tasks.any { it.check.isBlank() }) add("polish.blank_check")
+    }
+}
+
 data class CareProductionHandoff(
     val gameId: String,
     val ready: Boolean,
@@ -62,6 +75,39 @@ data class CareProductionHandoff(
     val requiredVisualCount: Int get() = visualAssets.count { it.required }
     val hasPolishPlan: Boolean get() = polishQueue.isNotEmpty()
 
+    /**
+     * Expands generic polish checks into deterministic per-asset work.
+     * Required visuals become blocking tasks, while optional art and global checks can
+     * proceed independently. This gives future games the same ready-made art/QA lane.
+     */
+    fun visualPolishPlan(): CarePolishPlan {
+        val assetChecks = polishQueue.filter { check ->
+            check.contains("character") || check.contains("transparent") || check.contains("scene")
+        }
+        val globalChecks = polishQueue - assetChecks.toSet()
+        val tasks = buildList {
+            visualAssets.forEach { asset ->
+                assetChecks.forEach { check ->
+                    add(CarePolishTask(
+                        id = "${safeTaskPart(asset.key)}__${safeTaskPart(check)}",
+                        assetKey = asset.key,
+                        check = check,
+                        blocking = asset.required
+                    ))
+                }
+            }
+            globalChecks.forEach { check ->
+                add(CarePolishTask(
+                    id = "global__${safeTaskPart(check)}",
+                    assetKey = null,
+                    check = check,
+                    blocking = false
+                ))
+            }
+        }.distinctBy { it.id }
+        return CarePolishPlan(gameId, tasks)
+    }
+
     fun validate(): List<String> = buildList {
         if (gameId.isBlank()) add("handoff.game_id")
         if (runtimeEntryPoint.isBlank()) add("handoff.runtime")
@@ -70,7 +116,15 @@ data class CareProductionHandoff(
         if (implementationQueue.isEmpty()) add("handoff.implementation_queue")
         if (polishQueue.isEmpty()) add("handoff.polish_queue")
         if (ready && blockers.isNotEmpty()) add("handoff.ready_with_blockers")
+        addAll(visualPolishPlan().validate())
     }
+
+    private fun safeTaskPart(value: String): String = value.lowercase()
+        .map { if (it.isLetterOrDigit()) it else '_' }
+        .joinToString("")
+        .replace(Regex("_+"), "_")
+        .trim('_')
+        .ifBlank { "task" }
 }
 
 object CareFactoryBundleFactory {
@@ -99,15 +153,17 @@ object CareFactoryBundleFactory {
             product.blueprint.id to build(product)
         }
 
-    /** CI/tooling gate. Empty means every factory title has a complete production handoff. */
     fun validateCatalog(): Map<String, List<String>> =
         catalog().mapValues { (_, bundle) ->
             (bundle.blockingIssues + bundle.productionHandoff().validate()).distinct()
         }.filterValues { it.isNotEmpty() }
 
-    /** Ready-to-consume production plans for automation, art and QA tooling. */
     fun productionCatalog(): Map<String, CareProductionHandoff> =
         catalog().mapValues { (_, bundle) -> bundle.productionHandoff() }
+
+    /** Reusable art/QA work queue for every title in the factory catalog. */
+    fun polishCatalog(): Map<String, CarePolishPlan> =
+        productionCatalog().mapValues { (_, handoff) -> handoff.visualPolishPlan() }
 
     private fun manifestFor(product: CareBlueprintProduct): CareGameArtManifest {
         val blueprint = product.blueprint
