@@ -22,15 +22,45 @@ data class CareGameVisualSpec(
         if (touch.minimumTargetDp < 48) add("visual.touch_target")
         if (layers.isEmpty()) add("visual.layers")
         if (requiredStates.isEmpty() || "idle" !in requiredStates) add("visual.idle_state")
+        val unknownFeedbackStates = feedback.keys - requiredStates
+        if (unknownFeedbackStates.isNotEmpty()) add("visual.feedback_unknown_state")
+        val actionableStates = requiredStates - "idle"
+        if (!feedback.keys.containsAll(actionableStates)) add("visual.feedback_missing_state")
         feedback.forEach { (state, spec) ->
             if (state.isBlank()) add("visual.feedback_state")
-            if (spec.particleCount < 0 || spec.distanceDp < 0) add("visual.feedback_particles")
+            if (spec.particleCount < 0 || spec.distanceDp < 0 || spec.largeDp <= 0 || spec.smallDp <= 0) {
+                add("visual.feedback_particles")
+            }
             if (spec.reactionScale <= 0f) add("visual.feedback_scale")
+            if (spec.liftDp < 0) add("visual.feedback_lift")
         }
     }
 
     fun feedbackFor(state: String): CareActionFeedbackSpec =
         feedback[state] ?: CareActionFeedbackSpec()
+
+    /** Compact readiness signal for factory dashboards and future game generation. */
+    fun productionReadiness(): CareVisualProductionReadiness {
+        val issues = validate()
+        val actionStates = requiredStates - "idle"
+        val configured = actionStates.count(feedback::containsKey)
+        return CareVisualProductionReadiness(
+            ready = issues.isEmpty(),
+            configuredFeedbackStates = configured,
+            requiredFeedbackStates = actionStates.size,
+            issues = issues
+        )
+    }
+}
+
+data class CareVisualProductionReadiness(
+    val ready: Boolean,
+    val configuredFeedbackStates: Int,
+    val requiredFeedbackStates: Int,
+    val issues: List<String>
+) {
+    val feedbackComplete: Boolean
+        get() = configuredFeedbackStates == requiredFeedbackStates
 }
 
 data class CareCharacterVisualSpec(
