@@ -14,6 +14,21 @@ data class CareProductionTask(
     val workKey: String get() = "$gameId:${kind.name.lowercase()}:$assetKey"
 }
 
+/**
+ * A production wave groups work that can be advanced together without losing the
+ * deterministic order of the factory queue. Future games inherit these lanes automatically.
+ */
+data class CareProductionWave(
+    val number: Int,
+    val tasks: List<CareProductionTask>
+) {
+    val blocking: Boolean get() = tasks.any { it.blocksInternalTest }
+    val assetTasks: List<CareProductionTask> get() = tasks.filter { it.kind == CareProductionTaskKind.ASSET }
+    val visualContractTasks: List<CareProductionTask> get() =
+        tasks.filter { it.kind == CareProductionTaskKind.VISUAL_CONTRACT }
+    val gameIds: Set<String> get() = tasks.mapTo(linkedSetOf()) { it.gameId }
+}
+
 data class CareProductionPlan(
     val tasks: List<CareProductionTask>
 ) {
@@ -24,6 +39,35 @@ data class CareProductionPlan(
         tasks.filter { it.kind == CareProductionTaskKind.VISUAL_CONTRACT }
 
     fun forGame(gameId: String): List<CareProductionTask> = tasks.filter { it.gameId == gameId }
+
+    /**
+     * Splits the backlog into reusable execution waves. Each wave limits work per game,
+     * preventing one unfinished pack from starving the others while still prioritizing blockers.
+     */
+    fun waves(maxTasksPerGame: Int = 2): List<CareProductionWave> {
+        require(maxTasksPerGame > 0) { "maxTasksPerGame must be positive" }
+        val remaining = tasks.toMutableList()
+        val result = mutableListOf<CareProductionWave>()
+        var number = 1
+        while (remaining.isNotEmpty()) {
+            val selected = mutableListOf<CareProductionTask>()
+            val counts = mutableMapOf<String, Int>()
+            val iterator = remaining.iterator()
+            while (iterator.hasNext()) {
+                val task = iterator.next()
+                val used = counts[task.gameId] ?: 0
+                if (used < maxTasksPerGame) {
+                    selected += task
+                    counts[task.gameId] = used + 1
+                    iterator.remove()
+                }
+            }
+            result += CareProductionWave(number++, selected)
+        }
+        return result
+    }
+
+    fun nextWave(maxTasksPerGame: Int = 2): CareProductionWave? = waves(maxTasksPerGame).firstOrNull()
 }
 
 /**
