@@ -9,7 +9,8 @@ import android.widget.ImageView
 /** Shared renderer: new care games inherit scene depth and motion automatically. */
 class CareGameSceneRenderer(
     private val context: Context,
-    private val host: FrameLayout
+    private val host: FrameLayout,
+    private val visualSpec: CareGameVisualSpec? = null
 ) {
     private data class LayerPolish(
         val overscan: Float,
@@ -18,12 +19,16 @@ class CareGameSceneRenderer(
         val liftDp: Int = 0
     )
 
-    private val polish = mapOf(
-        CareVisualLayer.BACKGROUND to LayerPolish(overscan = 1.02f),
-        CareVisualLayer.CHARACTER to LayerPolish(overscan = 1f, enterScale = .97f, enterOffsetDp = 4),
-        CareVisualLayer.EFFECTS to LayerPolish(overscan = 1.015f, liftDp = 2),
-        CareVisualLayer.HUD to LayerPolish(overscan = 1f)
-    )
+    private fun polishFor(layer: CareVisualLayer): LayerPolish = when (layer) {
+        CareVisualLayer.BACKGROUND -> LayerPolish(overscan = 1.02f)
+        CareVisualLayer.CHARACTER -> LayerPolish(
+            overscan = visualSpec?.character?.scale ?: 1f,
+            enterScale = visualSpec?.touch?.feedbackScale ?: .97f,
+            enterOffsetDp = 4
+        )
+        CareVisualLayer.EFFECTS -> LayerPolish(overscan = 1.015f, liftDp = 2)
+        CareVisualLayer.HUD -> LayerPolish(overscan = 1f)
+    }
 
     private val views = CareVisualLayer.values().associateWith { layer ->
         ImageView(context).apply {
@@ -61,15 +66,19 @@ class CareGameSceneRenderer(
 
     private fun apply(view: ImageView, layer: CareVisualLayer, command: CareGameRenderCommand, animated: Boolean) {
         view.setImageDrawable(command.drawableKey?.let(::drawable))
-        view.pivotX = view.width * command.anchorX
-        view.pivotY = view.height * command.anchorY
+        val tuning = polishFor(layer)
+        val anchorX = if (layer == CareVisualLayer.CHARACTER) visualSpec?.character?.anchorX ?: command.anchorX else command.anchorX
+        val anchorY = if (layer == CareVisualLayer.CHARACTER) visualSpec?.character?.anchorY ?: command.anchorY else command.anchorY
+        view.pivotX = view.width * anchorX
+        view.pivotY = view.height * anchorY
 
-        val tuning = requireNotNull(polish[layer])
         val targetScale = command.scale * tuning.overscan
         val targetY = -dp(tuning.liftDp).toFloat()
+        val duration = visualSpec?.motion?.actionTransitionMs ?: command.transitionMs
+        val shouldAnimate = animated && duration > 0
 
         view.animate().cancel()
-        if (animated && command.transitionMs > 0) {
+        if (shouldAnimate) {
             view.scaleX = targetScale * tuning.enterScale
             view.scaleY = targetScale * tuning.enterScale
             view.translationY = dp(tuning.enterOffsetDp).toFloat()
@@ -77,7 +86,7 @@ class CareGameSceneRenderer(
                 .scaleX(targetScale)
                 .scaleY(targetScale)
                 .translationY(targetY)
-                .setDuration(command.transitionMs.toLong())
+                .setDuration(duration.toLong())
                 .start()
         } else {
             view.scaleX = targetScale
