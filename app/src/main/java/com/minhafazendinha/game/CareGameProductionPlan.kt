@@ -15,10 +15,11 @@ data class CareProductionTask(
 }
 
 /**
- * A production wave groups work that can be advanced together without losing the
- * deterministic order of the factory queue. Future games inherit these lanes automatically.
+ * An execution lane groups work that can advance together without losing the
+ * deterministic order of the factory queue. It is intentionally distinct from
+ * CareProductionWave, which tracks resumable completion state.
  */
-data class CareProductionWave(
+data class CareProductionExecutionLane(
     val number: Int,
     val tasks: List<CareProductionTask>
 ) {
@@ -41,13 +42,13 @@ data class CareProductionPlan(
     fun forGame(gameId: String): List<CareProductionTask> = tasks.filter { it.gameId == gameId }
 
     /**
-     * Splits the backlog into reusable execution waves. Each wave limits work per game,
+     * Splits the backlog into reusable execution lanes. Each lane limits work per game,
      * preventing one unfinished pack from starving the others while still prioritizing blockers.
      */
-    fun waves(maxTasksPerGame: Int = 2): List<CareProductionWave> {
+    fun executionLanes(maxTasksPerGame: Int = 2): List<CareProductionExecutionLane> {
         require(maxTasksPerGame > 0) { "maxTasksPerGame must be positive" }
         val remaining = tasks.toMutableList()
-        val result = mutableListOf<CareProductionWave>()
+        val result = mutableListOf<CareProductionExecutionLane>()
         var number = 1
         while (remaining.isNotEmpty()) {
             val selected = mutableListOf<CareProductionTask>()
@@ -62,12 +63,13 @@ data class CareProductionPlan(
                     iterator.remove()
                 }
             }
-            result += CareProductionWave(number++, selected)
+            result += CareProductionExecutionLane(number++, selected)
         }
         return result
     }
 
-    fun nextWave(maxTasksPerGame: Int = 2): CareProductionWave? = waves(maxTasksPerGame).firstOrNull()
+    fun nextExecutionLane(maxTasksPerGame: Int = 2): CareProductionExecutionLane? =
+        executionLanes(maxTasksPerGame).firstOrNull()
 }
 
 /**
