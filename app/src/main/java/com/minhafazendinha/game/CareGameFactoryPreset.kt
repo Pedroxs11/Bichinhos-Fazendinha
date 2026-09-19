@@ -15,13 +15,50 @@ data class CareFactoryPreset(
     }
 }
 
+/**
+ * Executable unit of work for the reusable game factory. Besides exposing the
+ * next production tasks, it keeps checkpoint cadence with the package so tools
+ * and future games do not need to duplicate progress bookkeeping.
+ */
 data class CareFactoryWorkPackage(
     val session: CareProductionSession,
     val tasks: List<CareProductionTask>,
-    val checkpoint: CareProductionCheckpoint
+    val checkpoint: CareProductionCheckpoint,
+    val preset: CareFactoryPreset = CareGameFactoryPreset.DEFAULT,
+    val completedSinceCheckpoint: Int = 0
 ) {
     val isComplete: Boolean get() = session.isComplete
     val remaining: Int get() = session.progress.remaining
+    val shouldCheckpoint: Boolean
+        get() = isComplete || completedSinceCheckpoint >= preset.checkpointEvery
+
+    fun complete(task: CareProductionTask): CareFactoryWorkPackage {
+        val updated = session.complete(task.gameId, task.assetKey)
+        return fromSession(updated, completedSinceCheckpoint + 1)
+    }
+
+    fun completeBatch(completedTasks: Iterable<CareProductionTask> = tasks): CareFactoryWorkPackage {
+        val completed = completedTasks.toList()
+        if (completed.isEmpty()) return this
+        val updated = session.completeBatch(completed)
+        return fromSession(updated, completedSinceCheckpoint + completed.size)
+    }
+
+    /** Marks the current checkpoint as persisted and starts a fresh cadence. */
+    fun checkpointSaved(): CareFactoryWorkPackage = copy(
+        checkpoint = session.checkpoint(),
+        completedSinceCheckpoint = 0
+    )
+
+    private fun fromSession(
+        updated: CareProductionSession,
+        completedCount: Int
+    ) = copy(
+        session = updated,
+        tasks = updated.nextBatch.tasks,
+        checkpoint = updated.checkpoint(),
+        completedSinceCheckpoint = completedCount
+    )
 }
 
 /**
@@ -45,7 +82,7 @@ object CareGameFactoryPreset {
             completedKeys = completedKeys,
             batchSize = preset.batchSize
         )
-        return session.toWorkPackage()
+        return session.toWorkPackage(preset)
     }
 
     fun resume(
@@ -60,12 +97,13 @@ object CareGameFactoryPreset {
             finalKeysByGame = finalKeysByGame,
             fallbackBatchSize = preset.batchSize
         )
-        return session.toWorkPackage()
+        return session.toWorkPackage(preset)
     }
 
-    private fun CareProductionSession.toWorkPackage() = CareFactoryWorkPackage(
+    private fun CareProductionSession.toWorkPackage(preset: CareFactoryPreset) = CareFactoryWorkPackage(
         session = this,
         tasks = nextBatch.tasks,
-        checkpoint = checkpoint()
+        checkpoint = checkpoint(),
+        preset = preset
     )
 }
