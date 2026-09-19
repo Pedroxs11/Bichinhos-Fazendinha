@@ -4,6 +4,7 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
+import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
@@ -27,7 +28,8 @@ class CareGameVisualFeedback(
         clear()
         if (state == "idle" || !animated) return
 
-        val count = 6
+        val preset = presetFor(state)
+        val count = preset.count
         val duration = visualSpec.motion.completionFeedbackMs.toLong()
         val centerX = host.width * visualSpec.character.anchorX
         val centerY = host.height * visualSpec.character.anchorY
@@ -36,11 +38,11 @@ class CareGameVisualFeedback(
             val particle = View(context).apply {
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
-                    setColor(0xCCFFFFFF.toInt())
+                    setColor(preset.color)
                 }
                 alpha = 0f
             }
-            val size = dp(if (index % 2 == 0) 10 else 7)
+            val size = dp(if (index % 2 == 0) preset.largeDp else preset.smallDp)
             host.addView(particle, FrameLayout.LayoutParams(size, size).apply {
                 gravity = Gravity.TOP or Gravity.START
                 leftMargin = (centerX - size / 2f).toInt()
@@ -49,7 +51,7 @@ class CareGameVisualFeedback(
             particles += particle
 
             val angle = Math.toRadians((index * (360.0 / count)) - 90.0)
-            val distance = dp(34 + (index % 3) * 8).toFloat()
+            val distance = dp(preset.distanceDp + (index % 3) * 8).toFloat()
             val x = (cos(angle) * distance).toFloat()
             val y = (sin(angle) * distance).toFloat()
 
@@ -73,6 +75,34 @@ class CareGameVisualFeedback(
         running = null
         particles.forEach(host::removeView)
         particles.clear()
+    }
+
+    private data class FeedbackPreset(
+        val count: Int,
+        val color: Int,
+        val distanceDp: Int,
+        val largeDp: Int = 10,
+        val smallDp: Int = 7
+    )
+
+    /**
+     * Semantic presets keep actions visually distinct without requiring bespoke art.
+     * Matching is intentionally tolerant so future templates can use localized or
+     * domain-specific state names and still inherit useful feedback.
+     */
+    private fun presetFor(state: String): FeedbackPreset {
+        val key = state.lowercase()
+        return when {
+            key.contains("bath") || key.contains("wash") || key.contains("wet") ||
+                key.contains("banho") -> FeedbackPreset(8, Color.argb(210, 160, 220, 255), 42, 12, 8)
+            key.contains("feed") || key.contains("eat") || key.contains("food") ||
+                key.contains("comer") -> FeedbackPreset(6, Color.argb(220, 255, 220, 120), 36, 9, 6)
+            key.contains("brush") || key.contains("clean") || key.contains("escov") ->
+                FeedbackPreset(7, Color.argb(220, 255, 245, 210), 38, 10, 6)
+            key.contains("play") || key.contains("ball") || key.contains("brinc") ->
+                FeedbackPreset(9, Color.argb(225, 255, 190, 210), 48, 11, 7)
+            else -> FeedbackPreset(6, Color.argb(205, 255, 255, 255), 38)
+        }
     }
 
     private fun dp(value: Int): Int =
