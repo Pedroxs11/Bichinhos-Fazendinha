@@ -6,18 +6,25 @@ import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.ImageView
 
-/**
- * Android renderer shared by every care-game screen.
- * It executes factory scene commands while keeping asset lookup and layer views
- * out of individual games, so new games mostly provide templates/assets.
- *
- * Depth polish also lives here: every new care game inherits the same subtle
- * overscan, layer separation and action motion without duplicating screen code.
- */
+/** Shared renderer: new care games inherit scene depth and motion automatically. */
 class CareGameSceneRenderer(
     private val context: Context,
     private val host: FrameLayout
 ) {
+    private data class LayerPolish(
+        val overscan: Float,
+        val enterScale: Float = 1f,
+        val enterOffsetDp: Int = 0,
+        val liftDp: Int = 0
+    )
+
+    private val polish = mapOf(
+        CareVisualLayer.BACKGROUND to LayerPolish(overscan = 1.02f),
+        CareVisualLayer.CHARACTER to LayerPolish(overscan = 1f, enterScale = .97f, enterOffsetDp = 4),
+        CareVisualLayer.EFFECTS to LayerPolish(overscan = 1.015f, liftDp = 2),
+        CareVisualLayer.HUD to LayerPolish(overscan = 1f)
+    )
+
     private val views = CareVisualLayer.values().associateWith { layer ->
         ImageView(context).apply {
             scaleType = when (layer) {
@@ -34,9 +41,8 @@ class CareGameSceneRenderer(
         views.forEach { (layer, view) ->
             val command = byLayer[layer]
             view.visibility = if (command == null) ImageView.GONE else ImageView.VISIBLE
-            if (command != null) {
-                apply(view, layer, command, scene.animated)
-            } else {
+            if (command != null) apply(view, layer, command, scene.animated)
+            else {
                 reset(view)
                 view.setImageDrawable(null)
             }
@@ -53,36 +59,20 @@ class CareGameSceneRenderer(
 
     fun view(layer: CareVisualLayer): ImageView = requireNotNull(views[layer])
 
-    private fun apply(
-        view: ImageView,
-        layer: CareVisualLayer,
-        command: CareGameRenderCommand,
-        animated: Boolean
-    ) {
+    private fun apply(view: ImageView, layer: CareVisualLayer, command: CareGameRenderCommand, animated: Boolean) {
         view.setImageDrawable(command.drawableKey?.let(::drawable))
         view.pivotX = view.width * command.anchorX
         view.pivotY = view.height * command.anchorY
 
-        val depthScale = when (layer) {
-            CareVisualLayer.BACKGROUND -> 1.02f
-            CareVisualLayer.CHARACTER -> 1f
-            CareVisualLayer.EFFECTS -> 1.015f
-            CareVisualLayer.HUD -> 1f
-        }
-        val targetScale = command.scale * depthScale
-        val targetY = when (layer) {
-            CareVisualLayer.CHARACTER -> 0f
-            CareVisualLayer.EFFECTS -> -dp(2).toFloat()
-            else -> 0f
-        }
+        val tuning = requireNotNull(polish[layer])
+        val targetScale = command.scale * tuning.overscan
+        val targetY = -dp(tuning.liftDp).toFloat()
 
         view.animate().cancel()
         if (animated && command.transitionMs > 0) {
-            if (layer == CareVisualLayer.CHARACTER) {
-                view.scaleX = targetScale * .97f
-                view.scaleY = targetScale * .97f
-                view.translationY = dp(4).toFloat()
-            }
+            view.scaleX = targetScale * tuning.enterScale
+            view.scaleY = targetScale * tuning.enterScale
+            view.translationY = dp(tuning.enterOffsetDp).toFloat()
             view.animate()
                 .scaleX(targetScale)
                 .scaleY(targetScale)
