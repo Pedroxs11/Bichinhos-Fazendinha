@@ -19,6 +19,7 @@ class CareGameSceneHost(
     private val visualSpec = CareGameVisualSpecFactory.build(pack)
     private val scenes = CareGameSceneCatalog.create(gameId, preferences)
     private val renderer = CareGameSceneRenderer(context, this, visualSpec)
+    private val feedback = CareGameVisualFeedback(context, this, visualSpec)
 
     init {
         clipChildren = false
@@ -32,7 +33,10 @@ class CareGameSceneHost(
 
     fun showState(state: String) = render(scenes.forState(state))
 
-    fun clearScene() = renderer.clear()
+    fun clearScene() {
+        feedback.clear()
+        renderer.clear()
+    }
 
     fun visualSpec(): CareGameVisualSpec = visualSpec
 
@@ -41,6 +45,7 @@ class CareGameSceneHost(
             "Scene ${scene.gameId} cannot be rendered by host $gameId"
         }
         renderer.render(scene)
+        post { feedback.play(scene.state, scene.animated) }
     }
 }
 
