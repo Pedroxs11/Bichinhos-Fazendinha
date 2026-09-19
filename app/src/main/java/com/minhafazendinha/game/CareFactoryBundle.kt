@@ -39,20 +39,20 @@ data class CareProductionAsset(
     val required: Boolean
 )
 
-data class CarePolishTask(
+data class CareVisualPolishTask(
     val id: String,
     val assetKey: String?,
     val check: String,
     val blocking: Boolean
 )
 
-data class CarePolishPlan(
+data class CareVisualPolishPlan(
     val gameId: String,
-    val tasks: List<CarePolishTask>
+    val tasks: List<CareVisualPolishTask>
 ) {
-    val blockingTasks: List<CarePolishTask> get() = tasks.filter { it.blocking }
-    val assetTasks: List<CarePolishTask> get() = tasks.filter { it.assetKey != null }
-    val globalTasks: List<CarePolishTask> get() = tasks.filter { it.assetKey == null }
+    val blockingTasks: List<CareVisualPolishTask> get() = tasks.filter { it.blocking }
+    val assetTasks: List<CareVisualPolishTask> get() = tasks.filter { it.assetKey != null }
+    val globalTasks: List<CareVisualPolishTask> get() = tasks.filter { it.assetKey == null }
 
     fun validate(): List<String> = buildList {
         if (gameId.isBlank()) add("polish.game_id")
@@ -75,12 +75,7 @@ data class CareProductionHandoff(
     val requiredVisualCount: Int get() = visualAssets.count { it.required }
     val hasPolishPlan: Boolean get() = polishQueue.isNotEmpty()
 
-    /**
-     * Expands generic polish checks into deterministic per-asset work.
-     * Required visuals become blocking tasks, while optional art and global checks can
-     * proceed independently. This gives future games the same ready-made art/QA lane.
-     */
-    fun visualPolishPlan(): CarePolishPlan {
+    fun visualPolishPlan(): CareVisualPolishPlan {
         val assetChecks = polishQueue.filter { check ->
             check.contains("character") || check.contains("transparent") || check.contains("scene")
         }
@@ -88,7 +83,7 @@ data class CareProductionHandoff(
         val tasks = buildList {
             visualAssets.forEach { asset ->
                 assetChecks.forEach { check ->
-                    add(CarePolishTask(
+                    add(CareVisualPolishTask(
                         id = "${safeTaskPart(asset.key)}__${safeTaskPart(check)}",
                         assetKey = asset.key,
                         check = check,
@@ -97,7 +92,7 @@ data class CareProductionHandoff(
                 }
             }
             globalChecks.forEach { check ->
-                add(CarePolishTask(
+                add(CareVisualPolishTask(
                     id = "global__${safeTaskPart(check)}",
                     assetKey = null,
                     check = check,
@@ -105,7 +100,7 @@ data class CareProductionHandoff(
                 ))
             }
         }.distinctBy { it.id }
-        return CarePolishPlan(gameId, tasks)
+        return CareVisualPolishPlan(gameId, tasks)
     }
 
     fun validate(): List<String> = buildList {
@@ -161,8 +156,7 @@ object CareFactoryBundleFactory {
     fun productionCatalog(): Map<String, CareProductionHandoff> =
         catalog().mapValues { (_, bundle) -> bundle.productionHandoff() }
 
-    /** Reusable art/QA work queue for every title in the factory catalog. */
-    fun polishCatalog(): Map<String, CarePolishPlan> =
+    fun polishCatalog(): Map<String, CareVisualPolishPlan> =
         productionCatalog().mapValues { (_, handoff) -> handoff.visualPolishPlan() }
 
     private fun manifestFor(product: CareBlueprintProduct): CareGameArtManifest {
