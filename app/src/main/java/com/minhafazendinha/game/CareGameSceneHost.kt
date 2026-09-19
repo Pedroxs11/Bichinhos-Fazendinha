@@ -45,7 +45,13 @@ class CareGameSceneHost(
             "Scene ${scene.gameId} cannot be rendered by host $gameId"
         }
         renderer.render(scene)
-        post { feedback.play(scene.state, scene.animated) }
+        post {
+            feedback.play(
+                state = scene.state,
+                animated = scene.animated,
+                character = renderer.view(CareVisualLayer.CHARACTER)
+            )
+        }
     }
 }
 
