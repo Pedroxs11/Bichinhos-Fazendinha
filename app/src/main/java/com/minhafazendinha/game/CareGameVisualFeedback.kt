@@ -19,19 +19,38 @@ class CareGameVisualFeedback(
 ) {
     private val particles = mutableListOf<View>()
     private var running: AnimatorSet? = null
+    private var particleRunning: AnimatorSet? = null
+    private var activeCharacter: View? = null
+    private var characterBase: CharacterBase? = null
 
     fun play(state: String, animated: Boolean, character: View? = null) {
         clear()
         if (state == "idle" || !animated) return
 
         val preset = presetFor(state)
-        character?.let { playCharacterReaction(it, preset) }
+        character?.let {
+            activeCharacter = it
+            characterBase = CharacterBase(it.scaleX, it.scaleY, it.translationY, it.rotation)
+            playCharacterReaction(it, preset)
+        }
         playParticles(preset)
     }
 
     fun clear() {
         running?.cancel()
+        particleRunning?.cancel()
         running = null
+        particleRunning = null
+        activeCharacter?.let { character ->
+            characterBase?.let { base ->
+                character.scaleX = base.scaleX
+                character.scaleY = base.scaleY
+                character.translationY = base.translationY
+                character.rotation = base.rotation
+            }
+        }
+        activeCharacter = null
+        characterBase = null
         particles.forEach(host::removeView)
         particles.clear()
     }
@@ -88,11 +107,18 @@ class CareGameVisualFeedback(
                 ObjectAnimator.ofFloat(particle, View.SCALE_Y, .6f, 1.25f)
             ).onEach { it.duration = duration }
         }
-        AnimatorSet().apply {
+        particleRunning = AnimatorSet().apply {
             playTogether(particleAnimators)
             start()
         }
     }
+
+    private data class CharacterBase(
+        val scaleX: Float,
+        val scaleY: Float,
+        val translationY: Float,
+        val rotation: Float
+    )
 
     private data class FeedbackPreset(
         val count: Int,
