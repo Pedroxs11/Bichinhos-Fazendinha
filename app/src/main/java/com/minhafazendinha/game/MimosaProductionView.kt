@@ -18,6 +18,7 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
     private val foreground = layer(ImageView.ScaleType.CENTER_CROP)
     private val prop = layer(ImageView.ScaleType.CENTER_INSIDE)
     private var visualState = CareVisualState.IDLE
+    private val assetContract = CareAssetContract.MIMOSA
     private val reactionAnimator: CareReactionAnimator
 
     init {
@@ -136,17 +137,9 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
             if (layered) drawable(asset ?: spec.characterAsset) ?: drawable(spec.characterAsset) else null
         )
 
-        val propAsset = actionPropAsset(visualState)
+        val propAsset = assetContract.assetFor(actionKey(visualState))
         prop.setImageDrawable(propAsset?.let(::drawable))
         prop.visibility = if (layered && prop.drawable != null && visualState != CareVisualState.IDLE) VISIBLE else GONE
-    }
-
-    private fun actionPropAsset(state: CareVisualState): String? = when (state) {
-        CareVisualState.FEED -> "farm_prop_food"
-        CareVisualState.BATHE -> "farm_prop_water_tub"
-        CareVisualState.BRUSH -> "farm_prop_brush"
-        CareVisualState.PLAY -> "farm_prop_play_ball"
-        CareVisualState.IDLE -> null
     }
 
     private fun animateProp(state: CareVisualState) {
