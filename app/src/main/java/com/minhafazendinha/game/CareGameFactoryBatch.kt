@@ -53,10 +53,6 @@ data class CareFactoryBatchHandoff(
     val taskCount: Int get() = actionableItems.sumOf { it.tasks.size }
     val complete: Boolean get() = actionableItems.isEmpty() && remainingGames == 0
 
-    /**
-     * Generator-friendly manifests: every task receives a stable id and order so
-     * art/QA tooling can resume work without understanding planner internals.
-     */
     fun manifests(): List<CareFactoryWorkManifest> = actionableItems.map { item ->
         CareFactoryWorkManifest(
             workKey = item.key,
@@ -64,21 +60,13 @@ data class CareFactoryBatchHandoff(
             stage = item.stage,
             priorityScore = item.priorityScore,
             steps = item.tasks.mapIndexed { index, task ->
-                CareFactoryWorkStep(
-                    id = "${item.key}:${index + 1}",
-                    order = index + 1,
-                    task = task
-                )
+                CareFactoryWorkStep("${item.key}:${index + 1}", index + 1, task)
             }
         )
     }
 }
 
-data class CareFactoryWorkStep(
-    val id: String,
-    val order: Int,
-    val task: String
-)
+data class CareFactoryWorkStep(val id: String, val order: Int, val task: String)
 
 data class CareFactoryWorkManifest(
     val workKey: String,
@@ -89,6 +77,40 @@ data class CareFactoryWorkManifest(
 ) {
     val stepCount: Int get() = steps.size
     val readyToExecute: Boolean get() = steps.isNotEmpty()
+
+    /**
+     * Builds a deterministic resumable plan. Generators can persist completed ids
+     * and ask for the next work without knowing anything about planner internals.
+     */
+    fun executionPlan(completedStepIds: Set<String> = emptySet()): CareFactoryExecutionPlan {
+        val knownIds = steps.mapTo(mutableSetOf()) { it.id }
+        val completed = completedStepIds.intersect(knownIds)
+        val pending = steps.filterNot { it.id in completed }
+        return CareFactoryExecutionPlan(
+            workKey = workKey,
+            gameId = gameId,
+            stage = stage,
+            completedStepIds = completed,
+            pendingSteps = pending,
+            totalSteps = steps.size
+        )
+    }
+}
+
+data class CareFactoryExecutionPlan(
+    val workKey: String,
+    val gameId: String,
+    val stage: CareFactoryPriorityStage,
+    val completedStepIds: Set<String>,
+    val pendingSteps: List<CareFactoryWorkStep>,
+    val totalSteps: Int
+) {
+    val completedSteps: Int get() = completedStepIds.size
+    val remainingSteps: Int get() = pendingSteps.size
+    val complete: Boolean get() = remainingSteps == 0
+    val progressPercent: Int
+        get() = if (totalSteps == 0) 100 else (completedSteps * 100) / totalSteps
+    val nextStep: CareFactoryWorkStep? get() = pendingSteps.minByOrNull { it.order }
 }
 
 object CareGameFactoryBatchPlanner {
@@ -109,38 +131,33 @@ object CareGameFactoryBatchPlanner {
                 score = priority.score
             )
         }
-        return CareFactoryBatch(
-            items = selected,
-            remainingGames = (pending.size - selected.size).coerceAtLeast(0)
-        )
+        return CareFactoryBatch(selected, (pending.size - selected.size).coerceAtLeast(0))
     }
 
-    /** Convenience entry point used by future games: dashboard -> ordered batch. */
     fun next(
         dashboard: CareFactoryDashboard,
         maxGames: Int = 3,
         maxTasksPerGame: Int = 2
-    ): CareFactoryBatch = next(
-        CareGameFactoryPriorityEngine.build(dashboard),
-        maxGames,
-        maxTasksPerGame
-    )
+    ): CareFactoryBatch = next(CareGameFactoryPriorityEngine.build(dashboard), maxGames, maxTasksPerGame)
 
-    /** One-call production contract for future art, QA and generation tooling. */
     fun nextHandoff(
         dashboard: CareFactoryDashboard,
         maxGames: Int = 3,
         maxTasksPerGame: Int = 2
     ): CareFactoryBatchHandoff = next(dashboard, maxGames, maxTasksPerGame).handoff()
 
-    /** Direct executable manifests for the next production round. */
     fun nextManifests(
         dashboard: CareFactoryDashboard,
         maxGames: Int = 3,
         maxTasksPerGame: Int = 2
-    ): List<CareFactoryWorkManifest> = nextHandoff(
-        dashboard,
-        maxGames,
-        maxTasksPerGame
-    ).manifests()
+    ): List<CareFactoryWorkManifest> = nextHandoff(dashboard, maxGames, maxTasksPerGame).manifests()
+
+    /** One-call resumable execution plans for automated production workers. */
+    fun nextExecutionPlans(
+        dashboard: CareFactoryDashboard,
+        completedStepIds: Set<String> = emptySet(),
+        maxGames: Int = 3,
+        maxTasksPerGame: Int = 2
+    ): List<CareFactoryExecutionPlan> = nextManifests(dashboard, maxGames, maxTasksPerGame)
+        .map { it.executionPlan(completedStepIds) }
 }
