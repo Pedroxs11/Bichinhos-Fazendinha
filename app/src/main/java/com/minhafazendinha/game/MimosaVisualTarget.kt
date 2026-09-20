@@ -21,7 +21,7 @@ object MimosaVisualProduction {
         style = "polished_3d_cartoon_kids_game",
         composition = "mimosa_centered_large_with_clear_play_space",
         lighting = "warm_sunny_soft_global_light",
-        depth = "foreground_character_midground_background_parallax",
+        depth = "2_5d_layered_depth_foreground_character_midground_background_parallax",
         character = "friendly_round_mimosa_big_glossy_eyes_pink_muzzle",
         requiredProps = listOf(
             "red_barn", "wood_fence", "hay", "flowers", "trees",
@@ -45,12 +45,12 @@ object MimosaVisualProduction {
             "foreground_depth",
             "warm_consistent_light",
             "large_child_friendly_touch_targets",
-            "reference_quality_or_better"
+            "reference_quality_or_better",\n            "2_5d_depth_visible_in_motion",\n            "3d_rendered_look_without_realtime_3d_models"
         )
     )
 
     /** Concrete drawable contract used by the next art export/import pass. */
-    val drawableContract: Map<String, String> = mapOf(
+    val productionRule = "FINAL_VISUALS_2_5D_ONLY_NO_FLAT_CANVAS_REPLACEMENTS"\n\n    val drawableContract: Map<String, String> = mapOf(
         "background" to "farm_care_scene",
         "idle" to "farm_care_idle",
         "feed" to "farm_care_feed",
