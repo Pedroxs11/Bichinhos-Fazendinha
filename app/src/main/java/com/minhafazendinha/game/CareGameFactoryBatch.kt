@@ -52,6 +52,43 @@ data class CareFactoryBatchHandoff(
     val actionableItems: List<CareFactoryWorkItem> get() = workItems.filter { it.readyToStart }
     val taskCount: Int get() = actionableItems.sumOf { it.tasks.size }
     val complete: Boolean get() = actionableItems.isEmpty() && remainingGames == 0
+
+    /**
+     * Generator-friendly manifests: every task receives a stable id and order so
+     * art/QA tooling can resume work without understanding planner internals.
+     */
+    fun manifests(): List<CareFactoryWorkManifest> = actionableItems.map { item ->
+        CareFactoryWorkManifest(
+            workKey = item.key,
+            gameId = item.gameId,
+            stage = item.stage,
+            priorityScore = item.priorityScore,
+            steps = item.tasks.mapIndexed { index, task ->
+                CareFactoryWorkStep(
+                    id = "${item.key}:${index + 1}",
+                    order = index + 1,
+                    task = task
+                )
+            }
+        )
+    }
+}
+
+data class CareFactoryWorkStep(
+    val id: String,
+    val order: Int,
+    val task: String
+)
+
+data class CareFactoryWorkManifest(
+    val workKey: String,
+    val gameId: String,
+    val stage: CareFactoryPriorityStage,
+    val priorityScore: Int,
+    val steps: List<CareFactoryWorkStep>
+) {
+    val stepCount: Int get() = steps.size
+    val readyToExecute: Boolean get() = steps.isNotEmpty()
 }
 
 object CareGameFactoryBatchPlanner {
@@ -95,4 +132,15 @@ object CareGameFactoryBatchPlanner {
         maxGames: Int = 3,
         maxTasksPerGame: Int = 2
     ): CareFactoryBatchHandoff = next(dashboard, maxGames, maxTasksPerGame).handoff()
+
+    /** Direct executable manifests for the next production round. */
+    fun nextManifests(
+        dashboard: CareFactoryDashboard,
+        maxGames: Int = 3,
+        maxTasksPerGame: Int = 2
+    ): List<CareFactoryWorkManifest> = nextHandoff(
+        dashboard,
+        maxGames,
+        maxTasksPerGame
+    ).manifests()
 }
