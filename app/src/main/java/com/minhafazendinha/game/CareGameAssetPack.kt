@@ -41,18 +41,10 @@ data class CareGameAssetPack(
     }
 
     companion object {
-        val MIMOSA = CareGameAssetPack(
-            gameId = "mimosa",
-            contract = CareAssetContract.MIMOSA,
-            background = "farm_care_scene",
-            foreground = "farm_care_foreground",
-            actionCharacters = mapOf(
-                "feed" to "farm_care_feed",
-                "bath" to "farm_care_bath",
-                "brush" to "farm_care_brush",
-                "play" to "farm_care_play"
-            )
-        )
+        val MIMOSA = careGameAssetPack("mimosa", CareAssetContract.MIMOSA) {
+            scene("farm_care_scene", "farm_care_foreground")
+            standardActionCharacters("farm_care")
+        }
     }
 }
 
