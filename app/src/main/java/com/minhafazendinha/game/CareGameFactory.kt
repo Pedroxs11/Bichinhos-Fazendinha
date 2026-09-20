@@ -9,7 +9,8 @@ data class CarePetDefinition(
     val soundKey: String,
     val initialStats: CareStats = CareStats(),
     val actions: List<CareActionDefinition>,
-    val visual: CareVisualDefinition = CareVisualDefinition()
+    val visual: CareVisualDefinition = CareVisualDefinition(),
+    val assetPack: CareGameAssetPack? = null
 )
 
 data class CareStats(val hunger:Int=80,val hygiene:Int=70,val happiness:Int=75,val energy:Int=90,val coins:Int=120)
@@ -40,13 +41,37 @@ object CareGameFactory {
             sceneKey="mimosa_paddock",
             idleAssetKey="mimosa_idle",
             reactionAssetKeys=mapOf("feed" to "mimosa_feed","bathe" to "mimosa_bathe","brush" to "mimosa_brush","play" to "mimosa_play")
-        )
+        ),
+        assetPack=CareGameAssetPack.MIMOSA
     )
 
-    /** Registry is the entry point for future games/animals: register definition, reuse engine + UI. */
+    /** Registry is the single entry point for future animals/games. */
     private val pets = linkedMapOf(mimosa.id to mimosa)
-    fun pet(id: String): CarePetDefinition? = pets[id]
+
+    fun pet(id: String): CarePetDefinition? = pets[id.lowercase()]
+    fun requirePet(id: String): CarePetDefinition = pet(id) ?: error("Unknown care pet: $id")
     fun allPets(): List<CarePetDefinition> = pets.values.toList()
+
+    fun register(pet: CarePetDefinition) {
+        require(pet.id.isNotBlank()) { "Care pet id cannot be blank" }
+        pets[pet.id.lowercase()] = pet
+    }
+
+    fun assetPack(id: String): CareGameAssetPack? = pet(id)?.assetPack
+
+    fun drawableManifest(id: String): Map<String,String> {
+        val pack = requirePet(id).assetPack ?: return emptyMap()
+        return linkedMapOf<String,String>().apply {
+            put("scene_background", pack.background)
+            pack.foreground?.let { put("scene_foreground", it) }
+            putAll(pack.contract.drawableManifest())
+            pack.actionCharacters.forEach { (action, drawable) -> put("character_$action", drawable) }
+        }
+    }
+
+    fun readiness(id: String, availableDrawables: Set<String>): CareGameAssetPackReadiness? =
+        assetPack(id)?.readiness(availableDrawables)
+
     fun stateFor(pet: CarePetDefinition) = MimosaCareState(
         pet.initialStats.hunger,
         pet.initialStats.hygiene,
