@@ -24,18 +24,20 @@ data class CareAssetContract(
         feedEffect, bathEffect, brushEffect, playEffect
     )
 
-    fun assetFor(action: FarmAction): String = when (action) {
-        FarmAction.FEED -> feedProp
-        FarmAction.BATHE -> bathProp
-        FarmAction.BRUSH -> brushProp
-        FarmAction.PLAY -> playProp
+    fun assetFor(actionId: String): String? = when (actionId.lowercase()) {
+        "feed", "eat", "food", "comer" -> feedProp
+        "bath", "bathe", "wash", "banho" -> bathProp
+        "brush", "clean", "escovar" -> brushProp
+        "play", "ball", "brincar" -> playProp
+        else -> null
     }
 
-    fun effectFor(action: FarmAction): String = when (action) {
-        FarmAction.FEED -> feedEffect
-        FarmAction.BATHE -> bathEffect
-        FarmAction.BRUSH -> brushEffect
-        FarmAction.PLAY -> playEffect
+    fun effectFor(actionId: String): String? = when (actionId.lowercase()) {
+        "feed", "eat", "food", "comer" -> feedEffect
+        "bath", "bathe", "wash", "banho" -> bathEffect
+        "brush", "clean", "escovar" -> brushEffect
+        "play", "ball", "brincar" -> playEffect
+        else -> null
     }
 
     companion object {
