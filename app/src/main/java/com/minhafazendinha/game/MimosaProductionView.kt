@@ -139,7 +139,7 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
 
         val propAsset = assetContract.assetFor(actionKey(visualState))
         prop.setImageDrawable(propAsset?.let(::drawable))
-        prop.visibility = if (layered && prop.drawable != null && visualState != CareVisualState.IDLE) VISIBLE else GONE
+        // Action props are part of the playable APK even while the final layered art is being produced.\n        prop.visibility = if (prop.drawable != null && visualState != CareVisualState.IDLE) VISIBLE else GONE
     }
 
     private fun animateProp(state: CareVisualState) {
