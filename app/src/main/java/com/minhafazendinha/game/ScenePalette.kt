@@ -25,3 +25,33 @@ object ScenePalette {
     val flower = Color.rgb(244, 119, 171)
     val heart = Color.rgb(255, 92, 145)
 }
+
+
+/** Semantic palette contract: lets future games replace a theme without touching scene code. */
+data class GameSceneTheme(
+    val skyTop: Int,
+    val skyBottom: Int,
+    val hill: Int,
+    val water: Int,
+    val waterHighlight: Int,
+    val ground: Int,
+    val accent: Int
+)
+
+object GameSceneThemes {
+    val FARM = GameSceneTheme(
+        skyTop = ScenePalette.skyTop,
+        skyBottom = ScenePalette.skyBottom,
+        hill = ScenePalette.hill,
+        water = ScenePalette.lake,
+        waterHighlight = ScenePalette.lakeHighlight,
+        ground = ScenePalette.soil,
+        accent = ScenePalette.flower
+    )
+
+    fun validate(theme: GameSceneTheme): List<String> = buildList {
+        if (theme.skyTop == theme.skyBottom) add("sky gradient needs two tones")
+        if (theme.water == theme.waterHighlight) add("water highlight must contrast with water")
+        if (theme.ground == theme.hill) add("ground and hill need visual separation")
+    }
+}
