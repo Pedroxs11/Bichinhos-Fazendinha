@@ -28,6 +28,14 @@ data class CareVisualDefinition(
     val inkColor:Int=0xFF49372D.toInt()
 ){ fun assetFor(actionId:String)=reactionAssetKeys[actionId] ?: idleAssetKey }
 
+data class CareFactoryReadiness(
+    val games: Map<String, CareGameAssetPackReadiness>
+) {
+    val ready: Boolean get() = games.values.all { it.ready }
+    val missing: Set<String> get() = games.values.flatMap { it.missing }.toSet()
+    val progress: Int get() = if (games.isEmpty()) 100 else games.values.map { it.progress }.average().toInt()
+}
+
 object CareGameFactory {
     val mimosa = CarePetDefinition(
         id="mimosa", name="Mimosa", emoji="🐮", soundKey="vaca",
@@ -69,8 +77,23 @@ object CareGameFactory {
         }
     }
 
+    /** One deterministic manifest for art export/import tooling across every registered game. */
+    fun drawableManifestAll(): Map<String,String> = linkedMapOf<String,String>().apply {
+        allPets().forEach { pet ->
+            drawableManifest(pet.id).forEach { (slot, drawable) -> put("${pet.id}.$slot", drawable) }
+        }
+    }
+
     fun readiness(id: String, availableDrawables: Set<String>): CareGameAssetPackReadiness? =
         assetPack(id)?.readiness(availableDrawables)
+
+    /** CI/art tooling can validate every game at once before packaging visual assets. */
+    fun validateAll(availableDrawables: Set<String>): CareFactoryReadiness {
+        val games = allPets().mapNotNull { pet ->
+            readiness(pet.id, availableDrawables)?.let { pet.id to it }
+        }.toMap()
+        return CareFactoryReadiness(games)
+    }
 
     fun stateFor(pet: CarePetDefinition) = MimosaCareState(
         pet.initialStats.hunger,
