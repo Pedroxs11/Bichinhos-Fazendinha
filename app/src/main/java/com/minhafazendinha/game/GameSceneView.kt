@@ -46,6 +46,15 @@ class GameSceneView(context: Context): View(context){
     private fun drawFlowers(c:Canvas,w:Float,h:Float){
         for(i in 0..4){val x=w*(.27f+i*.07f);val y=h*(.80f+(i%2)*.025f);p.color=if(i%2==0)Color.rgb(255,115,166) else Color.rgb(255,222,70);c.drawCircle(x,y,w*.012f,p);p.color=Color.WHITE;c.drawCircle(x,y,w*.004f,p)}
     }
+    private fun drawHayBales(c:Canvas,w:Float,h:Float){
+        val y=h*.77f
+        for(i in 0..2){val x=w*(.53f+i*.065f);rr(c,Color.rgb(224,174,63),x,y-i*h*.015f,x+w*.075f,y+h*.075f-i*h*.015f,9f);p.color=Color.rgb(180,128,42);p.style=Paint.Style.STROKE;p.strokeWidth=3f;c.drawLine(x+w*.037f,y-i*h*.015f,x+w*.037f,y+h*.075f-i*h*.015f,p);p.style=Paint.Style.FILL}
+    }
+    private fun drawFarmSign(c:Canvas,w:Float,h:Float){
+        rr(c,Color.rgb(133,83,47),w*.025f,h*.57f,w*.20f,h*.65f,9f)
+        rr(c,Color.rgb(101,64,39),w*.065f,h*.64f,w*.08f,h*.82f,4f)
+        p.color=Color.WHITE;p.textAlign=Paint.Align.CENTER;p.textSize=w*.030f;p.isFakeBoldText=true;c.drawText("FAZENDA",w*.112f,h*.622f,p);p.isFakeBoldText=false;p.textAlign=Paint.Align.LEFT
+    }
     private fun drawLakeRipples(c:Canvas,x:Float,y:Float,scale:Float){p.style=Paint.Style.STROKE;p.strokeWidth=3f;p.color=Color.argb(125,255,255,255);val s=scale*.075f;c.drawOval(x-s,y-s*.20f,x+s,y+s*.20f,p);p.style=Paint.Style.FILL}
 
     private fun drawLakeBubbles(c:Canvas,x:Float,y:Float,scale:Float,alpha:Float){
@@ -86,7 +95,7 @@ class GameSceneView(context: Context): View(context){
         p.color=Color.rgb(255,220,62);c.drawCircle(w*.12f,h*.15f,min(w,h)*.065f,p)
         oval(c,Color.WHITE,w*.55f,h*.10f,w*.78f,h*.18f);oval(c,Color.WHITE,w*.64f,h*.07f,w*.88f,h*.18f)
         p.color=Color.rgb(91,176,74);val hill=Path();hill.moveTo(0f,h*.48f);hill.quadTo(w*.28f,h*.34f,w*.56f,h*.49f);hill.quadTo(w*.8f,h*.35f,w,h*.47f);hill.lineTo(w,h);hill.lineTo(0f,h);hill.close();c.drawPath(hill,p)
-        drawTree(c,w,h);if(sceneMode!="coop")drawBarn(c,w,h);drawFlowers(c,w,h)
+        drawTree(c,w,h);if(sceneMode!="coop")drawBarn(c,w,h);drawFlowers(c,w,h);drawFarmSign(c,w,h);if(sceneMode!="lake")drawHayBales(c,w,h)
         when(sceneMode){
             "coop"->{rr(c,Color.rgb(230,173,76),w*.55f,h*.31f,w*.86f,h*.68f);p.color=Color.rgb(181,62,48);val roof=Path();roof.moveTo(w*.50f,h*.35f);roof.lineTo(w*.70f,h*.20f);roof.lineTo(w*.91f,h*.35f);roof.close();c.drawPath(roof,p);for(i in 0..2){oval(c,Color.WHITE,w*(.17f+i*.18f),h*.70f,w*(.24f+i*.18f),h*.77f);oval(c,Color.WHITE,w*(.18f+i*.18f),h*.53f,w*(.31f+i*.18f),h*.69f);p.color=Color.rgb(206,65,48);c.drawCircle(w*(.22f+i*.18f),h*.52f,10f,p)}}
             "lake"->{oval(c,Color.rgb(78,181,226),w*.08f,h*.52f,w*.92f,h*.90f);oval(c,Color.rgb(105,213,237),w*.16f,h*.60f,w*.83f,h*.82f);val motion=(lakePhase+wildlifeBoost)%1f;drawFish(c,w*(.40f+.16f*motion),h*.72f,w);drawFish(c,w*(.74f-.14f*motion),h*.78f,w*.72f);drawDuck(c,w*(.24f+.14f*motion),h*.64f,w);drawLily(c,w*.76f,h*.68f,w);drawLakeRipples(c,w*.30f,h*.70f,w);drawLakeRipples(c,w*.53f,h*.77f,w);if(splashAlpha>0f){p.alpha=(255*splashAlpha).toInt();drawLakeRipples(c,w*splashX,h*splashY,w*(1.15f-splashAlpha*.25f));p.alpha=255};if(lakeHearts>0f)drawLakeHeart(c,w*splashX,h*(splashY-.05f*(1f-lakeHearts)),w,lakeHearts);if(lakeBubbles>0f)drawLakeBubbles(c,w*splashX,h*splashY,w,lakeBubbles)}
