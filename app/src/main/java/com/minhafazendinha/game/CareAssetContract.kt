@@ -24,6 +24,30 @@ data class CareAssetContract(
         feedEffect, bathEffect, brushEffect, playEffect
     )
 
+    /**
+     * Deterministic drawable manifest used by art export/import tooling.
+     * Keeping filenames here lets future games drop generated PNGs into the
+     * same pipeline without changing screen code.
+     */
+    fun drawableManifest(): Map<String, String> = linkedMapOf(
+        "character_idle" to characterIdle,
+        "character_happy" to characterHappy,
+        "action_feed" to feedProp,
+        "action_bath" to bathProp,
+        "action_brush" to brushProp,
+        "action_play" to playProp,
+        "effect_feed" to feedEffect,
+        "effect_bath" to bathEffect,
+        "effect_brush" to brushEffect,
+        "effect_play" to playEffect
+    )
+
+    fun missingDrawables(available: Set<String>): Set<String> =
+        drawableManifest().values.filterNot(available::contains).toSet()
+
+    fun readyForVisualIntegration(available: Set<String>): Boolean =
+        requiredAssets().all(available::contains)
+
     fun assetFor(actionId: String): String? = when (actionId.lowercase()) {
         "feed", "eat", "food", "comer" -> feedProp
         "bath", "bathe", "wash", "banho" -> bathProp
