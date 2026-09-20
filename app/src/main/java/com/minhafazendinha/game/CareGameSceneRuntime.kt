@@ -9,7 +9,7 @@ import android.widget.ImageView
 
 /**
  * Reusable layered renderer for care-game templates.
- * New games can now supply a CareGameVisualRecipe instead of creating a bespoke scene View.
+ * New games can supply a CareGameVisualRecipe instead of creating a bespoke scene View.
  */
 class CareGameSceneRuntime(
     context: Context,
@@ -19,13 +19,16 @@ class CareGameSceneRuntime(
     private val background = layer(ImageView.ScaleType.CENTER_CROP)
     private val character = layer(ImageView.ScaleType.CENTER_INSIDE)
     private val foreground = layer(ImageView.ScaleType.CENTER_CROP)
+    private val effect = layer(ImageView.ScaleType.CENTER_INSIDE)
     private val prop = layer(ImageView.ScaleType.CENTER_INSIDE)
     private val reactionAnimator: CareReactionAnimator
+    private var playbackToken = 0
 
     init {
         clipChildren = false
         addView(background, LayoutParams(-1, -1))
         addView(character, LayoutParams(-1, -1).apply { gravity = Gravity.CENTER })
+        addView(effect, LayoutParams(-1, -1).apply { gravity = Gravity.CENTER })
         addView(foreground, LayoutParams(-1, -1))
         addView(prop, LayoutParams(dp(150), dp(150)).apply {
             gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
@@ -43,18 +46,39 @@ class CareGameSceneRuntime(
         background.setImageDrawable(drawable(recipe.backgroundAsset))
         foreground.setImageDrawable(recipe.foregroundAsset?.let(::drawable))
         character.setImageDrawable(drawable(recipe.characterIdleAsset))
+        prop.setImageDrawable(null)
+        effect.setImageDrawable(null)
         prop.visibility = View.GONE
+        effect.visibility = View.GONE
     }
 
     fun play(actionId: String) {
         val action = recipe.action(actionId) ?: return
+        val token = ++playbackToken
         character.setImageDrawable(drawable(action.characterAsset) ?: drawable(recipe.characterIdleAsset))
         prop.setImageDrawable(action.propAsset?.let(::drawable))
+        effect.setImageDrawable(action.effectAsset?.let(::drawable))
         prop.visibility = if (prop.drawable == null) View.GONE else View.VISIBLE
+        effect.visibility = if (effect.drawable == null) View.GONE else View.VISIBLE
         pulse(character)
         if (prop.visibility == View.VISIBLE) pulse(prop)
+        if (effect.visibility == View.VISIBLE) {
+            effect.alpha = 0f
+            effect.scaleX = .9f
+            effect.scaleY = .9f
+            effect.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setDuration(recipe.actionPulseInMs).start()
+            postDelayed({
+                if (token == playbackToken) effect.animate().alpha(0f)
+                    .setDuration(recipe.actionPulseOutMs).withEndAction {
+                        if (token == playbackToken) effect.visibility = View.GONE
+                    }.start()
+            }, recipe.effectHoldMs)
+        }
         reactionAnimator.play(actionId)
-        postDelayed({ showIdle() }, recipe.propHoldMs + recipe.idleReturnDelayMs)
+        postDelayed({
+            if (token == playbackToken) showIdle()
+        }, maxOf(recipe.propHoldMs, recipe.effectHoldMs) + recipe.idleReturnDelayMs)
     }
 
     fun missingAssets(): List<String> {
