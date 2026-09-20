@@ -14,6 +14,8 @@ class GameSceneView(context: Context): View(context){
     private var splashX=.5f
     private var splashY=.72f
     private var splashAlpha=0f
+    private var lakeTapCount=0
+    private var wildlifeBoost=0f
     private val lakeAnimator=ValueAnimator.ofFloat(0f,1f).apply{duration=6000;repeatCount=ValueAnimator.INFINITE;interpolator=LinearInterpolator();addUpdateListener{lakePhase=it.animatedValue as Float;if(sceneMode=="lake")invalidate()}}
     fun setMode(v:String){sceneMode=v;if(v=="lake"){if(!lakeAnimator.isStarted)lakeAnimator.start()}else lakeAnimator.cancel();invalidate()}
     private fun oval(c:Canvas,col:Int,l:Float,t:Float,r:Float,b:Float){p.color=col;c.drawOval(l,t,r,b,p)}
@@ -36,7 +38,10 @@ class GameSceneView(context: Context): View(context){
         if(event.action==MotionEvent.ACTION_DOWN){
             splashX=(event.x/width.coerceAtLeast(1)).coerceIn(.08f,.92f)
             splashY=(event.y/height.coerceAtLeast(1)).coerceIn(.52f,.90f)
+            lakeTapCount++
+            wildlifeBoost=(wildlifeBoost+.11f)%1f
             ValueAnimator.ofFloat(1f,0f).apply{duration=650;addUpdateListener{splashAlpha=it.animatedValue as Float;invalidate()};start()}
+            animate().scaleX(1.008f).scaleY(1.008f).setDuration(70).withEndAction{animate().scaleX(1f).scaleY(1f).setDuration(110).start()}.start()
             performClick();return true
         }
         return true
@@ -51,7 +56,7 @@ class GameSceneView(context: Context): View(context){
         p.color=Color.rgb(91,176,74);val hill=Path();hill.moveTo(0f,h*.48f);hill.quadTo(w*.28f,h*.34f,w*.56f,h*.49f);hill.quadTo(w*.8f,h*.35f,w,h*.47f);hill.lineTo(w,h);hill.lineTo(0f,h);hill.close();c.drawPath(hill,p)
         when(sceneMode){
             "coop"->{rr(c,Color.rgb(230,173,76),w*.55f,h*.31f,w*.86f,h*.68f);p.color=Color.rgb(181,62,48);val roof=Path();roof.moveTo(w*.50f,h*.35f);roof.lineTo(w*.70f,h*.20f);roof.lineTo(w*.91f,h*.35f);roof.close();c.drawPath(roof,p);for(i in 0..2){oval(c,Color.WHITE,w*(.17f+i*.18f),h*.70f,w*(.24f+i*.18f),h*.77f);oval(c,Color.WHITE,w*(.18f+i*.18f),h*.53f,w*(.31f+i*.18f),h*.69f);p.color=Color.rgb(206,65,48);c.drawCircle(w*(.22f+i*.18f),h*.52f,10f,p)}}
-            "lake"->{oval(c,Color.rgb(78,181,226),w*.08f,h*.52f,w*.92f,h*.90f);oval(c,Color.rgb(105,213,237),w*.16f,h*.60f,w*.83f,h*.82f);drawFish(c,w*(.40f+.16f*lakePhase),h*.72f,w);drawFish(c,w*(.74f-.14f*lakePhase),h*.78f,w*.72f);drawDuck(c,w*(.24f+.14f*lakePhase),h*.64f,w);drawLily(c,w*.76f,h*.68f,w);drawLakeRipples(c,w*.30f,h*.70f,w);drawLakeRipples(c,w*.53f,h*.77f,w);if(splashAlpha>0f){p.alpha=(255*splashAlpha).toInt();drawLakeRipples(c,w*splashX,h*splashY,w*(1.15f-splashAlpha*.25f));p.alpha=255}}
+            "lake"->{oval(c,Color.rgb(78,181,226),w*.08f,h*.52f,w*.92f,h*.90f);oval(c,Color.rgb(105,213,237),w*.16f,h*.60f,w*.83f,h*.82f);val motion=(lakePhase+wildlifeBoost)%1f;drawFish(c,w*(.40f+.16f*motion),h*.72f,w);drawFish(c,w*(.74f-.14f*motion),h*.78f,w*.72f);drawDuck(c,w*(.24f+.14f*motion),h*.64f,w);drawLily(c,w*.76f,h*.68f,w);drawLakeRipples(c,w*.30f,h*.70f,w);drawLakeRipples(c,w*.53f,h*.77f,w);if(splashAlpha>0f){p.alpha=(255*splashAlpha).toInt();drawLakeRipples(c,w*splashX,h*splashY,w*(1.15f-splashAlpha*.25f));p.alpha=255}}
             else->{rr(c,Color.rgb(121,76,40),w*.05f,h*.66f,w*.95f,h*.90f,12f);for(i in 0..5){val x=w*(.12f+i*.15f);p.color=Color.rgb(60,150,62);c.drawRect(x-4,h*.54f,x+4,h*.75f,p);c.drawCircle(x-15,h*.57f,17f,p);c.drawCircle(x+13,h*.60f,16f,p);p.color=Color.rgb(239,174,47);c.drawCircle(x,h*.54f,9f,p)}}
         }
         p.color=Color.rgb(220,176,102);for(i in 0..5){val x=i*w/5f;rr(c,p.color,x-5,h*.86f,x+10,h,5f)};rr(c,Color.rgb(191,139,72),0f,h*.91f,w,h*.95f,4f)
