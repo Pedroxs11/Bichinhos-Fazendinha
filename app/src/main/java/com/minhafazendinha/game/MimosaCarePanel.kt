@@ -17,15 +17,15 @@ class MimosaCarePanel(context:Context,private val state:MimosaCareState=MimosaCa
  private val reaction=TextView(context)
  private val progress=ProgressBar(context,null,android.R.attr.progressBarStyleHorizontal).apply{max=100}
  private val actions=listOf(
-  CareUiAction(CareVisualState.FEED,"🥕  COMER",0xFF48B92D.toInt()){feed()},
+  CareUiAction(CareVisualState.FEED,"🥕  COMER",0xFFFFA51F.toInt()){feed()},
   CareUiAction(CareVisualState.BATHE,"🧽  BANHO",0xFF25A9F2.toInt()){bathe()},
-  CareUiAction(CareVisualState.BRUSH,"🪮  ESCOVAR",0xFFF4B51C.toInt()){brush()},
-  CareUiAction(CareVisualState.PLAY,"🏐  BRINCAR",0xFFED4F96.toInt()){play()}
+  CareUiAction(CareVisualState.BRUSH,"🪮  ESCOVAR",0xFFED5B9A.toInt()){brush()},
+  CareUiAction(CareVisualState.PLAY,"🏐  BRINCAR",0xFF55B83B.toInt()){play()}
  )
  init{
   orientation=VERTICAL;gravity=Gravity.CENTER;setPadding(12,8,12,10)
-  background=GradientDrawable().apply{setColor(0xEFFFF8E8.toInt());cornerRadii=floatArrayOf(28f,28f,28f,28f,0f,0f,0f,0f)}
-  status.gravity=Gravity.CENTER;status.textSize=17f;status.setTextColor(0xFF5B351B.toInt());status.setTypeface(null,android.graphics.Typeface.BOLD)
+  background=GradientDrawable().apply{setColor(0xFFF7E3B5.toInt());cornerRadius=30f;setStroke(3,0xFFB87936.toInt())}
+  status.gravity=Gravity.CENTER;status.textSize=17f;status.setTextColor(0xFF633B20.toInt());status.setTypeface(null,android.graphics.Typeface.BOLD)
   reaction.gravity=Gravity.CENTER;reaction.textSize=15f;reaction.setTextColor(0xFF704525.toInt());reaction.text="❤️ Muuu! Vamos brincar?"
   addView(status,lp());addView(progress,LayoutParams(-1,18).apply{setMargins(24,2,24,5)});addView(reaction,lp())
   val row=LinearLayout(context).apply{orientation=HORIZONTAL;gravity=Gravity.CENTER}
