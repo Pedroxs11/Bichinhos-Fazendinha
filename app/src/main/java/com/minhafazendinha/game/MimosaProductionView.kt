@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 
@@ -15,6 +16,7 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
     private val contactShadow = ImageView(context)
     private val character = layer(ImageView.ScaleType.CENTER_INSIDE)
     private val foreground = layer(ImageView.ScaleType.CENTER_CROP)
+    private val prop = layer(ImageView.ScaleType.CENTER_INSIDE)
     private var visualState = CareVisualState.IDLE
     private val reactionAnimator: CareReactionAnimator
 
@@ -29,6 +31,10 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
         })
         addView(character, LayoutParams(-1, -1).apply { gravity = Gravity.CENTER })
         addView(foreground, LayoutParams(-1, -1))
+        addView(prop, LayoutParams(dp(150), dp(150)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+            bottomMargin = dp(36)
+        })
         contactShadow.background = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor(Color.argb(52, 32, 24, 18))
@@ -53,11 +59,13 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
         render()
         animateCharacter()
         reactionAnimator.play(actionKey(state))
+        animateProp(state)
     }
 
     fun showIdle() {
         visualState = CareVisualState.IDLE
         render()
+        prop.visibility = View.GONE
     }
 
     fun hasVisualPreview() = drawable(ProductionVisuals.mimosa.referenceAsset) != null
@@ -127,6 +135,39 @@ class MimosaProductionView(context: Context) : FrameLayout(context) {
         character.setImageDrawable(
             if (layered) drawable(asset ?: spec.characterAsset) ?: drawable(spec.characterAsset) else null
         )
+
+        val propAsset = actionPropAsset(visualState)
+        prop.setImageDrawable(propAsset?.let(::drawable))
+        prop.visibility = if (layered && prop.drawable != null && visualState != CareVisualState.IDLE) VISIBLE else GONE
+    }
+
+    private fun actionPropAsset(state: CareVisualState): String? = when (state) {
+        CareVisualState.FEED -> "farm_prop_food"
+        CareVisualState.BATHE -> "farm_prop_water_tub"
+        CareVisualState.BRUSH -> "farm_prop_brush"
+        CareVisualState.PLAY -> "farm_prop_play_ball"
+        CareVisualState.IDLE -> null
+    }
+
+    private fun animateProp(state: CareVisualState) {
+        if (state == CareVisualState.IDLE || prop.drawable == null) return
+        prop.animate().cancel()
+        prop.alpha = 0f
+        prop.scaleX = .72f
+        prop.scaleY = .72f
+        prop.translationY = dp(18).toFloat()
+        prop.rotation = when (state) {
+            CareVisualState.BRUSH -> -10f
+            CareVisualState.PLAY -> -6f
+            else -> 0f
+        }
+        prop.animate()
+            .alpha(1f)
+            .scaleX(1f).scaleY(1f)
+            .translationY(0f)
+            .rotation(0f)
+            .setDuration(220)
+            .start()
     }
 
     private fun layer(scale: ImageView.ScaleType) = ImageView(context).apply {
