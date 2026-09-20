@@ -51,8 +51,11 @@ data class CareActionVisualRecipe(
 
 /** Single factory entry point for runtime and future visual tooling. */
 object CareGameVisualFactory {
+    private val packs: Map<String, CareGameAssetPack> = listOf(CareGameAssetPack.MIMOSA)
+        .associateBy { it.gameId.lowercase() }
+
     fun recipe(gameId: String): CareGameVisualRecipe? =
-        CareGameRegistry.assetPack(gameId)?.let(CareGameVisualRecipe::from)
+        packs[gameId.lowercase()]?.let(CareGameVisualRecipe::from)
 
     fun mimosa(): CareGameVisualRecipe = CareGameVisualRecipe.from(CareGameAssetPack.MIMOSA)
 }
