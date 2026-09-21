@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "BichinhosFazendinha"
 include(":app")
+include(":paintprototype")
