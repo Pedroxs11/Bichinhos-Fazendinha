@@ -43,7 +43,8 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun butterfly(): MutableList<Area> {
         val w = width.toFloat(); val top = height * .14f; val bottom = height * .72f
-        fun sx(x: Float)=x*w; fun sy(y: Float)=top+y*(bottom-top)
+        fun sx(x: Float) = x * w
+        fun sy(y: Float) = top + y * (bottom - top)
         return mutableListOf(
             Area(1,p(sx(.48f),sy(.10f),sx(.52f),sy(.10f),sx(.53f),sy(.80f),sx(.47f),sy(.80f))),
             Area(2,p(sx(.47f),sy(.18f),sx(.25f),sy(.05f),sx(.12f),sy(.22f),sx(.28f),sy(.42f))),
@@ -58,7 +59,8 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun fish(): MutableList<Area> {
         val w = width.toFloat(); val top = height*.18f; val bottom = height*.70f
-        fun sx(x: Float)=x*w; fun sy(y: Float)=top+y*(bottom-top)
+        fun sx(x: Float) = x * w
+        fun sy(y: Float) = top + y * (bottom - top)
         return mutableListOf(
             Area(1,p(sx(.18f),sy(.50f),sx(.34f),sy(.22f),sx(.45f),sy(.18f),sx(.42f),sy(.82f),sx(.30f),sy(.77f))),
             Area(2,p(sx(.42f),sy(.18f),sx(.52f),sy(.15f),sx(.52f),sy(.85f),sx(.42f),sy(.82f))),
