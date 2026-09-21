@@ -6,11 +6,11 @@ android {
     namespace = "com.paintbynumber.prototype"
     compileSdk = 35
     defaultConfig {
-        applicationId = "com.paintbynumber.prototype"
+        applicationId = "com.pedro.colorbynumber.prototype2"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
