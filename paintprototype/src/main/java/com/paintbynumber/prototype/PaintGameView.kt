@@ -95,7 +95,8 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun turtle(): MutableList<Area> {
         val w=width.toFloat(); val top=height*.18f; val bottom=height*.70f
-        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        fun sx(x: Float) = x * w
+        fun sy(y: Float) = top + y * (bottom - top)
         return mutableListOf(
             Area(1,p(sx(.28f),sy(.35f),sx(.42f),sy(.20f),sx(.58f),sy(.20f),sx(.72f),sy(.35f),sx(.68f),sy(.68f),sx(.32f),sy(.68f))),
             Area(2,p(sx(.72f),sy(.38f),sx(.88f),sy(.43f),sx(.91f),sy(.55f),sx(.72f),sy(.58f))),
@@ -110,7 +111,8 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun rocket(): MutableList<Area> {
         val w=width.toFloat(); val top=height*.16f; val bottom=height*.72f
-        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        fun sx(x: Float) = x * w
+        fun sy(y: Float) = top + y * (bottom - top)
         return mutableListOf(
             Area(1,p(sx(.50f),sy(.05f),sx(.62f),sy(.28f),sx(.62f),sy(.67f),sx(.38f),sy(.67f),sx(.38f),sy(.28f))),
             Area(2,p(sx(.38f),sy(.48f),sx(.25f),sy(.66f),sx(.38f),sy(.62f))),
@@ -125,7 +127,8 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun flower(): MutableList<Area> {
         val w=width.toFloat(); val top=height*.16f; val bottom=height*.72f
-        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        fun sx(x: Float) = x * w
+        fun sy(y: Float) = top + y * (bottom - top)
         return mutableListOf(
             Area(1,p(sx(.45f),sy(.38f),sx(.50f),sy(.16f),sx(.55f),sy(.38f),sx(.50f),sy(.48f))),
             Area(2,p(sx(.52f),sy(.40f),sx(.70f),sy(.28f),sx(.65f),sy(.48f),sx(.53f),sy(.50f))),
@@ -140,7 +143,8 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun iceCream(): MutableList<Area> {
         val w=width.toFloat(); val top=height*.16f; val bottom=height*.72f
-        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        fun sx(x: Float) = x * w
+        fun sy(y: Float) = top + y * (bottom - top)
         return mutableListOf(
             Area(1,p(sx(.35f),sy(.42f),sx(.65f),sy(.42f),sx(.56f),sy(.88f),sx(.44f),sy(.88f))),
             Area(2,p(sx(.35f),sy(.42f),sx(.30f),sy(.32f),sx(.38f),sy(.18f),sx(.48f),sy(.28f),sx(.50f),sy(.42f))),
