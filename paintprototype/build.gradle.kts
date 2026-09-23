@@ -14,19 +14,30 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        create("releaseLocal") {
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     defaultConfig {
-        applicationId = "com.pedro.colorbynumber.prototype2"
+        applicationId = "com.pedro.colorbynumber.prototype.release"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.1.2"
+        versionCode = 4
+        versionName = "0.1.3"
     }
 
     buildTypes {
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
+        }
+        getByName("release") {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("releaseLocal")
         }
     }
 
