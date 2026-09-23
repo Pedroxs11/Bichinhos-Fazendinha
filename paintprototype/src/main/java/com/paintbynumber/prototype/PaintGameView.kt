@@ -126,8 +126,14 @@ class PaintGameView(context: Context) : View(context) {
             drawingIndex=if(e.x<w/2) 0 else 1
             rebuild(); return true
         }
-        areas.firstOrNull { contains(it.path,e.x,e.y) }?.let {
-            if(it.number==selected) { it.painted=true; invalidate() }
+        // Prefer the currently selected numbered region. Some drawings have
+        // intentionally overlapping paths (for example, the fish eye sits
+        // inside the body), so checking the first path alone can block it.
+        areas.firstOrNull {
+            it.number == selected && !it.painted && contains(it.path, e.x, e.y)
+        }?.let {
+            it.painted = true
+            invalidate()
         }
         return true
     }
