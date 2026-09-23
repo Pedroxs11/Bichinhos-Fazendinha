@@ -28,8 +28,17 @@ class PaintGameView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
+    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete")
+
     private fun rebuild() {
-        areas = if (drawingIndex == 0) butterfly() else fish()
+        areas = when (drawingIndex) {
+            0 -> butterfly()
+            1 -> fish()
+            2 -> turtle()
+            3 -> rocket()
+            4 -> flower()
+            else -> iceCream()
+        }
         selected = areas.firstOrNull()?.number ?: 1
         wrongArea = null
         invalidate()
@@ -84,6 +93,66 @@ class PaintGameView(context: Context) : View(context) {
         )
     }
 
+    private fun turtle(): MutableList<Area> {
+        val w=width.toFloat(); val top=height*.18f; val bottom=height*.70f
+        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        return mutableListOf(
+            Area(1,p(sx(.28f),sy(.35f),sx(.42f),sy(.20f),sx(.58f),sy(.20f),sx(.72f),sy(.35f),sx(.68f),sy(.68f),sx(.32f),sy(.68f))),
+            Area(2,p(sx(.72f),sy(.38f),sx(.88f),sy(.43f),sx(.91f),sy(.55f),sx(.72f),sy(.58f))),
+            Area(3,p(sx(.30f),sy(.38f),sx(.18f),sy(.28f),sx(.12f),sy(.40f),sx(.28f),sy(.50f))),
+            Area(4,p(sx(.34f),sy(.64f),sx(.24f),sy(.78f),sx(.38f),sy(.80f),sx(.45f),sy(.67f))),
+            Area(5,p(sx(.58f),sy(.67f),sx(.66f),sy(.80f),sx(.80f),sy(.76f),sx(.68f),sy(.62f))),
+            Area(6,p(sx(.40f),sy(.30f),sx(.50f),sy(.22f),sx(.50f),sy(.45f))),
+            Area(7,p(sx(.50f),sy(.22f),sx(.61f),sy(.31f),sx(.50f),sy(.45f))),
+            Area(8,p(sx(.40f),sy(.30f),sx(.50f),sy(.45f),sx(.39f),sy(.57f)))
+        )
+    }
+
+    private fun rocket(): MutableList<Area> {
+        val w=width.toFloat(); val top=height*.16f; val bottom=height*.72f
+        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        return mutableListOf(
+            Area(1,p(sx(.50f),sy(.05f),sx(.62f),sy(.28f),sx(.62f),sy(.67f),sx(.38f),sy(.67f),sx(.38f),sy(.28f))),
+            Area(2,p(sx(.38f),sy(.48f),sx(.25f),sy(.66f),sx(.38f),sy(.62f))),
+            Area(3,p(sx(.62f),sy(.48f),sx(.75f),sy(.66f),sx(.62f),sy(.62f))),
+            Area(4,p(sx(.43f),sy(.32f),sx(.57f),sy(.32f),sx(.57f),sy(.47f),sx(.43f),sy(.47f))),
+            Area(5,p(sx(.43f),sy(.67f),sx(.50f),sy(.88f),sx(.57f),sy(.67f))),
+            Area(6,p(sx(.38f),sy(.28f),sx(.50f),sy(.05f),sx(.62f),sy(.28f))),
+            Area(7,p(sx(.45f),sy(.67f),sx(.50f),sy(.78f),sx(.55f),sy(.67f))),
+            Area(8,p(sx(.46f),sy(.35f),sx(.54f),sy(.35f),sx(.54f),sy(.44f),sx(.46f),sy(.44f)))
+        )
+    }
+
+    private fun flower(): MutableList<Area> {
+        val w=width.toFloat(); val top=height*.16f; val bottom=height*.72f
+        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        return mutableListOf(
+            Area(1,p(sx(.45f),sy(.38f),sx(.50f),sy(.16f),sx(.55f),sy(.38f),sx(.50f),sy(.48f))),
+            Area(2,p(sx(.52f),sy(.40f),sx(.70f),sy(.28f),sx(.65f),sy(.48f),sx(.53f),sy(.50f))),
+            Area(3,p(sx(.54f),sy(.50f),sx(.70f),sy(.58f),sx(.55f),sy(.66f),sx(.49f),sy(.53f))),
+            Area(4,p(sx(.47f),sy(.52f),sx(.45f),sy(.70f),sx(.34f),sy(.58f),sx(.43f),sy(.49f))),
+            Area(5,p(sx(.43f),sy(.47f),sx(.29f),sy(.36f),sx(.45f),sy(.34f),sx(.50f),sy(.45f))),
+            Area(6,p(sx(.45f),sy(.43f),sx(.55f),sy(.43f),sx(.57f),sy(.53f),sx(.48f),sy(.56f),sx(.42f),sy(.49f))),
+            Area(7,p(sx(.48f),sy(.55f),sx(.52f),sy(.55f),sx(.54f),sy(.91f),sx(.48f),sy(.91f))),
+            Area(8,p(sx(.51f),sy(.72f),sx(.68f),sy(.65f),sx(.62f),sy(.83f),sx(.52f),sy(.84f)))
+        )
+    }
+
+    private fun iceCream(): MutableList<Area> {
+        val w=width.toFloat(); val top=height*.16f; val bottom=height*.72f
+        fun sx(x:Float)=x*w; fun sy(y:Float)=top+y*(bottom-top)
+        return mutableListOf(
+            Area(1,p(sx(.35f),sy(.42f),sx(.65f),sy(.42f),sx(.56f),sy(.88f),sx(.44f),sy(.88f))),
+            Area(2,p(sx(.35f),sy(.42f),sx(.30f),sy(.32f),sx(.38f),sy(.18f),sx(.48f),sy(.28f),sx(.50f),sy(.42f))),
+            Area(3,p(sx(.50f),sy(.42f),sx(.48f),sy(.28f),sx(.57f),sy(.16f),sx(.67f),sy(.30f),sx(.65f),sy(.42f))),
+            Area(4,p(sx(.38f),sy(.42f),sx(.50f),sy(.55f),sx(.44f),sy(.70f))),
+            Area(5,p(sx(.50f),sy(.55f),sx(.62f),sy(.42f),sx(.56f),sy(.70f))),
+            Area(6,p(sx(.44f),sy(.70f),sx(.50f),sy(.55f),sx(.56f),sy(.70f),sx(.50f),sy(.86f))),
+            Area(7,p(sx(.38f),sy(.18f),sx(.43f),sy(.08f),sx(.48f),sy(.28f))),
+            Area(8,p(sx(.57f),sy(.16f),sx(.61f),sy(.07f),sx(.65f),sy(.23f)))
+        )
+    }
+
     override fun onDraw(c: Canvas) {
         super.onDraw(c)
         val w = width.toFloat(); val h = height.toFloat()
@@ -91,7 +160,7 @@ class PaintGameView(context: Context) : View(context) {
         c.drawRect(0f,0f,w,h*.11f,paint)
         textPaint.textSize = min(w,h)*.045f
         textPaint.color = Color.DKGRAY
-        c.drawText(if(drawingIndex==0) "Borboleta" else "Peixinho", w/2,h*.07f,textPaint)
+        c.drawText(drawingNames[drawingIndex], w/2,h*.07f,textPaint)
 
         areas.forEach { a ->
             paint.style = Paint.Style.FILL
@@ -149,11 +218,13 @@ class PaintGameView(context: Context) : View(context) {
         }
 
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(245,245,245)
-        c.drawRoundRect(w*.15f,h*.91f,w*.45f,h*.97f,20f,20f,paint)
-        c.drawRoundRect(w*.55f,h*.91f,w*.85f,h*.97f,20f,20f,paint)
-        textPaint.textSize=w*.035f; textPaint.color=Color.DKGRAY
-        c.drawText("Borboleta",w*.30f,h*.95f,textPaint)
-        c.drawText("Peixinho",w*.70f,h*.95f,textPaint)
+        c.drawRoundRect(w*.08f,h*.91f,w*.28f,h*.97f,20f,20f,paint)
+        c.drawRoundRect(w*.36f,h*.91f,w*.64f,h*.97f,20f,20f,paint)
+        c.drawRoundRect(w*.72f,h*.91f,w*.92f,h*.97f,20f,20f,paint)
+        textPaint.textSize=w*.033f; textPaint.color=Color.DKGRAY
+        c.drawText("‹ Anterior",w*.18f,h*.95f,textPaint)
+        c.drawText("${drawingIndex+1}/${drawingNames.size}",w*.50f,h*.95f,textPaint)
+        c.drawText("Próximo ›",w*.82f,h*.95f,textPaint)
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
@@ -170,8 +241,14 @@ class PaintGameView(context: Context) : View(context) {
             return true
         }
         if(e.y>h*.90f){
-            drawingIndex=if(e.x<w/2) 0 else 1
-            rebuild(); return true
+            if (e.x < w*.32f) {
+                drawingIndex = (drawingIndex - 1 + drawingNames.size) % drawingNames.size
+                rebuild()
+            } else if (e.x > w*.68f) {
+                drawingIndex = (drawingIndex + 1) % drawingNames.size
+                rebuild()
+            }
+            return true
         }
         // Prefer the currently selected numbered region. Some drawings have
         // intentionally overlapping paths (for example, the fish eye sits
