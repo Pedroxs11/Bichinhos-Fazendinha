@@ -16,6 +16,7 @@ class PaintGameView(context: Context) : View(context) {
     private var selected = 1
     private var drawingIndex = 0
     private var areas = mutableListOf<Area>()
+    private var wrongArea: Area? = null
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.DKGRAY
@@ -29,8 +30,18 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun rebuild() {
         areas = if (drawingIndex == 0) butterfly() else fish()
+        selected = areas.firstOrNull()?.number ?: 1
+        wrongArea = null
         invalidate()
     }
+
+    private fun isNumberComplete(number: Int): Boolean =
+        areas.filter { it.number == number }.all { it.painted }
+
+    private fun nextIncompleteNumber(): Int? =
+        (1..colors.size).firstOrNull { n -> areas.any { it.number == n && !it.painted } }
+
+    private fun isDrawingComplete(): Boolean = areas.isNotEmpty() && areas.all { it.painted }
 
     private fun p(vararg pts: Float): Path {
         val path = Path()
@@ -84,9 +95,25 @@ class PaintGameView(context: Context) : View(context) {
 
         areas.forEach { a ->
             paint.style = Paint.Style.FILL
-            paint.color = if(a.painted) colors[a.number-1] else Color.WHITE
+            paint.color = when {
+                a.painted -> colors[a.number-1]
+                a === wrongArea -> Color.rgb(255, 225, 225)
+                a.number == selected -> Color.rgb(248, 248, 248)
+                else -> Color.WHITE
+            }
             c.drawPath(a.path,paint)
-            paint.style = Paint.Style.STROKE; paint.strokeWidth = 3f; paint.color = Color.rgb(120,120,120)
+
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = when {
+                a === wrongArea -> 6f
+                !a.painted && a.number == selected -> 5f
+                else -> 3f
+            }
+            paint.color = when {
+                a === wrongArea -> Color.rgb(220, 60, 60)
+                !a.painted && a.number == selected -> colors[a.number - 1]
+                else -> Color.rgb(120,120,120)
+            }
             c.drawPath(a.path,paint)
             if(!a.painted){
                 val b=RectF(); a.path.computeBounds(b,true)
@@ -97,14 +124,28 @@ class PaintGameView(context: Context) : View(context) {
 
         val y=h*.84f
         colors.forEachIndexed { i,col ->
+            val number = i + 1
+            val complete = isNumberComplete(number)
             val x=w*(.075f+i*.122f)
-            paint.style=Paint.Style.FILL; paint.color=col
+
+            paint.style=Paint.Style.FILL
+            paint.color=if (complete) Color.rgb(225,225,225) else col
             c.drawCircle(x,y,w*.045f,paint)
-            paint.style=Paint.Style.STROKE; paint.strokeWidth=if(selected==i+1) 8f else 2f
-            paint.color=if(selected==i+1) Color.BLACK else Color.LTGRAY
+
+            paint.style=Paint.Style.STROKE
+            paint.strokeWidth=if(selected==number && !complete) 8f else 2f
+            paint.color=if(selected==number && !complete) Color.BLACK else Color.LTGRAY
             c.drawCircle(x,y,w*.052f,paint)
-            textPaint.textSize=w*.035f; textPaint.color=Color.WHITE
-            c.drawText((i+1).toString(),x,y+textPaint.textSize*.35f,textPaint)
+
+            textPaint.textSize=w*.035f
+            textPaint.color=if (complete) Color.DKGRAY else Color.WHITE
+            c.drawText(if (complete) "✓" else number.toString(),x,y+textPaint.textSize*.35f,textPaint)
+        }
+
+        if (isDrawingComplete()) {
+            textPaint.textSize = w * .055f
+            textPaint.color = Color.rgb(60, 150, 80)
+            c.drawText("Concluído! ✓", w/2, h*.77f, textPaint)
         }
 
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(245,245,245)
@@ -120,7 +161,13 @@ class PaintGameView(context: Context) : View(context) {
         val w=width.toFloat(); val h=height.toFloat()
         if(e.y in h*.79f..h*.89f){
             val idx=((e.x/w-.014f)/.122f).toInt().coerceIn(0,7)
-            selected=idx+1; invalidate(); return true
+            val number = idx + 1
+            if (!isNumberComplete(number)) {
+                selected = number
+                wrongArea = null
+                invalidate()
+            }
+            return true
         }
         if(e.y>h*.90f){
             drawingIndex=if(e.x<w/2) 0 else 1
@@ -129,11 +176,31 @@ class PaintGameView(context: Context) : View(context) {
         // Prefer the currently selected numbered region. Some drawings have
         // intentionally overlapping paths (for example, the fish eye sits
         // inside the body), so checking the first path alone can block it.
-        areas.firstOrNull {
+        val correct = areas.firstOrNull {
             it.number == selected && !it.painted && contains(it.path, e.x, e.y)
-        }?.let {
-            it.painted = true
+        }
+        if (correct != null) {
+            correct.painted = true
+            wrongArea = null
+            if (isNumberComplete(selected)) {
+                nextIncompleteNumber()?.let { selected = it }
+            }
             invalidate()
+            return true
+        }
+
+        val touchedWrong = areas.firstOrNull {
+            !it.painted && contains(it.path, e.x, e.y)
+        }
+        if (touchedWrong != null) {
+            wrongArea = touchedWrong
+            invalidate()
+            postDelayed({
+                if (wrongArea === touchedWrong) {
+                    wrongArea = null
+                    invalidate()
+                }
+            }, 280)
         }
         return true
     }
