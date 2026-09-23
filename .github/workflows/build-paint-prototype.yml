@@ -26,14 +26,14 @@ jobs:
         with:
           gradle-version: '8.9'
       - name: Build prototype APK
-        run: gradle :paintprototype:assembleDebug --stacktrace
+        run: gradle :paintprototype:assembleRelease --stacktrace
       - name: Verify APK signature
         run: |
-          APK="paintprototype/build/outputs/apk/debug/paintprototype-debug.apk"
+          APK="paintprototype/build/outputs/apk/release/paintprototype-release.apk"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           echo "Using $APKSIGNER"
           "$APKSIGNER" verify --verbose --print-certs "$APK"
       - uses: actions/upload-artifact@v4
         with:
-          name: pintura-por-numero-prototype
-          path: paintprototype/build/outputs/apk/debug/paintprototype-debug.apk
+          name: pintura-por-numero-release
+          path: paintprototype/build/outputs/apk/release/paintprototype-release.apk
