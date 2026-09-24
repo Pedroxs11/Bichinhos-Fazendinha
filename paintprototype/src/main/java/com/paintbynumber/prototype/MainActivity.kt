@@ -49,6 +49,8 @@ class MainActivity : Activity() {
         })
         setContentView(root)
 
+        restoreConfirmedCameraArtwork()
+
         // If Android recreated the activity while the camera/preview was open,
         // recover the pending photo instead of silently losing the user's work.
         val restoredPath = savedInstanceState?.getString(STATE_PENDING_CAMERA_FILE)
@@ -56,6 +58,33 @@ class MainActivity : Activity() {
             pendingCameraFile = it
             showCameraPreview(it)
         }
+    }
+
+    private fun restoreConfirmedCameraArtwork() {
+        val prefs = getSharedPreferences("paint_progress", MODE_PRIVATE)
+        if (!prefs.getBoolean("camera_line_art_confirmed", false)) return
+        val path = prefs.getString("last_camera_line_art", null) ?: return
+        val file = File(path)
+        if (!file.exists() || file.length() <= 0L) {
+            prefs.edit().remove("last_camera_line_art").putBoolean("camera_line_art_confirmed", false).apply()
+            return
+        }
+
+        val density = resources.displayMetrics.density
+        val button = Button(this).apply {
+            text = "🖼 Minha foto"
+            textSize = 14f
+            contentDescription = "Abrir desenho criado pela câmera"
+            setOnClickListener { showLineArtPreview(file) }
+        }
+        root.addView(button, FrameLayout.LayoutParams(
+            (128 * density).toInt(),
+            (48 * density).toInt(),
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            bottomMargin = (12 * density).toInt()
+            marginEnd = (10 * density).toInt()
+        })
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
