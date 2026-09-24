@@ -181,6 +181,14 @@ class PaintGameView(context: Context) : View(context) {
         return (count * 100 / drawingRegionCount(index)).coerceIn(0, 100)
     }
 
+    private fun savedCreativeProgress(index: Int): Int {
+        val prefix = "drawing_${index}_creative"
+        if (prefs.getBoolean("${prefix}_complete", false)) return 100
+        val painted = prefs.getString("${prefix}_painted", "") ?: ""
+        val count = painted.split(",").count { it.isNotBlank() }
+        return (count * 100 / drawingRegionCount(index)).coerceIn(0, 100)
+    }
+
     private fun isNumberComplete(number: Int): Boolean {
         val matching = areas.filter { it.number == number }
         return matching.isNotEmpty() && matching.all { it.painted }
@@ -619,10 +627,19 @@ class PaintGameView(context: Context) : View(context) {
             textPaint.color=Color.DKGRAY
             c.drawText(drawingNames[i],l+cardW/2,t+cardH*.72f,textPaint)
             val progress = savedProgress(i)
+            val creativeProgress = savedCreativeProgress(i)
             textPaint.textSize=w*.027f
-            textPaint.color=if (progress == 100) Color.rgb(60,150,80) else Color.GRAY
+            textPaint.color=if (progress == 100 || creativeProgress == 100) Color.rgb(60,150,80) else Color.GRAY
             val locked = i >= unlockedDrawingCount()
-            c.drawText(if (locked) "🔒 Assistir para liberar" else if (progress == 100) "Concluído ✓" else "$progress%",l+cardW/2,t+cardH*.88f,textPaint)
+            val status = when {
+                locked -> "🔒 Assistir para liberar"
+                progress == 100 && creativeProgress == 100 -> "⭐ Números + Criativo"
+                progress == 100 -> "Concluído ✓"
+                creativeProgress == 100 -> "🎨 Criativo concluído"
+                creativeProgress > 0 -> "$progress% • 🎨 $creativeProgress%"
+                else -> "$progress%"
+            }
+            c.drawText(status,l+cardW/2,t+cardH*.88f,textPaint)
         }
 
         paint.color=Color.rgb(235,242,255)
