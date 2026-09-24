@@ -17,6 +17,8 @@ object GalleryThumbnailRenderer {
         )
         val previousStyle = paint.style
         val previousStrokeWidth = paint.strokeWidth
+        val previousStrokeCap = paint.strokeCap
+        val previousColor = paint.color
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeWidth = width * .055f
@@ -31,7 +33,11 @@ object GalleryThumbnailRenderer {
             )
             canvas.drawArc(bounds, 180f, 180f, false, paint)
         }
+        // This helper shares PaintGameView's Paint instance. Restore every
+        // property we mutate so drawing a thumbnail cannot affect later cards.
         paint.style = previousStyle
         paint.strokeWidth = previousStrokeWidth
+        paint.strokeCap = previousStrokeCap
+        paint.color = previousColor
     }
 }
