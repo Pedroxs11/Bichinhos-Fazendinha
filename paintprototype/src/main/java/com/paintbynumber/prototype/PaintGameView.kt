@@ -44,6 +44,16 @@ class PaintGameView(context: Context) : View(context) {
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
     private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete")
+    // Monetization prototype: first four are free; one rewarded-video action
+    // unlocks the next two drawings. Real ad SDK will replace this simulator later.
+    private fun unlockedDrawingCount(): Int = prefs.getInt("unlocked_drawing_count", 4).coerceAtMost(drawingNames.size)
+    private fun simulateRewardedVideoUnlock() {
+        val current = unlockedDrawingCount()
+        prefs.edit().putInt("unlocked_drawing_count", (current + 2).coerceAtMost(drawingNames.size)).apply()
+        rewardTitle = "2 novas artes liberadas!"
+        rewardUntil = System.currentTimeMillis() + 2200L
+        invalidate()
+    }
 
     private fun rebuild() {
         areas = when (drawingIndex) {
@@ -297,13 +307,14 @@ class PaintGameView(context: Context) : View(context) {
             val progress = savedProgress(i)
             textPaint.textSize=w*.027f
             textPaint.color=if (progress == 100) Color.rgb(60,150,80) else Color.GRAY
-            c.drawText(if (progress == 100) "Concluído ✓" else "$progress%",l+cardW/2,t+cardH*.88f,textPaint)
+            val locked = i >= unlockedDrawingCount()
+            c.drawText(if (locked) "🔒 Assistir para liberar" else if (progress == 100) "Concluído ✓" else "$progress%",l+cardW/2,t+cardH*.88f,textPaint)
         }
 
         paint.color=Color.rgb(235,242,255)
         c.drawRoundRect(w*.12f,h*.88f,w*.88f,h*.95f,24f,24f,paint)
         textPaint.textSize=w*.035f; textPaint.color=Color.DKGRAY
-        c.drawText("📷 Câmera  •  em breve",w/2,h*.925f,textPaint)
+        c.drawText(if (unlockedDrawingCount() < drawingNames.size) "▶ Assistir vídeo • liberar 2 artes" else "📷 Câmera • em breve",w/2,h*.925f,textPaint)
     }
 
     override fun onDraw(c: Canvas) {
@@ -468,11 +479,21 @@ class PaintGameView(context: Context) : View(context) {
         if(e.action!=MotionEvent.ACTION_UP) return true
 
         if (galleryMode) {
+            if (e.y in h*.88f..h*.95f && unlockedDrawingCount() < drawingNames.size) {
+                simulateRewardedVideoUnlock()
+                return true
+            }
             if (e.y in h*.14f..h*.87f) {
                 val row = ((e.y - h*.16f) / (h*.235f)).toInt()
                 val col = if (e.x < w/2) 0 else 1
                 val index = row*2 + col
                 if (index in drawingNames.indices) {
+                    if (index >= unlockedDrawingCount()) {
+                        rewardTitle = "Arte bloqueada • assista para liberar"
+                        rewardUntil = System.currentTimeMillis() + 1600L
+                        invalidate()
+                        return true
+                    }
                     drawingIndex = index
                     galleryMode = false
                     creativeMode = false
