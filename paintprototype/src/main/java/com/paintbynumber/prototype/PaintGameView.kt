@@ -54,7 +54,7 @@ class PaintGameView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
-    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Mosaico")
+    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Mosaico", "Paisagem")
     // Monetization prototype: first four are free; one rewarded-video action
     // unlocks the next two drawings. Real ad SDK will replace this simulator later.
     private fun unlockedDrawingCount(): Int = prefs.getInt("unlocked_drawing_count", 4).coerceAtMost(drawingNames.size)
@@ -92,7 +92,8 @@ class PaintGameView(context: Context) : View(context) {
             3 -> rocket()
             4 -> flower()
             5 -> iceCream()
-            else -> mosaic()
+            6 -> mosaic()
+            else -> landscape()
         }
         restoreProgress()
         selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
@@ -275,6 +276,34 @@ class PaintGameView(context: Context) : View(context) {
     }
 
 
+
+    private fun landscape(): MutableList<Area> {
+        fun poly(vararg pts: Float): Path = Path().apply {
+            moveTo(pts[0]*width, pts[1]*height)
+            var i=2
+            while(i<pts.size){ lineTo(pts[i]*width, pts[i+1]*height); i+=2 }
+            close()
+        }
+        return mutableListOf(
+            Area(15, poly(.12f,.18f,.88f,.18f,.88f,.31f,.12f,.31f)), // sky
+            Area(10, poly(.12f,.31f,.30f,.20f,.45f,.31f)), Area(18, poly(.30f,.31f,.49f,.17f,.66f,.31f)),
+            Area(10, poly(.49f,.31f,.70f,.21f,.88f,.31f)), // mountains
+            Area(1, poly(.12f,.31f,.88f,.31f,.88f,.39f,.12f,.39f)), // sunset band
+            Area(2, poly(.12f,.39f,.88f,.39f,.88f,.48f,.12f,.48f)),
+            Area(16, poly(.12f,.48f,.88f,.48f,.88f,.57f,.12f,.57f)), // meadow
+            Area(3, poly(.12f,.57f,.88f,.57f,.88f,.66f,.12f,.66f)),
+            Area(11, poly(.42f,.48f,.58f,.48f,.67f,.66f,.33f,.66f)), // river
+            Area(7, poly(.46f,.48f,.54f,.48f,.58f,.66f,.42f,.66f)),
+            Area(9, poly(.16f,.42f,.20f,.31f,.24f,.42f)), Area(3, poly(.14f,.48f,.20f,.36f,.27f,.48f)),
+            Area(9, poly(.73f,.43f,.78f,.30f,.83f,.43f)), Area(3, poly(.70f,.49f,.78f,.35f,.87f,.49f)),
+            Area(6, poly(.18f,.55f,.20f,.48f,.22f,.55f)), Area(6, poly(.77f,.56f,.79f,.47f,.81f,.56f)),
+            Area(5, poly(.27f,.60f,.30f,.55f,.33f,.60f)), Area(8, poly(.67f,.61f,.70f,.55f,.73f,.61f)),
+            Area(12, poly(.36f,.57f,.39f,.52f,.42f,.57f)), Area(4, poly(.58f,.58f,.61f,.52f,.64f,.58f)),
+            Area(17, poly(.12f,.66f,.33f,.66f,.30f,.72f,.12f,.72f)),
+            Area(14, poly(.33f,.66f,.67f,.66f,.72f,.72f,.28f,.72f)),
+            Area(17, poly(.67f,.66f,.88f,.66f,.88f,.72f,.72f,.72f))
+        )
+    }
 
     private fun mosaic(): MutableList<Area> {
         val result = mutableListOf<Area>()
