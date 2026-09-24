@@ -22,6 +22,12 @@ class PaintGameView(context: Context) : View(context) {
     private var drawingIndex = 0
     private var areas = mutableListOf<Area>()
     private var wrongArea: Area? = null
+    private var scaleFactor = 1f
+    private var offsetX = 0f
+    private var offsetY = 0f
+    private var lastTouchX = 0f
+    private var lastTouchY = 0f
+    private var dragging = false
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.DKGRAY
@@ -46,6 +52,9 @@ class PaintGameView(context: Context) : View(context) {
         }
         selected = areas.firstOrNull()?.number ?: 1
         wrongArea = null
+        scaleFactor = 1f
+        offsetX = 0f
+        offsetY = 0f
         invalidate()
     }
 
@@ -220,6 +229,10 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.color = Color.DKGRAY
         c.drawText(drawingNames[drawingIndex], w/2,h*.07f,textPaint)
 
+        c.save()
+        c.translate(offsetX, offsetY)
+        c.scale(scaleFactor, scaleFactor, w/2, h*.43f)
+
         areas.forEach { a ->
             paint.style = Paint.Style.FILL
             paint.color = when {
@@ -258,6 +271,8 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize=w*.028f; textPaint.color=Color.DKGRAY
         c.drawText("Por números",w*.335f,h*.782f,textPaint)
         c.drawText("Criativo",w*.665f,h*.782f,textPaint)
+
+        c.restore()
 
         val y=h*.84f
         val visibleCount = 8
@@ -302,8 +317,44 @@ class PaintGameView(context: Context) : View(context) {
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        if(e.action!=MotionEvent.ACTION_UP) return true
         val w=width.toFloat(); val h=height.toFloat()
+
+        if (!galleryMode && e.pointerCount == 2) {
+            val dx = e.getX(0) - e.getX(1)
+            val dy = e.getY(0) - e.getY(1)
+            val distance = kotlin.math.sqrt(dx*dx + dy*dy)
+            when (e.actionMasked) {
+                MotionEvent.ACTION_POINTER_DOWN -> lastTouchX = distance
+                MotionEvent.ACTION_MOVE -> {
+                    if (lastTouchX > 0f) {
+                        scaleFactor = (scaleFactor * (distance / lastTouchX)).coerceIn(1f, 4f)
+                        invalidate()
+                    }
+                    lastTouchX = distance
+                }
+                MotionEvent.ACTION_POINTER_UP -> lastTouchX = 0f
+            }
+            return true
+        }
+
+        if (!galleryMode && scaleFactor > 1f && e.y < h*.74f) {
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    lastTouchX = e.x; lastTouchY = e.y; dragging = false
+                    return true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = e.x-lastTouchX; val dy=e.y-lastTouchY
+                    if (kotlin.math.abs(dx)+kotlin.math.abs(dy) > 5f) dragging=true
+                    offsetX += dx; offsetY += dy
+                    lastTouchX=e.x; lastTouchY=e.y
+                    invalidate(); return true
+                }
+                MotionEvent.ACTION_UP -> if (dragging) { dragging=false; return true }
+            }
+        }
+
+        if(e.action!=MotionEvent.ACTION_UP) return true
 
         if (galleryMode) {
             if (e.y in h*.14f..h*.87f) {
@@ -350,8 +401,13 @@ class PaintGameView(context: Context) : View(context) {
             }
             return true
         }
+        val pivotX = w/2
+        val pivotY = h*.43f
+        val touchX = (e.x - offsetX - pivotX) / scaleFactor + pivotX
+        val touchY = (e.y - offsetY - pivotY) / scaleFactor + pivotY
+
         if (creativeMode) {
-            val touched = areas.lastOrNull { contains(it.path, e.x, e.y) }
+            val touched = areas.lastOrNull { contains(it.path, touchX, touchY) }
             if (touched != null) {
                 touched.painted = true
                 touched.creativeColor = colors[selected - 1]
@@ -364,7 +420,7 @@ class PaintGameView(context: Context) : View(context) {
         // intentionally overlapping paths (for example, the fish eye sits
         // inside the body), so checking the first path alone can block it.
         val correct = areas.firstOrNull {
-            it.number == selected && !it.painted && contains(it.path, e.x, e.y)
+            it.number == selected && !it.painted && contains(it.path, touchX, touchY)
         }
         if (correct != null) {
             correct.painted = true
@@ -377,7 +433,7 @@ class PaintGameView(context: Context) : View(context) {
         }
 
         val touchedWrong = areas.firstOrNull {
-            !it.painted && contains(it.path, e.x, e.y)
+            !it.painted && contains(it.path, touchX, touchY)
         }
         if (touchedWrong != null) {
             wrongArea = touchedWrong
