@@ -32,6 +32,8 @@ class PaintGameView(context: Context) : View(context) {
     private var creativeMode = false
     private var galleryMode = true
     private var galleryScroll = 0f
+    private var galleryCategory = 0
+    private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
     private var drawingIndex = 0
@@ -357,14 +359,26 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.color = Color.rgb(90,90,90)
         c.drawText("🎟 Tickets: ${ticketCount()}", w*.82f, h*.075f, textPaint)
 
+        val tabY = h*.145f
+        for (i in galleryCategories.indices) {
+            val x = w*(.20f+i*.30f)
+            paint.style=Paint.Style.FILL
+            paint.color=if(i==galleryCategory) Color.rgb(220,232,255) else Color.rgb(238,238,238)
+            c.drawRoundRect(x-w*.12f,tabY-h*.025f,x+w*.12f,tabY+h*.025f,18f,18f,paint)
+            textPaint.textSize=w*.026f; textPaint.color=Color.DKGRAY
+            c.drawText(galleryCategories[i],x,tabY+h*.009f,textPaint)
+        }
+        val visibleIndices = drawingNames.indices.filter { i ->
+            galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6)
+        }
         val cardW = w*.40f
         val cardH = h*.20f
         val lefts = listOf(w*.07f, w*.53f)
-        for (i in drawingNames.indices) {
-            val row = i / 2
-            val col = i % 2
+        for ((position, i) in visibleIndices.withIndex()) {
+            val row = position / 2
+            val col = position % 2
             val l = lefts[col]
-            val t = h*.16f + row*h*.235f - galleryScroll
+            val t = h*.19f + row*h*.235f - galleryScroll
             paint.color = Color.WHITE
             paint.setShadowLayer(8f, 0f, 3f, Color.LTGRAY)
             setLayerType(LAYER_TYPE_SOFTWARE, paint)
@@ -605,14 +619,28 @@ class PaintGameView(context: Context) : View(context) {
             }
             if (e.action != MotionEvent.ACTION_UP) return true
             if (kotlin.math.abs(e.y - galleryDownY) > 18f) return true
+            if (e.y in h*.12f..h*.18f) {
+                galleryCategory = when {
+                    e.x < w*.35f -> 0
+                    e.x < w*.65f -> 1
+                    else -> 2
+                }
+                galleryScroll = 0f
+                invalidate()
+                return true
+            }
             if (e.y in h*.88f..h*.95f && unlockedDrawingCount() < drawingNames.size) {
                 if (!spendTicketToUnlock()) earnRewardTicket() // simulated rewarded video
                 return true
             }
             if (e.y in h*.14f..h*.87f) {
-                val row = ((e.y + galleryScroll - h*.16f) / (h*.235f)).toInt()
+                val row = ((e.y + galleryScroll - h*.19f) / (h*.235f)).toInt()
                 val col = if (e.x < w/2) 0 else 1
-                val index = row*2 + col
+                val visibleIndices = drawingNames.indices.filter { i ->
+                    galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6)
+                }
+                val position = row*2 + col
+                val index = visibleIndices.getOrNull(position) ?: -1
                 if (index in drawingNames.indices) {
                     if (index >= unlockedDrawingCount()) {
                         rewardTitle = "Arte bloqueada • assista para liberar"
