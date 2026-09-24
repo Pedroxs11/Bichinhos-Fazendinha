@@ -963,9 +963,19 @@ class PaintGameView(context: Context) : View(context) {
         if (creativeMode) {
             val touched = areas.lastOrNull { contains(it.path, touchX, touchY) }
             if (touched != null) {
+                val wasComplete = isDrawingComplete()
                 touched.painted = true
-                touched.creativeColor = colors[selected - 1]
+                touched.creativeColor = if (selectedSpecial in specialColors.indices) {
+                    specialColors[selectedSpecial]
+                } else {
+                    colors[selected - 1]
+                }
                 saveProgress()
+                if (!wasComplete && isDrawingComplete()) {
+                    completionCardVisible = true
+                    rewardTitle = "Modo criativo completo! ✨"
+                    rewardUntil = System.currentTimeMillis() + 1800L
+                }
                 invalidate()
             }
             return true
