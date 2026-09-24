@@ -366,14 +366,20 @@ class PaintGameView(context: Context) : View(context) {
 
         val y=h*.84f
         val visibleCount = 8
-        val half = visibleCount / 2
-        val paletteStart = (selected - 1 - half).coerceIn(0, (colors.size - visibleCount).coerceAtLeast(0))
-        val paletteEnd = (paletteStart + visibleCount).coerceAtMost(colors.size)
-        for (i in paletteStart until paletteEnd) {
+        // Number mode: once every region of a color is painted, remove that
+        // color from the palette. Creative mode keeps the full palette.
+        val paletteNumbers = if (creativeMode) {
+            colors.indices.map { it + 1 }
+        } else {
+            areas.map { it.number }.distinct().sorted().filterNot { isNumberComplete(it) }
+        }
+        val selectedPos = paletteNumbers.indexOf(selected).coerceAtLeast(0)
+        val paletteStart = (selectedPos - visibleCount / 2).coerceIn(0, (paletteNumbers.size - visibleCount).coerceAtLeast(0))
+        val visibleNumbers = paletteNumbers.drop(paletteStart).take(visibleCount)
+        for ((slot, number) in visibleNumbers.withIndex()) {
+            val i = number - 1
             val col = colors[i]
-            val number = i + 1
-            val complete = !creativeMode && isNumberComplete(number)
-            val slot = i - paletteStart
+            val complete = false
             val x=w*(.075f+slot*.122f)
 
             paint.style=Paint.Style.FILL
