@@ -28,6 +28,7 @@ class PaintGameView(context: Context) : View(context) {
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var dragging = false
+    private val prefs = context.getSharedPreferences("paint_progress", Context.MODE_PRIVATE)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.DKGRAY
@@ -50,12 +51,56 @@ class PaintGameView(context: Context) : View(context) {
             4 -> flower()
             else -> iceCream()
         }
-        selected = areas.firstOrNull()?.number ?: 1
+        restoreProgress()
+        selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
         wrongArea = null
         scaleFactor = 1f
         offsetX = 0f
         offsetY = 0f
         invalidate()
+    }
+
+
+    private fun progressKey() = "drawing_${drawingIndex}_" + if (creativeMode) "creative" else "numbers"
+
+    private fun saveProgress() {
+        val painted = areas.mapIndexedNotNull { index, area -> if (area.painted) index.toString() else null }.joinToString(",")
+        val creative = areas.mapIndexedNotNull { index, area ->
+            area.creativeColor?.let { "$index:$it" }
+        }.joinToString(",")
+        prefs.edit()
+            .putString("${progressKey()}_painted", painted)
+            .putString("${progressKey()}_colors", creative)
+            .putBoolean("${progressKey()}_complete", isDrawingComplete())
+            .apply()
+    }
+
+    private fun restoreProgress() {
+        val painted = prefs.getString("${progressKey()}_painted", "") ?: ""
+        painted.split(",").mapNotNull { it.toIntOrNull() }.forEach { index ->
+            areas.getOrNull(index)?.painted = true
+        }
+        val creative = prefs.getString("${progressKey()}_colors", "") ?: ""
+        creative.split(",").forEach { entry ->
+            val parts = entry.split(":")
+            if (parts.size == 2) {
+                val index = parts[0].toIntOrNull()
+                val color = parts[1].toIntOrNull()
+                if (index != null && color != null) {
+                    areas.getOrNull(index)?.apply {
+                        painted = true
+                        creativeColor = color
+                    }
+                }
+            }
+        }
+    }
+
+    private fun savedProgress(index: Int): Int {
+        val prefix = "drawing_${index}_numbers"
+        val painted = prefs.getString("${prefix}_painted", "") ?: ""
+        val count = painted.split(",").count { it.isNotBlank() }
+        return (count * 100 / 8).coerceIn(0, 100)
     }
 
     private fun isNumberComplete(number: Int): Boolean =
@@ -207,7 +252,11 @@ class PaintGameView(context: Context) : View(context) {
 
             textPaint.textSize=w*.036f
             textPaint.color=Color.DKGRAY
-            c.drawText(drawingNames[i],l+cardW/2,t+cardH*.78f,textPaint)
+            c.drawText(drawingNames[i],l+cardW/2,t+cardH*.72f,textPaint)
+            val progress = savedProgress(i)
+            textPaint.textSize=w*.027f
+            textPaint.color=if (progress == 100) Color.rgb(60,150,80) else Color.GRAY
+            c.drawText(if (progress == 100) "Concluído ✓" else "$progress%",l+cardW/2,t+cardH*.88f,textPaint)
         }
 
         paint.color=Color.rgb(235,242,255)
@@ -411,6 +460,7 @@ class PaintGameView(context: Context) : View(context) {
             if (touched != null) {
                 touched.painted = true
                 touched.creativeColor = colors[selected - 1]
+                saveProgress()
                 invalidate()
             }
             return true
@@ -425,6 +475,7 @@ class PaintGameView(context: Context) : View(context) {
         if (correct != null) {
             correct.painted = true
             wrongArea = null
+            saveProgress()
             if (isNumberComplete(selected)) {
                 nextIncompleteNumber()?.let { selected = it }
             }
