@@ -48,6 +48,21 @@ class MainActivity : Activity() {
             marginEnd = (8 * density).toInt()
         })
         setContentView(root)
+
+        // If Android recreated the activity while the camera/preview was open,
+        // recover the pending photo instead of silently losing the user's work.
+        val restoredPath = savedInstanceState?.getString(STATE_PENDING_CAMERA_FILE)
+        restoredPath?.let(::File)?.takeIf { it.exists() && it.length() > 0L }?.let {
+            pendingCameraFile = it
+            showCameraPreview(it)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        pendingCameraFile?.takeIf { it.exists() }?.let {
+            outState.putString(STATE_PENDING_CAMERA_FILE, it.absolutePath)
+        }
     }
 
     fun openCameraImport() {
@@ -69,6 +84,7 @@ class MainActivity : Activity() {
     }
 
     private fun showCameraPreview(file: File) {
+        pendingCameraFile = file
         cameraPreview?.let(root::removeView)
         val density = resources.displayMetrics.density
         val panel = LinearLayout(this).apply {
@@ -100,6 +116,7 @@ class MainActivity : Activity() {
             setOnClickListener {
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
+                pendingCameraFile = null
                 file.delete()
                 launchCamera()
             }
@@ -109,10 +126,12 @@ class MainActivity : Activity() {
             setOnClickListener {
                 getSharedPreferences("paint_progress", MODE_PRIVATE).edit()
                     .putString("last_camera_photo", file.absolutePath)
+                    .putBoolean("camera_photo_ready_for_conversion", true)
                     .apply()
+                pendingCameraFile = null
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
-                Toast.makeText(this@MainActivity, "Foto salva para virar desenho 🎨", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, "Foto pronta para virar desenho 🎨", Toast.LENGTH_LONG).show()
             }
         }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         panel.addView(actions)
@@ -138,12 +157,16 @@ class MainActivity : Activity() {
         if (requestCode != CameraCaptureHelper.CAMERA_CAPTURE_REQUEST) return
 
         val file = pendingCameraFile
-        pendingCameraFile = null
         if (resultCode == RESULT_OK && file?.exists() == true && file.length() > 0L) {
             showCameraPreview(file)
         } else {
+            pendingCameraFile = null
             file?.delete()
             Toast.makeText(this, "Foto cancelada", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    companion object {
+        private const val STATE_PENDING_CAMERA_FILE = "pending_camera_file"
     }
 }
