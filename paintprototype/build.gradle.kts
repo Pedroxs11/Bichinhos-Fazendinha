@@ -8,12 +8,6 @@ android {
     compileSdk = 35
 
     signingConfigs {
-        getByName("debug") {
-            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
         create("releaseLocal") {
             storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
             storePassword = "android"
@@ -32,7 +26,8 @@ android {
 
     buildTypes {
         getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
+            // Keep Android's standard debug signing. Gradle generates the
+            // debug keystore automatically when it is missing (including CI).
         }
         getByName("release") {
             isMinifyEnabled = false
