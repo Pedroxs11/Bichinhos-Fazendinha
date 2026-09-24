@@ -539,30 +539,9 @@ class PaintGameView(context: Context) : View(context) {
                     paint.color=colors[1]; for (a in 0 until 6) { val angle=Math.toRadians((a*60).toDouble()); val px=cx+kotlin.math.cos(angle).toFloat()*cardW*.11f; val py=cy+kotlin.math.sin(angle).toFloat()*cardH*.10f; c.drawCircle(px,py,cardW*.075f,paint) }
                     paint.color=colors[5]; c.drawCircle(cx,cy,cardW*.07f,paint)
                 }
-                5 -> { // ice cream
+                else -> { // ice cream
                     paint.color=colors[7]; c.drawCircle(cx,cy-cardH*.07f,cardW*.13f,paint)
                     paint.color=Color.rgb(205,150,90); val cone=Path(); cone.moveTo(cx-cardW*.11f,cy); cone.lineTo(cx+cardW*.11f,cy); cone.lineTo(cx,cy+cardH*.24f); cone.close(); c.drawPath(cone,paint)
-                }
-                6 -> { // mosaic
-                    for (rr in 0 until 3) for (cc in 0 until 4) {
-                        paint.color=colors[(rr*4+cc)%colors.size]
-                        val x=cx-cardW*.22f+cc*cardW*.11f; val y=cy-cardH*.18f+rr*cardH*.12f
-                        c.drawRect(x,y,x+cardW*.095f,y+cardH*.10f,paint)
-                    }
-                }
-                7 -> { // landscape
-                    paint.color=colors[3]; c.drawRect(cx-cardW*.25f,cy-cardH*.20f,cx+cardW*.25f,cy,paint)
-                    paint.color=colors[2]; c.drawRect(cx-cardW*.25f,cy,cx+cardW*.25f,cy+cardH*.18f,paint)
-                    paint.color=colors[9]; val mountain=Path(); mountain.moveTo(cx-cardW*.23f,cy); mountain.lineTo(cx-cardW*.07f,cy-cardH*.15f); mountain.lineTo(cx+cardW*.05f,cy); mountain.lineTo(cx+cardW*.16f,cy-cardH*.12f); mountain.lineTo(cx+cardW*.25f,cy); mountain.close(); c.drawPath(mountain,paint)
-                }
-                else -> { // rainbow
-                    paint.style=Paint.Style.STROKE; paint.strokeWidth=cardW*.055f
-                    listOf(colors[0],colors[5],colors[1],colors[2],colors[3]).forEachIndexed { band,color ->
-                        paint.color=color
-                        val inset=band*cardW*.035f
-                        c.drawArc(cx-cardW*.23f+inset,cy-cardH*.08f+inset,cx+cardW*.23f-inset,cy+cardH*.28f,false,180f,180f,paint)
-                    }
-                    paint.style=Paint.Style.FILL
                 }
             }
 
