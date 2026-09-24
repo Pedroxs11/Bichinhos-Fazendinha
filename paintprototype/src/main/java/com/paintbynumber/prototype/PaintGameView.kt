@@ -34,6 +34,7 @@ class PaintGameView(context: Context) : View(context) {
     private var galleryScroll = 0f
     private var galleryCategory = 0
     private var achievementsMode = false
+    private var hintUntil = 0L
     private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
@@ -561,6 +562,14 @@ class PaintGameView(context: Context) : View(context) {
             }
         }
 
+        if (!creativeMode && hintUntil > System.currentTimeMillis()) {
+            areas.filter { !it.painted && it.number == selected }.forEach { a ->
+                paint.style=Paint.Style.STROKE; paint.strokeWidth=10f
+                paint.color=Color.argb(220,255,193,7); c.drawPath(a.path,paint)
+            }
+            postInvalidateDelayed(100)
+        }
+
         if (!creativeMode && isDrawingComplete()) {
             textPaint.textSize = w * .055f
             textPaint.color = Color.rgb(60, 150, 80)
@@ -590,6 +599,10 @@ class PaintGameView(context: Context) : View(context) {
         c.drawText("‹ Anterior",w*.18f,h*.95f,textPaint)
         c.drawText("Galeria",w*.50f,h*.95f,textPaint)
         c.drawText("Próximo ›",w*.82f,h*.95f,textPaint)
+        if (!creativeMode && !isDrawingComplete()) {
+            paint.color=Color.rgb(255,244,210); c.drawRoundRect(w*.38f,h*.855f,w*.62f,h*.90f,16f,16f,paint)
+            textPaint.textSize=w*.026f; textPaint.color=Color.DKGRAY; c.drawText("💡 Dica",w*.50f,h*.885f,textPaint)
+        }
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
@@ -688,6 +701,11 @@ class PaintGameView(context: Context) : View(context) {
                     rebuild()
                 }
             }
+            return true
+        }
+        if (!creativeMode && !isDrawingComplete() && e.y in h*.845f..h*.905f && e.x in w*.34f..w*.66f) {
+            hintUntil = System.currentTimeMillis() + 1800L
+            invalidate()
             return true
         }
         if(e.y in h*.745f..h*.805f){
