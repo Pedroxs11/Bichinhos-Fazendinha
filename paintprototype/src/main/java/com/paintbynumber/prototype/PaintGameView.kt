@@ -11,7 +11,10 @@ class PaintGameView(context: Context) : View(context) {
     data class Area(val number: Int, val path: Path, var painted: Boolean = false, var creativeColor: Int? = null)
     private val colors = listOf(
         Color.rgb(244,67,54), Color.rgb(255,193,7), Color.rgb(76,175,80), Color.rgb(33,150,243),
-        Color.rgb(156,39,176), Color.rgb(255,152,0), Color.rgb(0,188,212), Color.rgb(233,30,99)
+        Color.rgb(156,39,176), Color.rgb(255,152,0), Color.rgb(0,188,212), Color.rgb(233,30,99),
+        Color.rgb(121,85,72), Color.rgb(63,81,181), Color.rgb(0,150,136), Color.rgb(205,220,57),
+        Color.rgb(255,87,34), Color.rgb(103,58,183), Color.rgb(3,169,244), Color.rgb(139,195,74),
+        Color.rgb(255,193,7), Color.rgb(96,125,139), Color.rgb(233,30,99), Color.rgb(33,33,33)
     )
     private var selected = 1
     private var creativeMode = false
@@ -49,7 +52,7 @@ class PaintGameView(context: Context) : View(context) {
         areas.filter { it.number == number }.all { it.painted }
 
     private fun nextIncompleteNumber(): Int? =
-        (1..colors.size).firstOrNull { n -> areas.any { it.number == n && !it.painted } }
+        areas.map { it.number }.distinct().sorted().firstOrNull { n -> areas.any { it.number == n && !it.painted } }
 
     private fun isDrawingComplete(): Boolean = areas.isNotEmpty() && areas.all { it.painted }
 
@@ -207,10 +210,16 @@ class PaintGameView(context: Context) : View(context) {
         c.drawText("Criativo",w*.665f,h*.782f,textPaint)
 
         val y=h*.84f
-        colors.forEachIndexed { i,col ->
+        val visibleCount = 8
+        val half = visibleCount / 2
+        val paletteStart = (selected - 1 - half).coerceIn(0, (colors.size - visibleCount).coerceAtLeast(0))
+        val paletteEnd = (paletteStart + visibleCount).coerceAtMost(colors.size)
+        for (i in paletteStart until paletteEnd) {
+            val col = colors[i]
             val number = i + 1
             val complete = !creativeMode && isNumberComplete(number)
-            val x=w*(.075f+i*.122f)
+            val slot = i - paletteStart
+            val x=w*(.075f+slot*.122f)
 
             paint.style=Paint.Style.FILL
             paint.color=if (complete) Color.rgb(225,225,225) else col
@@ -221,7 +230,7 @@ class PaintGameView(context: Context) : View(context) {
             paint.color=if(selected==number && !complete) Color.BLACK else Color.LTGRAY
             c.drawCircle(x,y,w*.052f,paint)
 
-            textPaint.textSize=w*.035f
+            textPaint.textSize=w*.032f
             textPaint.color=if (complete) Color.DKGRAY else Color.WHITE
             c.drawText(if (complete) "✓" else if (creativeMode) "●" else number.toString(),x,y+textPaint.textSize*.35f,textPaint)
         }
@@ -252,8 +261,10 @@ class PaintGameView(context: Context) : View(context) {
             return true
         }
         if(e.y in h*.79f..h*.89f){
-            val idx=((e.x/w-.014f)/.122f).toInt().coerceIn(0,7)
-            val number = idx + 1
+            val slot=((e.x/w-.014f)/.122f).toInt().coerceIn(0,7)
+            val half = 4
+            val paletteStart = (selected - 1 - half).coerceIn(0, (colors.size - 8).coerceAtLeast(0))
+            val number = (paletteStart + slot + 1).coerceAtMost(colors.size)
             if (creativeMode || !isNumberComplete(number)) {
                 selected = number
                 wrongArea = null
