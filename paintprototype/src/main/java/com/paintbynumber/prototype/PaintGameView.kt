@@ -33,6 +33,7 @@ class PaintGameView(context: Context) : View(context) {
     private var galleryMode = true
     private var galleryScroll = 0f
     private var galleryCategory = 0
+    private var achievementsMode = false
     private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
@@ -344,6 +345,29 @@ class PaintGameView(context: Context) : View(context) {
         return result
     }
 
+    private fun drawAchievements(c: Canvas, w: Float, h: Float) {
+        paint.style=Paint.Style.FILL; paint.color=Color.rgb(248,248,248); c.drawRect(0f,0f,w,h,paint)
+        textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Conquistas",w/2,h*.09f,textPaint)
+        val done=completedDrawings()
+        val badges=listOf(
+            Triple("Primeira Obra",1,"🏅"),
+            Triple("Artista em Ascensão",3,"🏆"),
+            Triple("Mestre das Cores",drawingNames.size,"👑")
+        )
+        badges.forEachIndexed { i,b ->
+            val unlocked=done>=b.second
+            val cy=h*(.25f+i*.20f)
+            paint.color=if(unlocked) Color.rgb(255,244,200) else Color.rgb(232,232,232)
+            c.drawRoundRect(w*.12f,cy-h*.07f,w*.88f,cy+h*.07f,28f,28f,paint)
+            textPaint.textSize=w*.055f; textPaint.color=if(unlocked) Color.rgb(170,120,20) else Color.GRAY
+            c.drawText(b.third,w*.23f,cy+h*.018f,textPaint)
+            textPaint.textSize=w*.034f; c.drawText(b.first,w*.57f,cy-h*.005f,textPaint)
+            textPaint.textSize=w*.026f; c.drawText(if(unlocked) "Conquistado ✓" else "$done/${b.second} artes",w*.57f,cy+h*.04f,textPaint)
+        }
+        paint.color=Color.rgb(225,235,255); c.drawRoundRect(w*.28f,h*.86f,w*.72f,h*.93f,24f,24f,paint)
+        textPaint.textSize=w*.032f; textPaint.color=Color.DKGRAY; c.drawText("← Voltar à galeria",w/2,h*.905f,textPaint)
+    }
+
     private fun drawGallery(c: Canvas, w: Float, h: Float) {
         paint.style = Paint.Style.FILL
         paint.color = Color.rgb(248,248,248)
@@ -358,6 +382,8 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize = w*.028f
         textPaint.color = Color.rgb(90,90,90)
         c.drawText("🎟 Tickets: ${ticketCount()}", w*.82f, h*.075f, textPaint)
+        paint.color=Color.rgb(255,244,210); c.drawRoundRect(w*.03f,h*.055f,w*.25f,h*.10f,16f,16f,paint)
+        textPaint.textSize=w*.024f; textPaint.color=Color.DKGRAY; c.drawText("🏆 ${completedDrawings()}",w*.14f,h*.084f,textPaint)
 
         val tabY = h*.145f
         for (i in galleryCategories.indices) {
@@ -436,6 +462,7 @@ class PaintGameView(context: Context) : View(context) {
     override fun onDraw(c: Canvas) {
         super.onDraw(c)
         val w = width.toFloat(); val h = height.toFloat()
+        if (achievementsMode) { drawAchievements(c,w,h); return }
         if (galleryMode) {
             drawGallery(c, w, h)
             return
@@ -605,6 +632,10 @@ class PaintGameView(context: Context) : View(context) {
 
         if(e.action!=MotionEvent.ACTION_UP) return true
 
+        if (achievementsMode) {
+            if (e.action == MotionEvent.ACTION_UP && e.y in h*.84f..h*.96f) { achievementsMode=false; galleryMode=true; invalidate() }
+            return true
+        }
         if (galleryMode) {
             if (e.action == MotionEvent.ACTION_DOWN) {
                 galleryDownY = e.y
@@ -619,6 +650,9 @@ class PaintGameView(context: Context) : View(context) {
             }
             if (e.action != MotionEvent.ACTION_UP) return true
             if (kotlin.math.abs(e.y - galleryDownY) > 18f) return true
+            if (e.y in h*.04f..h*.11f && e.x < w*.30f) {
+                achievementsMode=true; galleryMode=false; invalidate(); return true
+            }
             if (e.y in h*.12f..h*.18f) {
                 galleryCategory = when {
                     e.x < w*.35f -> 0
