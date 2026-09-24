@@ -17,7 +17,18 @@ class PaintGameView(context: Context) : View(context) {
         Color.rgb(255,87,34), Color.rgb(103,58,183), Color.rgb(3,169,244), Color.rgb(139,195,74),
         Color.rgb(255,193,7), Color.rgb(96,125,139), Color.rgb(233,30,99), Color.rgb(33,33,33)
     )
+    private val specialColors = listOf(Color.rgb(212,175,55), Color.rgb(192,192,192), Color.rgb(57,255,20))
     private var selected = 1
+    private var selectedSpecial = -1
+    private fun specialColorsUnlocked(): Boolean = prefs.getBoolean("special_colors_unlocked", false)
+    private fun unlockSpecialColors(): Boolean {
+        if (specialColorsUnlocked() || ticketCount() <= 0) return false
+        prefs.edit().putInt("reward_tickets", ticketCount() - 1).putBoolean("special_colors_unlocked", true).apply()
+        rewardTitle = "Cores especiais liberadas! ✨"
+        rewardUntil = System.currentTimeMillis() + 2000L
+        invalidate()
+        return true
+    }
     private var creativeMode = false
     private var galleryMode = true
     private var drawingIndex = 0
@@ -429,6 +440,17 @@ class PaintGameView(context: Context) : View(context) {
             textPaint.color=if (complete) Color.DKGRAY else Color.WHITE
             c.drawText(if (complete) "✓" else if (creativeMode) "●" else number.toString(),x,y+textPaint.textSize*.35f,textPaint)
         }
+        if (creativeMode) {
+            textPaint.textSize=w*.025f; textPaint.color=Color.DKGRAY
+            c.drawText(if (specialColorsUnlocked()) "✨ Especiais liberadas" else "✨ Especiais • 1 ticket",w/2,h*.91f,textPaint)
+            if (specialColorsUnlocked()) {
+                for (i in specialColors.indices) {
+                    val x=w*(.38f+i*.12f)
+                    paint.style=Paint.Style.FILL; paint.color=specialColors[i]; c.drawCircle(x,h*.95f,w*.035f,paint)
+                    paint.style=Paint.Style.STROKE; paint.strokeWidth=if(selectedSpecial==i) 7f else 2f; paint.color=Color.DKGRAY; c.drawCircle(x,h*.95f,w*.041f,paint)
+                }
+            }
+        }
 
         if (!creativeMode && isDrawingComplete()) {
             textPaint.textSize = w * .055f
@@ -531,6 +553,21 @@ class PaintGameView(context: Context) : View(context) {
             invalidate()
             return true
         }
+        if (creativeMode && e.y in h*.89f..h*.98f) {
+            if (!specialColorsUnlocked()) {
+                if (!unlockSpecialColors()) {
+                    rewardTitle = "Você precisa de 1 ticket 🎟"
+                    rewardUntil = System.currentTimeMillis() + 1600L
+                    invalidate()
+                }
+            } else {
+                val candidates = specialColors.indices.minByOrNull { kotlin.math.abs(e.x - w*(.38f+it*.12f)) } ?: 0
+                selectedSpecial = candidates
+                wrongArea = null
+                invalidate()
+            }
+            return true
+        }
         if(e.y in h*.79f..h*.89f){
             val slot=((e.x/w-.014f)/.122f).toInt().coerceIn(0,7)
             val half = 4
@@ -538,6 +575,7 @@ class PaintGameView(context: Context) : View(context) {
             val number = (paletteStart + slot + 1).coerceAtMost(colors.size)
             if (creativeMode || !isNumberComplete(number)) {
                 selected = number
+                selectedSpecial = -1
                 wrongArea = null
                 invalidate()
             }
