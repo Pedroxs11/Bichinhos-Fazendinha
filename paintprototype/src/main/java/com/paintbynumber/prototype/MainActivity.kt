@@ -2,7 +2,11 @@ package com.paintbynumber.prototype
 
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
+import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
 import java.io.File
 
@@ -13,7 +17,30 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         gameView = PaintGameView(this)
-        setContentView(gameView)
+
+        val root = FrameLayout(this)
+        root.addView(gameView, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        ))
+
+        val cameraButton = Button(this).apply {
+            text = "📷"
+            textSize = 22f
+            setTextColor(Color.DKGRAY)
+            contentDescription = "Criar arte pela câmera"
+            setOnClickListener { openCameraImport() }
+        }
+        val density = resources.displayMetrics.density
+        root.addView(cameraButton, FrameLayout.LayoutParams(
+            (58 * density).toInt(),
+            (52 * density).toInt(),
+            Gravity.TOP or Gravity.END
+        ).apply {
+            topMargin = (8 * density).toInt()
+            marginEnd = (8 * density).toInt()
+        })
+        setContentView(root)
     }
 
     fun openCameraImport() {
@@ -53,7 +80,11 @@ class MainActivity : Activity() {
         val file = pendingCameraFile
         pendingCameraFile = null
         if (resultCode == RESULT_OK && file?.exists() == true && file.length() > 0L) {
-            gameView.onCameraPhotoCaptured(file)
+            getSharedPreferences("paint_progress", MODE_PRIVATE)
+                .edit()
+                .putString("last_camera_photo", file.absolutePath)
+                .apply()
+            Toast.makeText(this, "Foto pronta para virar desenho 🎨", Toast.LENGTH_LONG).show()
         } else {
             file?.delete()
             Toast.makeText(this, "Foto cancelada", Toast.LENGTH_SHORT).show()
