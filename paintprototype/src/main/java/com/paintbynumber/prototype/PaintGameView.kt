@@ -34,6 +34,7 @@ class PaintGameView(context: Context) : View(context) {
     private var galleryScroll = 0f
     private var galleryCategory = 0
     private var achievementsMode = false
+    private var completionCountedThisSession = false
     private var hintUntil = 0L
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private var completionCardVisible = false
@@ -109,6 +110,7 @@ class PaintGameView(context: Context) : View(context) {
         restoreProgress()
         completionCardVisible = isDrawingComplete()
         completionRewardShown = isDrawingComplete()
+        completionCountedThisSession = isDrawingComplete()
         selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
         wrongArea = null
         scaleFactor = 1f
@@ -181,6 +183,14 @@ class PaintGameView(context: Context) : View(context) {
     private fun completedDrawings(): Int =
         drawingNames.indices.count { prefs.getBoolean("drawing_${it}_numbers_complete", false) }
 
+    private fun totalCompletedPaintings(): Int = prefs.getInt("total_completed_paintings", 0)
+
+    private fun recordCompletionOnce() {
+        if (completionCountedThisSession) return
+        completionCountedThisSession = true
+        prefs.edit().putInt("total_completed_paintings", totalCompletedPaintings() + 1).apply()
+    }
+
     private fun shareArtwork() {
         // Render only the artwork itself (without buttons, palette or HUD) so
         // the shared PNG looks like a finished picture instead of a screenshot.
@@ -223,6 +233,7 @@ class PaintGameView(context: Context) : View(context) {
         if (completionRewardShown) return
         completionRewardShown = true
         completionCardVisible = true
+        recordCompletionOnce()
         celebrationParticles = List(28) { i ->
             val x = ((i * 37) % 100) / 100f
             val y = ((i * 61) % 70) / 100f + .12f
@@ -408,6 +419,8 @@ class PaintGameView(context: Context) : View(context) {
             Triple("Artista em Ascensão",3,"🏆"),
             Triple("Mestre das Cores",drawingNames.size,"👑")
         )
+        textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
+        c.drawText("Obras únicas: $done • pinturas concluídas: ${totalCompletedPaintings()}",w/2,h*.145f,textPaint)
         badges.forEachIndexed { i,b ->
             val unlocked=done>=b.second
             val cy=h*(.25f+i*.20f)
