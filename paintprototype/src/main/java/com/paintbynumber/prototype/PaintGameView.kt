@@ -54,7 +54,7 @@ class PaintGameView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
-    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete")
+    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Mosaico")
     // Monetization prototype: first four are free; one rewarded-video action
     // unlocks the next two drawings. Real ad SDK will replace this simulator later.
     private fun unlockedDrawingCount(): Int = prefs.getInt("unlocked_drawing_count", 4).coerceAtMost(drawingNames.size)
@@ -91,7 +91,8 @@ class PaintGameView(context: Context) : View(context) {
             2 -> turtle()
             3 -> rocket()
             4 -> flower()
-            else -> iceCream()
+            5 -> iceCream()
+            else -> mosaic()
         }
         restoreProgress()
         selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
@@ -273,6 +274,34 @@ class PaintGameView(context: Context) : View(context) {
         )
     }
 
+
+
+    private fun mosaic(): MutableList<Area> {
+        val result = mutableListOf<Area>()
+        val cols = 5
+        val rows = 5
+        val left = width * .18f
+        val top = height * .18f
+        val cellW = width * .64f / cols
+        val cellH = height * .48f / rows
+        var n = 1
+        for (r in 0 until rows) {
+            for (col in 0 until cols) {
+                val x = left + col * cellW
+                val y = top + r * cellH
+                val path = Path().apply {
+                    moveTo(x, y + cellH*.12f)
+                    lineTo(x + cellW*.88f, y)
+                    lineTo(x + cellW, y + cellH*.82f)
+                    lineTo(x + cellW*.10f, y + cellH)
+                    close()
+                }
+                result.add(Area(n, path))
+                n = if (n >= 20) 1 else n + 1
+            }
+        }
+        return result
+    }
 
     private fun drawGallery(c: Canvas, w: Float, h: Float) {
         paint.style = Paint.Style.FILL
