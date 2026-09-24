@@ -38,7 +38,7 @@ class PaintGameView(context: Context) : View(context) {
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private var completionCardVisible = false
     private var completionRewardShown = false
-    private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados", "Concluídos")
+    private val galleryCategories = listOf("Todos", "Fáceis", "Desafios", "Concluídos")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
     private var drawingIndex = 0
@@ -64,7 +64,7 @@ class PaintGameView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
-    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Mosaico", "Paisagem", "Arco-íris")
+    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Quebra-cabeça", "Aventurinha", "Arco-íris")
     // Monetization prototype: first four are free; one rewarded-video action
     // unlocks the next two drawings. Real ad SDK will replace this simulator later.
     private fun unlockedDrawingCount(): Int = prefs.getInt("unlocked_drawing_count", 4).coerceAtMost(drawingNames.size)
@@ -479,10 +479,10 @@ class PaintGameView(context: Context) : View(context) {
 
         textPaint.color = Color.DKGRAY
         textPaint.textSize = w * .065f
-        c.drawText("Escolha sua arte", w/2, h*.075f, textPaint)
+        c.drawText("Minhas Artes", w/2, h*.075f, textPaint)
         textPaint.textSize = w * .032f
         textPaint.color = Color.GRAY
-        c.drawText("Pinte por números ou do seu jeito", w/2, h*.115f, textPaint)
+        c.drawText("Escolha, pinte e divirta-se! 🎨", w/2, h*.115f, textPaint)
         textPaint.textSize = w*.028f
         textPaint.color = Color.rgb(90,90,90)
         c.drawText("🎟 Tickets: ${ticketCount()}", w*.82f, h*.075f, textPaint)
