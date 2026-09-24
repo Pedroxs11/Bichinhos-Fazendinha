@@ -199,6 +199,21 @@ class PaintGameView(context: Context) : View(context) {
         editor.apply()
     }
 
+    private fun repaintCurrentDrawing() {
+        val prefix = "drawing_${drawingIndex}_numbers"
+        prefs.edit()
+            .remove("${prefix}_painted")
+            .remove("${prefix}_colors")
+            .remove("${prefix}_complete")
+            .remove("drawing_${drawingIndex}_completion_counted")
+            .apply()
+        creativeMode = false
+        completionCardVisible = false
+        completionRewardShown = false
+        celebrationParticles = emptyList()
+        rebuild()
+    }
+
     private fun shareArtwork() {
         // Render only the artwork itself (without buttons, palette or HUD) so
         // the shared PNG looks like a finished picture instead of a screenshot.
@@ -712,9 +727,12 @@ class PaintGameView(context: Context) : View(context) {
 
         if (completionCardVisible && isDrawingComplete()) {
             paint.style=Paint.Style.FILL; paint.color=Color.rgb(230,245,255)
-            c.drawRoundRect(w*.18f,h*.62f,w*.82f,h*.70f,22f,22f,paint)
-            textPaint.textSize=w*.031f; textPaint.color=Color.DKGRAY
-            c.drawText("📤 Compartilhar minha arte",w/2,h*.67f,textPaint)
+            c.drawRoundRect(w*.12f,h*.62f,w*.49f,h*.70f,22f,22f,paint)
+            paint.color=Color.rgb(255,244,210)
+            c.drawRoundRect(w*.51f,h*.62f,w*.88f,h*.70f,22f,22f,paint)
+            textPaint.textSize=w*.027f; textPaint.color=Color.DKGRAY
+            c.drawText("📤 Compartilhar",w*.305f,h*.67f,textPaint)
+            c.drawText("🎨 Pintar de novo",w*.695f,h*.67f,textPaint)
         }
 
         if (rewardUntil > System.currentTimeMillis()) {
@@ -852,8 +870,11 @@ class PaintGameView(context: Context) : View(context) {
             }
             return true
         }
-        if (!creativeMode && isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f && e.x in w*.15f..w*.85f) {
-            shareArtwork()
+        if (!creativeMode && isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f) {
+            when {
+                e.x in w*.10f..w*.50f -> shareArtwork()
+                e.x in w*.50f..w*.90f -> repaintCurrentDrawing()
+            }
             return true
         }
         if (!creativeMode && !isDrawingComplete() && e.y in h*.845f..h*.905f && e.x in w*.34f..w*.66f) {
