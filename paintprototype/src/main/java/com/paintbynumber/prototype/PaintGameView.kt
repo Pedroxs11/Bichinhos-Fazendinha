@@ -226,6 +226,15 @@ class PaintGameView(context: Context) : View(context) {
         rebuild()
     }
 
+    private fun recordCreativeCompletionOnce() {
+        val key = "drawing_${drawingIndex}_creative_completion_counted"
+        if (prefs.getBoolean(key, false)) return
+        prefs.edit()
+            .putInt("total_creative_completed", prefs.getInt("total_creative_completed", 0) + 1)
+            .putBoolean(key, true)
+            .apply()
+    }
+
     private fun shareArtwork() {
         // Render only the artwork itself (without buttons, palette or HUD) so
         // the shared PNG looks like a finished picture instead of a screenshot.
@@ -973,6 +982,7 @@ class PaintGameView(context: Context) : View(context) {
                 saveProgress()
                 if (!wasComplete && isDrawingComplete()) {
                     completionCardVisible = true
+                    recordCreativeCompletionOnce()
                     rewardTitle = "Modo criativo completo! ✨"
                     rewardUntil = System.currentTimeMillis() + 1800L
                 }
