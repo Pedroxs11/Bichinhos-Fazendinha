@@ -29,6 +29,8 @@ class PaintGameView(context: Context) : View(context) {
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var dragging = false
+    private var rewardUntil = 0L
+    private var rewardTitle = ""
     private val prefs: SharedPreferences = context.getSharedPreferences("paint_progress", Context.MODE_PRIVATE)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -113,6 +115,19 @@ class PaintGameView(context: Context) : View(context) {
         areas.map { it.number }.distinct().sorted().firstOrNull { n -> areas.any { it.number == n && !it.painted } }
 
     private fun isDrawingComplete(): Boolean = areas.isNotEmpty() && areas.all { it.painted }
+
+    private fun completedDrawings(): Int =
+        drawingNames.indices.count { prefs.getBoolean("drawing_${it}_numbers_complete", false) }
+
+    private fun triggerCompletionReward() {
+        val completed = completedDrawings()
+        rewardTitle = when {
+            completed >= drawingNames.size -> "Mestre das Cores!"
+            completed >= 3 -> "Artista em Ascensão!"
+            else -> "Primeira Obra!"
+        }
+        rewardUntil = System.currentTimeMillis() + 2200L
+    }
 
     private fun p(vararg pts: Float): Path {
         val path = Path()
@@ -358,6 +373,21 @@ class PaintGameView(context: Context) : View(context) {
             c.drawText("Concluído! ✓", w/2, h*.77f, textPaint)
         }
 
+        if (rewardUntil > System.currentTimeMillis()) {
+            paint.style = Paint.Style.FILL
+            paint.color = Color.argb(225, 255, 248, 220)
+            c.drawRoundRect(w*.12f,h*.30f,w*.88f,h*.58f,36f,36f,paint)
+            textPaint.color = Color.rgb(180,130,20)
+            textPaint.textSize = w*.11f
+            c.drawText("🏆",w/2,h*.39f,textPaint)
+            textPaint.textSize = w*.052f
+            c.drawText(rewardTitle,w/2,h*.47f,textPaint)
+            textPaint.textSize = w*.032f
+            textPaint.color = Color.DKGRAY
+            c.drawText("Obra concluída! +1 conquista",w/2,h*.53f,textPaint)
+            postInvalidateDelayed(80)
+        }
+
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(245,245,245)
         c.drawRoundRect(w*.08f,h*.91f,w*.28f,h*.97f,20f,20f,paint)
         c.drawRoundRect(w*.36f,h*.91f,w*.64f,h*.97f,20f,20f,paint)
@@ -476,9 +506,11 @@ class PaintGameView(context: Context) : View(context) {
             it.number == selected && !it.painted && contains(it.path, touchX, touchY)
         }
         if (correct != null) {
+            val wasComplete = isDrawingComplete()
             correct.painted = true
             wrongArea = null
             saveProgress()
+            if (!wasComplete && isDrawingComplete()) triggerCompletionReward()
             if (isNumberComplete(selected)) {
                 nextIncompleteNumber()?.let { selected = it }
             }
