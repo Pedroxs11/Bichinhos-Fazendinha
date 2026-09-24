@@ -138,11 +138,60 @@ class MainActivity : Activity() {
                 pendingCameraFile = null
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
-                Toast.makeText(this@MainActivity, "Foto preparada como desenho 🎨", Toast.LENGTH_LONG).show()
+                showLineArtPreview(lineArtFile)
             }
         }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         panel.addView(actions)
 
+        cameraPreview = panel
+        root.addView(panel, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+    }
+
+    private fun showLineArtPreview(file: File) {
+        cameraPreview?.let(root::removeView)
+        val density = resources.displayMetrics.density
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding((18*density).toInt(), (18*density).toInt(), (18*density).toInt(), (18*density).toInt())
+            setBackgroundColor(Color.WHITE)
+        }
+        panel.addView(TextView(this).apply {
+            text = "Prévia do desenho 🎨"
+            textSize = 20f
+            setTextColor(Color.DKGRAY)
+            gravity = Gravity.CENTER
+        })
+        panel.addView(ImageView(this).apply {
+            setImageBitmap(BitmapFactory.decodeFile(file.absolutePath))
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            adjustViewBounds = true
+            contentDescription = "Prévia do desenho criado a partir da foto"
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply {
+            topMargin = (12*density).toInt()
+            bottomMargin = (12*density).toInt()
+        })
+        val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        actions.addView(Button(this).apply {
+            text = "Nova foto"
+            setOnClickListener {
+                cameraPreview?.let(root::removeView)
+                cameraPreview = null
+                launchCamera()
+            }
+        }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        actions.addView(Button(this).apply {
+            text = "Guardar desenho"
+            setOnClickListener {
+                getSharedPreferences("paint_progress", MODE_PRIVATE).edit()
+                    .putBoolean("camera_line_art_confirmed", true)
+                    .apply()
+                cameraPreview?.let(root::removeView)
+                cameraPreview = null
+                Toast.makeText(this@MainActivity, "Desenho guardado para colorir ✓", Toast.LENGTH_LONG).show()
+            }
+        }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        panel.addView(actions)
         cameraPreview = panel
         root.addView(panel, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
     }
