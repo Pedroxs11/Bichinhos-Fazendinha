@@ -34,7 +34,6 @@ class PaintGameView(context: Context) : View(context) {
     private var galleryScroll = 0f
     private var galleryCategory = 0
     private var achievementsMode = false
-    private var completionCountedThisSession = false
     private var hintUntil = 0L
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private var completionCardVisible = false
@@ -110,7 +109,6 @@ class PaintGameView(context: Context) : View(context) {
         restoreProgress()
         completionCardVisible = isDrawingComplete()
         completionRewardShown = isDrawingComplete()
-        completionCountedThisSession = isDrawingComplete()
         selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
         wrongArea = null
         scaleFactor = 1f
@@ -186,9 +184,12 @@ class PaintGameView(context: Context) : View(context) {
     private fun totalCompletedPaintings(): Int = prefs.getInt("total_completed_paintings", 0)
 
     private fun recordCompletionOnce() {
-        if (completionCountedThisSession) return
-        completionCountedThisSession = true
-        prefs.edit().putInt("total_completed_paintings", totalCompletedPaintings() + 1).apply()
+        val key = "drawing_${drawingIndex}_completion_counted"
+        if (prefs.getBoolean(key, false)) return
+        prefs.edit()
+            .putInt("total_completed_paintings", totalCompletedPaintings() + 1)
+            .putBoolean(key, true)
+            .apply()
     }
 
     private fun shareArtwork() {
