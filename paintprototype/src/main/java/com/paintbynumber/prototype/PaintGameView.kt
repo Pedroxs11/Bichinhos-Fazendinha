@@ -237,12 +237,21 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun recordCreativeCompletionOnce() {
         val key = "drawing_${drawingIndex}_creative_completion_counted"
-        if (prefs.getBoolean(key, false)) return
-        prefs.edit()
-            .putInt("total_creative_completed", prefs.getInt("total_creative_completed", 0) + 1)
-            .putBoolean(key, true)
-            .apply()
+        val everKey = "drawing_${drawingIndex}_creative_ever_completed"
+        val editor = prefs.edit().putBoolean(everKey, true)
+        if (!prefs.getBoolean(key, false)) {
+            editor
+                .putInt("total_creative_completed", prefs.getInt("total_creative_completed", 0) + 1)
+                .putBoolean(key, true)
+        }
+        editor.apply()
     }
+
+    private fun creativeCompletedDrawings(): Int =
+        drawingNames.indices.count { index ->
+            prefs.getBoolean("drawing_${index}_creative_ever_completed", false) ||
+                prefs.getBoolean("drawing_${index}_creative_complete", false)
+        }
 
     private fun shareArtwork() {
         // Render only the artwork itself (without buttons, palette or HUD) so
@@ -508,10 +517,11 @@ class PaintGameView(context: Context) : View(context) {
         )
         val total=totalCompletedPaintings()
         val creativeTotal=prefs.getInt("total_creative_completed", 0)
+        val creativeUnique=creativeCompletedDrawings()
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
         c.drawText("$done artes diferentes • $total pinturas prontas",w/2,h*.145f,textPaint)
         textPaint.textSize=w*.024f
-        c.drawText("🎨 $creativeTotal criações livres concluídas",w/2,h*.172f,textPaint)
+        c.drawText("🎨 $creativeUnique artes criativas • $creativeTotal conclusões",w/2,h*.172f,textPaint)
         badges.forEachIndexed { i,b ->
             val progress=if(b.usesTotal) total else done
             val unlocked=progress>=b.target
