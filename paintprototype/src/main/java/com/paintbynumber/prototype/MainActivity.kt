@@ -20,6 +20,7 @@ class MainActivity : Activity() {
     private lateinit var root: FrameLayout
     private var pendingCameraFile: File? = null
     private var cameraPreview: View? = null
+    private var savedArtworkButton: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +50,7 @@ class MainActivity : Activity() {
         })
         setContentView(root)
 
-        restoreConfirmedCameraArtwork()
+        refreshSavedArtworkEntry()
 
         // If Android recreated the activity while the camera/preview was open,
         // recover the pending photo instead of silently losing the user's work.
@@ -60,7 +61,9 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun restoreConfirmedCameraArtwork() {
+    private fun refreshSavedArtworkEntry() {
+        savedArtworkButton?.let(root::removeView)
+        savedArtworkButton = null
         val prefs = getSharedPreferences("paint_progress", MODE_PRIVATE)
         if (!prefs.getBoolean("camera_line_art_confirmed", false)) return
         val path = prefs.getString("last_camera_line_art", null) ?: return
@@ -77,6 +80,7 @@ class MainActivity : Activity() {
             contentDescription = "Abrir desenho criado pela câmera"
             setOnClickListener { showLineArtPreview(file) }
         }
+        savedArtworkButton = button
         root.addView(button, FrameLayout.LayoutParams(
             (128 * density).toInt(),
             (48 * density).toInt(),
@@ -212,11 +216,30 @@ class MainActivity : Activity() {
         actions.addView(Button(this).apply {
             text = "Guardar desenho"
             setOnClickListener {
-                getSharedPreferences("paint_progress", MODE_PRIVATE).edit()
+                val prefs = getSharedPreferences("paint_progress", MODE_PRIVATE)
+                val directory = File(filesDir, "camera_artworks").apply { mkdirs() }
+                val persistentFile = File(directory, "arte_${System.currentTimeMillis()}.png")
+                val saved = runCatching {
+                    file.copyTo(persistentFile, overwrite = true)
+                    persistentFile.exists() && persistentFile.length() > 0L
+                }.getOrDefault(false)
+                if (!saved) {
+                    persistentFile.delete()
+                    Toast.makeText(this@MainActivity, "Não foi possível guardar o desenho", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+
+                prefs.getString("last_camera_line_art", null)?.let { oldPath ->
+                    val oldFile = File(oldPath)
+                    if (oldFile.parentFile?.absolutePath == directory.absolutePath && oldFile != persistentFile) oldFile.delete()
+                }
+                prefs.edit()
+                    .putString("last_camera_line_art", persistentFile.absolutePath)
                     .putBoolean("camera_line_art_confirmed", true)
                     .apply()
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
+                refreshSavedArtworkEntry()
                 Toast.makeText(this@MainActivity, "Desenho guardado para colorir ✓", Toast.LENGTH_LONG).show()
             }
         }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
