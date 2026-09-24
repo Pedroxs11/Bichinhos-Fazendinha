@@ -509,30 +509,39 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Minhas Estrelinhas ⭐",w/2,h*.09f,textPaint)
         val done=completedDrawings()
         data class Badge(val name:String,val target:Int,val icon:String,val usesTotal:Boolean=false)
+        val creativeUnique=creativeCompletedDrawings()
         val badges=listOf(
             Badge("Minha Primeira Arte",1,"⭐"),
             Badge("Pequeno Artista",3,"🏆"),
+            Badge("Artista Criativo",3,"🌈"),
             Badge("Super Pintor",10,"🎨",true),
             Badge("Mestre das Cores",drawingNames.size,"👑")
         )
         val total=totalCompletedPaintings()
         val creativeTotal=prefs.getInt("total_creative_completed", 0)
-        val creativeUnique=creativeCompletedDrawings()
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
         c.drawText("$done artes diferentes • $total pinturas prontas",w/2,h*.145f,textPaint)
         textPaint.textSize=w*.024f
         c.drawText("🎨 $creativeUnique artes criativas • $creativeTotal conclusões",w/2,h*.172f,textPaint)
         badges.forEachIndexed { i,b ->
-            val progress=if(b.usesTotal) total else done
+            val progress=when {
+                b.name == "Artista Criativo" -> creativeUnique
+                b.usesTotal -> total
+                else -> done
+            }
             val unlocked=progress>=b.target
-            val cy=h*(.235f+i*.145f)
+            val cy=h*(.225f+i*.125f)
             paint.color=if(unlocked) Color.rgb(255,244,200) else Color.rgb(232,232,232)
             c.drawRoundRect(w*.12f,cy-h*.055f,w*.88f,cy+h*.055f,28f,28f,paint)
             textPaint.textSize=w*.050f; textPaint.color=if(unlocked) Color.rgb(170,120,20) else Color.GRAY
             c.drawText(b.icon,w*.23f,cy+h*.016f,textPaint)
             textPaint.textSize=w*.032f; c.drawText(b.name,w*.57f,cy-h*.004f,textPaint)
             textPaint.textSize=w*.024f
-            val unit=if(b.usesTotal) "pinturas" else "artes"
+            val unit=when {
+                b.name == "Artista Criativo" -> "artes criativas"
+                b.usesTotal -> "pinturas"
+                else -> "artes"
+            }
             c.drawText(if(unlocked) "Conquistado ✓" else "$progress/${b.target} $unit",w*.57f,cy+h*.032f,textPaint)
         }
         paint.color=Color.rgb(225,235,255); c.drawRoundRect(w*.28f,h*.86f,w*.72f,h*.93f,24f,24f,paint)
