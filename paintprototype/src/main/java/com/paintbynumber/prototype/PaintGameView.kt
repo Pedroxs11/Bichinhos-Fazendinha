@@ -64,7 +64,7 @@ class PaintGameView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
-    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Quebra-cabeça", "Aventurinha", "Arco-íris")
+    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Quebra-cabeça", "Mundo Mágico", "Arco-íris")
     // Monetization prototype: first four are free; one rewarded-video action
     // unlocks the next two drawings. Real ad SDK will replace this simulator later.
     private fun unlockedDrawingCount(): Int = prefs.getInt("unlocked_drawing_count", 4).coerceAtMost(drawingNames.size)
@@ -443,18 +443,18 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun drawAchievements(c: Canvas, w: Float, h: Float) {
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(248,248,248); c.drawRect(0f,0f,w,h,paint)
-        textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Conquistas",w/2,h*.09f,textPaint)
+        textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Minhas Estrelinhas ⭐",w/2,h*.09f,textPaint)
         val done=completedDrawings()
         data class Badge(val name:String,val target:Int,val icon:String,val usesTotal:Boolean=false)
         val badges=listOf(
-            Badge("Primeira Obra",1,"🏅"),
-            Badge("Artista em Ascensão",3,"🏆"),
-            Badge("Pincel Incansável",10,"🎨",true),
+            Badge("Minha Primeira Arte",1,"⭐"),
+            Badge("Pequeno Artista",3,"🏆"),
+            Badge("Super Pintor",10,"🎨",true),
             Badge("Mestre das Cores",drawingNames.size,"👑")
         )
         val total=totalCompletedPaintings()
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
-        c.drawText("Obras únicas: $done • pinturas concluídas: $total",w/2,h*.145f,textPaint)
+        c.drawText("$done artes diferentes • $total pinturas prontas",w/2,h*.145f,textPaint)
         badges.forEachIndexed { i,b ->
             val progress=if(b.usesTotal) total else done
             val unlocked=progress>=b.target
