@@ -507,8 +507,11 @@ class PaintGameView(context: Context) : View(context) {
             Badge("Mestre das Cores",drawingNames.size,"👑")
         )
         val total=totalCompletedPaintings()
+        val creativeTotal=prefs.getInt("total_creative_completed", 0)
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
         c.drawText("$done artes diferentes • $total pinturas prontas",w/2,h*.145f,textPaint)
+        textPaint.textSize=w*.024f
+        c.drawText("🎨 $creativeTotal criações livres concluídas",w/2,h*.172f,textPaint)
         badges.forEachIndexed { i,b ->
             val progress=if(b.usesTotal) total else done
             val unlocked=progress>=b.target
