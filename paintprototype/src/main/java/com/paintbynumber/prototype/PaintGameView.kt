@@ -37,6 +37,7 @@ class PaintGameView(context: Context) : View(context) {
     private var hintUntil = 0L
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private var completionCardVisible = false
+    private var completionRewardShown = false
     private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
@@ -106,6 +107,8 @@ class PaintGameView(context: Context) : View(context) {
             else -> landscape()
         }
         restoreProgress()
+        completionCardVisible = isDrawingComplete()
+        completionRewardShown = isDrawingComplete()
         selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
         wrongArea = null
         scaleFactor = 1f
@@ -127,6 +130,7 @@ class PaintGameView(context: Context) : View(context) {
             .putString("${progressKey()}_colors", creative)
             .putBoolean("${progressKey()}_complete", isDrawingComplete())
             .apply()
+        if (isDrawingComplete()) completionCardVisible = true
     }
 
     private fun restoreProgress() {
@@ -216,6 +220,9 @@ class PaintGameView(context: Context) : View(context) {
     }
 
     private fun triggerCompletionReward() {
+        if (completionRewardShown) return
+        completionRewardShown = true
+        completionCardVisible = true
         celebrationParticles = List(28) { i ->
             val x = ((i * 37) % 100) / 100f
             val y = ((i * 61) % 70) / 100f + .12f
