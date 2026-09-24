@@ -38,7 +38,7 @@ class PaintGameView(context: Context) : View(context) {
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private var completionCardVisible = false
     private var completionRewardShown = false
-    private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
+    private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados", "Concluídos")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
     private var drawingIndex = 0
@@ -441,7 +441,7 @@ class PaintGameView(context: Context) : View(context) {
 
         val tabY = h*.145f
         for (i in galleryCategories.indices) {
-            val x = w*(.20f+i*.30f)
+            val x = w*(.14f+i*.24f)
             paint.style=Paint.Style.FILL
             paint.color=if(i==galleryCategory) Color.rgb(220,232,255) else Color.rgb(238,238,238)
             c.drawRoundRect(x-w*.12f,tabY-h*.025f,x+w*.12f,tabY+h*.025f,18f,18f,paint)
@@ -449,7 +449,7 @@ class PaintGameView(context: Context) : View(context) {
             c.drawText(galleryCategories[i],x,tabY+h*.009f,textPaint)
         }
         val visibleIndices = drawingNames.indices.filter { i ->
-            galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6)
+            galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6) || (galleryCategory == 3 && savedProgress(i) == 100)
         }
         val cardW = w*.40f
         val cardH = h*.20f
@@ -734,9 +734,10 @@ class PaintGameView(context: Context) : View(context) {
             }
             if (e.y in h*.12f..h*.18f) {
                 galleryCategory = when {
-                    e.x < w*.35f -> 0
-                    e.x < w*.65f -> 1
-                    else -> 2
+                    e.x < w*.26f -> 0
+                    e.x < w*.50f -> 1
+                    e.x < w*.74f -> 2
+                    else -> 3
                 }
                 galleryScroll = 0f
                 invalidate()
