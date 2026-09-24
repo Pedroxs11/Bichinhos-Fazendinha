@@ -8,12 +8,13 @@ import kotlin.math.min
 
 class PaintGameView(context: Context) : View(context) {
 
-    data class Area(val number: Int, val path: Path, var painted: Boolean = false)
+    data class Area(val number: Int, val path: Path, var painted: Boolean = false, var creativeColor: Int? = null)
     private val colors = listOf(
         Color.rgb(244,67,54), Color.rgb(255,193,7), Color.rgb(76,175,80), Color.rgb(33,150,243),
         Color.rgb(156,39,176), Color.rgb(255,152,0), Color.rgb(0,188,212), Color.rgb(233,30,99)
     )
     private var selected = 1
+    private var creativeMode = false
     private var drawingIndex = 0
     private var areas = mutableListOf<Area>()
     private var wrongArea: Area? = null
@@ -169,7 +170,7 @@ class PaintGameView(context: Context) : View(context) {
         areas.forEach { a ->
             paint.style = Paint.Style.FILL
             paint.color = when {
-                a.painted -> colors[a.number-1]
+                a.painted -> if (creativeMode) (a.creativeColor ?: colors[a.number - 1]) else colors[a.number-1]
                 a === wrongArea -> Color.rgb(255, 225, 225)
                 a.number == selected -> Color.rgb(248, 248, 248)
                 else -> Color.WHITE
@@ -188,17 +189,27 @@ class PaintGameView(context: Context) : View(context) {
                 else -> Color.rgb(120,120,120)
             }
             c.drawPath(a.path,paint)
-            if(!a.painted){
+            if(!a.painted && !creativeMode){
                 val b=RectF(); a.path.computeBounds(b,true)
                 textPaint.textSize=min(w,h)*.034f; textPaint.color=Color.rgb(110,110,110)
                 c.drawText(a.number.toString(),b.centerX(),b.centerY()+textPaint.textSize*.35f,textPaint)
             }
         }
 
+        // Mode switch
+        paint.style=Paint.Style.FILL
+        paint.color=if (!creativeMode) Color.rgb(225,235,255) else Color.rgb(245,245,245)
+        c.drawRoundRect(w*.18f,h*.755f,w*.49f,h*.795f,18f,18f,paint)
+        paint.color=if (creativeMode) Color.rgb(255,235,220) else Color.rgb(245,245,245)
+        c.drawRoundRect(w*.51f,h*.755f,w*.82f,h*.795f,18f,18f,paint)
+        textPaint.textSize=w*.028f; textPaint.color=Color.DKGRAY
+        c.drawText("Por números",w*.335f,h*.782f,textPaint)
+        c.drawText("Criativo",w*.665f,h*.782f,textPaint)
+
         val y=h*.84f
         colors.forEachIndexed { i,col ->
             val number = i + 1
-            val complete = isNumberComplete(number)
+            val complete = !creativeMode && isNumberComplete(number)
             val x=w*(.075f+i*.122f)
 
             paint.style=Paint.Style.FILL
@@ -212,10 +223,10 @@ class PaintGameView(context: Context) : View(context) {
 
             textPaint.textSize=w*.035f
             textPaint.color=if (complete) Color.DKGRAY else Color.WHITE
-            c.drawText(if (complete) "✓" else number.toString(),x,y+textPaint.textSize*.35f,textPaint)
+            c.drawText(if (complete) "✓" else if (creativeMode) "●" else number.toString(),x,y+textPaint.textSize*.35f,textPaint)
         }
 
-        if (isDrawingComplete()) {
+        if (!creativeMode && isDrawingComplete()) {
             textPaint.textSize = w * .055f
             textPaint.color = Color.rgb(60, 150, 80)
             c.drawText("Concluído! ✓", w/2, h*.77f, textPaint)
@@ -234,10 +245,16 @@ class PaintGameView(context: Context) : View(context) {
     override fun onTouchEvent(e: MotionEvent): Boolean {
         if(e.action!=MotionEvent.ACTION_UP) return true
         val w=width.toFloat(); val h=height.toFloat()
+        if(e.y in h*.745f..h*.805f){
+            creativeMode = e.x >= w*.50f
+            wrongArea = null
+            invalidate()
+            return true
+        }
         if(e.y in h*.79f..h*.89f){
             val idx=((e.x/w-.014f)/.122f).toInt().coerceIn(0,7)
             val number = idx + 1
-            if (!isNumberComplete(number)) {
+            if (creativeMode || !isNumberComplete(number)) {
                 selected = number
                 wrongArea = null
                 invalidate()
@@ -254,6 +271,16 @@ class PaintGameView(context: Context) : View(context) {
             }
             return true
         }
+        if (creativeMode) {
+            val touched = areas.lastOrNull { contains(it.path, e.x, e.y) }
+            if (touched != null) {
+                touched.painted = true
+                touched.creativeColor = colors[selected - 1]
+                invalidate()
+            }
+            return true
+        }
+
         // Prefer the currently selected numbered region. Some drawings have
         // intentionally overlapping paths (for example, the fish eye sits
         // inside the body), so checking the first path alone can block it.
