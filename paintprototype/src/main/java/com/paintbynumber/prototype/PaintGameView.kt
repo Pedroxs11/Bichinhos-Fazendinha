@@ -930,7 +930,20 @@ class PaintGameView(context: Context) : View(context) {
             return true
         }
         if(e.y in h*.745f..h*.805f){
-            creativeMode = e.x >= w*.50f
+            val requestedCreativeMode = e.x >= w*.50f
+            if (requestedCreativeMode != creativeMode) {
+                saveProgress()
+                creativeMode = requestedCreativeMode
+                areas.forEach { area ->
+                    area.painted = false
+                    area.creativeColor = null
+                }
+                restoreProgress()
+                completionCardVisible = isDrawingComplete()
+                completionRewardShown = isDrawingComplete()
+                selected = nextIncompleteNumber() ?: (areas.firstOrNull()?.number ?: 1)
+                selectedSpecial = -1
+            }
             wrongArea = null
             invalidate()
             return true
