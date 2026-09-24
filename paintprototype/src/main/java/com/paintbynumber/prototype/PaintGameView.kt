@@ -730,15 +730,24 @@ class PaintGameView(context: Context) : View(context) {
             return true
         }
         if(e.y in h*.79f..h*.89f){
-            val slot=((e.x/w-.014f)/.122f).toInt().coerceIn(0,7)
-            val half = 4
-            val paletteStart = (selected - 1 - half).coerceIn(0, (colors.size - 8).coerceAtLeast(0))
-            val number = (paletteStart + slot + 1).coerceAtMost(colors.size)
-            if (creativeMode || !isNumberComplete(number)) {
-                selected = number
-                selectedSpecial = -1
-                wrongArea = null
-                invalidate()
+            val paletteNumbers = if (creativeMode) {
+                colors.indices.map { it + 1 }
+            } else {
+                areas.map { it.number }.distinct().sorted().filterNot { isNumberComplete(it) }
+            }
+            if (paletteNumbers.isNotEmpty()) {
+                val selectedPos = paletteNumbers.indexOf(selected).coerceAtLeast(0)
+                val start = (selectedPos - 4).coerceIn(0, (paletteNumbers.size - 8).coerceAtLeast(0))
+                val visibleNumbers = paletteNumbers.drop(start).take(8)
+                val slot = visibleNumbers.indices.minByOrNull { i ->
+                    kotlin.math.abs(e.x - w*(.075f+i*.122f))
+                } ?: 0
+                visibleNumbers.getOrNull(slot)?.let { number ->
+                    selected = number
+                    selectedSpecial = -1
+                    wrongArea = null
+                    invalidate()
+                }
             }
             return true
         }
