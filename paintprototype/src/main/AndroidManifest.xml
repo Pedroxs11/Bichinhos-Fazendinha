@@ -1,10 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Camera is optional: the current painting experience keeps working on devices
-         without a camera. This prepares the prototype for the future photo-to-paint flow. -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
 
     <application android:theme="@style/AppTheme" android:label="Pintura por Número">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_paths" />
+        </provider>
         <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
