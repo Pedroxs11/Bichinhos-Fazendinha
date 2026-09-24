@@ -797,7 +797,8 @@ class PaintGameView(context: Context) : View(context) {
                 return true
             }
             if (e.action == MotionEvent.ACTION_MOVE) {
-                val maxScroll = ((drawingNames.size + 1) / 2 * h*.235f - h*.68f).coerceAtLeast(0f)
+                val filteredCount = drawingNames.indices.count { i -> galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6) || (galleryCategory == 3 && savedProgress(i) == 100) }
+                val maxScroll = (((filteredCount + 1) / 2) * h*.235f - h*.68f).coerceAtLeast(0f)
                 galleryScroll = (galleryStartScroll + galleryDownY - e.y).coerceIn(0f, maxScroll)
                 invalidate()
                 return true
