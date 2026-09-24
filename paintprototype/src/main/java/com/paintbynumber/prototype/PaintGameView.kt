@@ -18,6 +18,7 @@ class PaintGameView(context: Context) : View(context) {
     )
     private var selected = 1
     private var creativeMode = false
+    private var galleryMode = true
     private var drawingIndex = 0
     private var areas = mutableListOf<Area>()
     private var wrongArea: Area? = null
@@ -161,9 +162,58 @@ class PaintGameView(context: Context) : View(context) {
         )
     }
 
+
+    private fun drawGallery(c: Canvas, w: Float, h: Float) {
+        paint.style = Paint.Style.FILL
+        paint.color = Color.rgb(248,248,248)
+        c.drawRect(0f, 0f, w, h, paint)
+
+        textPaint.color = Color.DKGRAY
+        textPaint.textSize = w * .065f
+        c.drawText("Escolha sua arte", w/2, h*.075f, textPaint)
+        textPaint.textSize = w * .032f
+        textPaint.color = Color.GRAY
+        c.drawText("Pinte por números ou do seu jeito", w/2, h*.115f, textPaint)
+
+        val cardW = w*.40f
+        val cardH = h*.20f
+        val lefts = listOf(w*.07f, w*.53f)
+        for (i in drawingNames.indices) {
+            val row = i / 2
+            val col = i % 2
+            val l = lefts[col]
+            val t = h*.16f + row*h*.235f
+            paint.color = Color.WHITE
+            paint.setShadowLayer(8f, 0f, 3f, Color.LTGRAY)
+            setLayerType(LAYER_TYPE_SOFTWARE, paint)
+            c.drawRoundRect(l,t,l+cardW,t+cardH,24f,24f,paint)
+            paint.clearShadowLayer()
+
+            val previewColors = listOf(
+                Color.rgb(244,67,54), Color.rgb(33,150,243), Color.rgb(76,175,80),
+                Color.rgb(156,39,176), Color.rgb(255,193,7), Color.rgb(255,152,0)
+            )
+            paint.color = previewColors[i % previewColors.size]
+            c.drawCircle(l+cardW/2,t+cardH*.40f,min(cardW,cardH)*.22f,paint)
+
+            textPaint.textSize=w*.036f
+            textPaint.color=Color.DKGRAY
+            c.drawText(drawingNames[i],l+cardW/2,t+cardH*.78f,textPaint)
+        }
+
+        paint.color=Color.rgb(235,242,255)
+        c.drawRoundRect(w*.12f,h*.88f,w*.88f,h*.95f,24f,24f,paint)
+        textPaint.textSize=w*.035f; textPaint.color=Color.DKGRAY
+        c.drawText("📷 Câmera  •  em breve",w/2,h*.925f,textPaint)
+    }
+
     override fun onDraw(c: Canvas) {
         super.onDraw(c)
         val w = width.toFloat(); val h = height.toFloat()
+        if (galleryMode) {
+            drawGallery(c, w, h)
+            return
+        }
         paint.style = Paint.Style.FILL; paint.color = Color.rgb(248,248,248)
         c.drawRect(0f,0f,w,h*.11f,paint)
         textPaint.textSize = min(w,h)*.045f
@@ -247,13 +297,28 @@ class PaintGameView(context: Context) : View(context) {
         c.drawRoundRect(w*.72f,h*.91f,w*.92f,h*.97f,20f,20f,paint)
         textPaint.textSize=w*.033f; textPaint.color=Color.DKGRAY
         c.drawText("‹ Anterior",w*.18f,h*.95f,textPaint)
-        c.drawText("${drawingIndex+1}/${drawingNames.size}",w*.50f,h*.95f,textPaint)
+        c.drawText("Galeria",w*.50f,h*.95f,textPaint)
         c.drawText("Próximo ›",w*.82f,h*.95f,textPaint)
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
         if(e.action!=MotionEvent.ACTION_UP) return true
         val w=width.toFloat(); val h=height.toFloat()
+
+        if (galleryMode) {
+            if (e.y in h*.14f..h*.87f) {
+                val row = ((e.y - h*.16f) / (h*.235f)).toInt()
+                val col = if (e.x < w/2) 0 else 1
+                val index = row*2 + col
+                if (index in drawingNames.indices) {
+                    drawingIndex = index
+                    galleryMode = false
+                    creativeMode = false
+                    rebuild()
+                }
+            }
+            return true
+        }
         if(e.y in h*.745f..h*.805f){
             creativeMode = e.x >= w*.50f
             wrongArea = null
@@ -273,7 +338,10 @@ class PaintGameView(context: Context) : View(context) {
             return true
         }
         if(e.y>h*.90f){
-            if (e.x < w*.32f) {
+            if (e.x in w*.36f..w*.64f) {
+                galleryMode = true
+                invalidate()
+            } else if (e.x < w*.32f) {
                 drawingIndex = (drawingIndex - 1 + drawingNames.size) % drawingNames.size
                 rebuild()
             } else if (e.x > w*.68f) {
