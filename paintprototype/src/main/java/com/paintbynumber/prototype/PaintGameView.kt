@@ -170,6 +170,7 @@ class PaintGameView(context: Context) : View(context) {
     private fun drawingRegionCount(index: Int): Int = when(index) {
         6 -> 25
         7 -> 23
+        8 -> 18
         else -> 8
     }
 
