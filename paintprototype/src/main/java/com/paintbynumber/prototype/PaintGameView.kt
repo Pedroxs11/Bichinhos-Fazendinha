@@ -35,6 +35,7 @@ class PaintGameView(context: Context) : View(context) {
     private var galleryCategory = 0
     private var achievementsMode = false
     private var hintUntil = 0L
+    private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
@@ -175,6 +176,11 @@ class PaintGameView(context: Context) : View(context) {
         drawingNames.indices.count { prefs.getBoolean("drawing_${it}_numbers_complete", false) }
 
     private fun triggerCompletionReward() {
+        celebrationParticles = List(28) { i ->
+            val x = ((i * 37) % 100) / 100f
+            val y = ((i * 61) % 70) / 100f + .12f
+            Pair(x,y)
+        }
         val completed = completedDrawings()
         rewardTitle = when {
             completed >= drawingNames.size -> "Mestre das Cores!"
@@ -577,6 +583,12 @@ class PaintGameView(context: Context) : View(context) {
         }
 
         if (rewardUntil > System.currentTimeMillis()) {
+            celebrationParticles.forEachIndexed { i,p ->
+                paint.style=Paint.Style.FILL
+                paint.color=colors[i % colors.size]
+                val px=w*p.first; val py=h*p.second
+                if(i%2==0) c.drawCircle(px,py,w*.012f,paint) else c.drawRect(px-w*.009f,py-w*.009f,px+w*.009f,py+w*.009f,paint)
+            }
             paint.style = Paint.Style.FILL
             paint.color = Color.argb(225, 255, 248, 220)
             c.drawRoundRect(w*.12f,h*.30f,w*.88f,h*.58f,36f,36f,paint)
