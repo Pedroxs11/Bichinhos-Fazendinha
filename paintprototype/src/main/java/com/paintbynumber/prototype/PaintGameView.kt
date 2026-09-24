@@ -1,6 +1,7 @@
 package com.paintbynumber.prototype
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.*
 import android.view.MotionEvent
 import android.view.View
@@ -28,7 +29,7 @@ class PaintGameView(context: Context) : View(context) {
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var dragging = false
-    private val prefs = context.getSharedPreferences("paint_progress", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getSharedPreferences("paint_progress", Context.MODE_PRIVATE)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.DKGRAY
@@ -103,8 +104,10 @@ class PaintGameView(context: Context) : View(context) {
         return (count * 100 / 8).coerceIn(0, 100)
     }
 
-    private fun isNumberComplete(number: Int): Boolean =
-        areas.filter { it.number == number }.all { it.painted }
+    private fun isNumberComplete(number: Int): Boolean {
+        val matching = areas.filter { it.number == number }
+        return matching.isNotEmpty() && matching.all { it.painted }
+    }
 
     private fun nextIncompleteNumber(): Int? =
         areas.map { it.number }.distinct().sorted().firstOrNull { n -> areas.any { it.number == n && !it.painted } }
