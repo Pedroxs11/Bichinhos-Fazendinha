@@ -77,8 +77,8 @@ class PaintGameView(context: Context) : View(context) {
     }
 
     private fun restoreProgress() {
-        val painted = prefs.getString("${progressKey()}_painted", "") ?: ""
-        painted.split(",").mapNotNull { it.toIntOrNull() }.forEach { index ->
+        val paintedIndexes = prefs.getString("${progressKey()}_painted", "") ?: ""
+        paintedIndexes.split(",").mapNotNull { it.toIntOrNull() }.forEach { index ->
             areas.getOrNull(index)?.painted = true
         }
         val creative = prefs.getString("${progressKey()}_colors", "") ?: ""
