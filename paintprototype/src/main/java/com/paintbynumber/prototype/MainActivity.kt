@@ -124,14 +124,21 @@ class MainActivity : Activity() {
         actions.addView(Button(this).apply {
             text = "Usar foto"
             setOnClickListener {
+                val lineArtFile = File(cacheDir, "camera_import/line_art_${System.currentTimeMillis()}.png")
+                val converted = CameraArtworkProcessor.createLineArt(file, lineArtFile)
+                if (!converted) {
+                    Toast.makeText(this@MainActivity, "Não foi possível preparar esta foto", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
                 getSharedPreferences("paint_progress", MODE_PRIVATE).edit()
                     .putString("last_camera_photo", file.absolutePath)
+                    .putString("last_camera_line_art", lineArtFile.absolutePath)
                     .putBoolean("camera_photo_ready_for_conversion", true)
                     .apply()
                 pendingCameraFile = null
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
-                Toast.makeText(this@MainActivity, "Foto pronta para virar desenho 🎨", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, "Foto preparada como desenho 🎨", Toast.LENGTH_LONG).show()
             }
         }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         panel.addView(actions)
