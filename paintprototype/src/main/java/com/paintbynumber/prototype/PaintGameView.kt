@@ -261,12 +261,35 @@ class PaintGameView(context: Context) : View(context) {
             c.drawRoundRect(l,t,l+cardW,t+cardH,24f,24f,paint)
             paint.clearShadowLayer()
 
-            val previewColors = listOf(
-                Color.rgb(244,67,54), Color.rgb(33,150,243), Color.rgb(76,175,80),
-                Color.rgb(156,39,176), Color.rgb(255,193,7), Color.rgb(255,152,0)
-            )
-            paint.color = previewColors[i % previewColors.size]
-            c.drawCircle(l+cardW/2,t+cardH*.40f,min(cardW,cardH)*.22f,paint)
+            // Simple recognizable thumbnails instead of placeholder circles.
+            val cx = l + cardW/2
+            val cy = t + cardH*.36f
+            paint.style = Paint.Style.FILL
+            when (i) {
+                0 -> { // butterfly
+                    paint.color=colors[4]; c.drawOval(cx-cardW*.23f,cy-cardH*.18f,cx-cardW*.03f,cy+cardH*.13f,paint); c.drawOval(cx+cardW*.03f,cy-cardH*.18f,cx+cardW*.23f,cy+cardH*.13f,paint)
+                    paint.color=colors[5]; c.drawRoundRect(cx-cardW*.025f,cy-cardH*.18f,cx+cardW*.025f,cy+cardH*.18f,12f,12f,paint)
+                }
+                1 -> { // fish
+                    paint.color=colors[3]; c.drawOval(cx-cardW*.22f,cy-cardH*.12f,cx+cardW*.14f,cy+cardH*.12f,paint)
+                    paint.color=colors[1]; val tail=Path(); tail.moveTo(cx+cardW*.10f,cy); tail.lineTo(cx+cardW*.27f,cy-cardH*.13f); tail.lineTo(cx+cardW*.27f,cy+cardH*.13f); tail.close(); c.drawPath(tail,paint)
+                }
+                2 -> { // turtle
+                    paint.color=colors[2]; c.drawOval(cx-cardW*.18f,cy-cardH*.13f,cx+cardW*.16f,cy+cardH*.13f,paint); c.drawCircle(cx+cardW*.22f,cy,cardW*.07f,paint)
+                }
+                3 -> { // rocket
+                    paint.color=colors[3]; val rocket=Path(); rocket.moveTo(cx,cy-cardH*.22f); rocket.lineTo(cx-cardW*.10f,cy+cardH*.13f); rocket.lineTo(cx+cardW*.10f,cy+cardH*.13f); rocket.close(); c.drawPath(rocket,paint)
+                    paint.color=colors[0]; val flame=Path(); flame.moveTo(cx-cardW*.05f,cy+cardH*.12f); flame.lineTo(cx,cy+cardH*.25f); flame.lineTo(cx+cardW*.05f,cy+cardH*.12f); flame.close(); c.drawPath(flame,paint)
+                }
+                4 -> { // flower
+                    paint.color=colors[1]; for (a in 0 until 6) { val angle=Math.toRadians((a*60).toDouble()); val px=cx+kotlin.math.cos(angle).toFloat()*cardW*.11f; val py=cy+kotlin.math.sin(angle).toFloat()*cardH*.10f; c.drawCircle(px,py,cardW*.075f,paint) }
+                    paint.color=colors[5]; c.drawCircle(cx,cy,cardW*.07f,paint)
+                }
+                else -> { // ice cream
+                    paint.color=colors[7]; c.drawCircle(cx,cy-cardH*.07f,cardW*.13f,paint)
+                    paint.color=Color.rgb(205,150,90); val cone=Path(); cone.moveTo(cx-cardW*.11f,cy); cone.lineTo(cx+cardW*.11f,cy); cone.lineTo(cx,cy+cardH*.24f); cone.close(); c.drawPath(cone,paint)
+                }
+            }
 
             textPaint.textSize=w*.036f
             textPaint.color=Color.DKGRAY
