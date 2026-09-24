@@ -263,10 +263,13 @@ class PaintGameView(context: Context) : View(context) {
             Pair(x,y)
         }
         val completed = completedDrawings()
+        val total = totalCompletedPaintings()
         rewardTitle = when {
-            completed >= drawingNames.size -> "Mestre das Cores!"
-            completed >= 3 -> "Artista em Ascensão!"
-            else -> "Primeira Obra!"
+            completed >= drawingNames.size -> "Mestre das Cores! 👑"
+            total >= 10 -> "Super Pintor! 🎨"
+            completed >= 3 -> "Pequeno Artista! 🏆"
+            completed >= 1 -> "Minha Primeira Arte! ⭐"
+            else -> "Muito bem! ⭐"
         }
         rewardUntil = System.currentTimeMillis() + 2200L
     }
@@ -752,7 +755,7 @@ class PaintGameView(context: Context) : View(context) {
             c.drawText(rewardTitle,w/2,h*.47f,textPaint)
             textPaint.textSize = w*.032f
             textPaint.color = Color.DKGRAY
-            c.drawText("Obra concluída! +1 conquista",w/2,h*.53f,textPaint)
+            c.drawText("Pintura pronta! Você ganhou uma estrelinha ⭐",w/2,h*.53f,textPaint)
             postInvalidateDelayed(80)
         }
 
