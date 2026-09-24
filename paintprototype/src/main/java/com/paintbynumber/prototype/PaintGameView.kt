@@ -119,6 +119,18 @@ class PaintGameView(context: Context) : View(context) {
     }
 
 
+    private fun clampPan() {
+        if (scaleFactor <= 1f) {
+            offsetX = 0f
+            offsetY = 0f
+            return
+        }
+        val maxX = width * (scaleFactor - 1f) * .50f
+        val maxY = height * (scaleFactor - 1f) * .32f
+        offsetX = offsetX.coerceIn(-maxX, maxX)
+        offsetY = offsetY.coerceIn(-maxY, maxY)
+    }
+
     private fun progressKey() = "drawing_${drawingIndex}_" + (if (creativeMode) "creative" else "numbers")
 
     private fun saveProgress() {
@@ -785,6 +797,7 @@ class PaintGameView(context: Context) : View(context) {
                 MotionEvent.ACTION_MOVE -> {
                     if (lastTouchX > 0f) {
                         scaleFactor = (scaleFactor * (distance / lastTouchX)).coerceIn(1f, 4f)
+                        clampPan()
                         invalidate()
                     }
                     lastTouchX = distance
@@ -804,6 +817,7 @@ class PaintGameView(context: Context) : View(context) {
                     val dx = e.x-lastTouchX; val dy=e.y-lastTouchY
                     if (kotlin.math.abs(dx)+kotlin.math.abs(dy) > 5f) dragging=true
                     offsetX += dx; offsetY += dy
+                    clampPan()
                     lastTouchX=e.x; lastTouchY=e.y
                     invalidate(); return true
                 }
