@@ -2,7 +2,6 @@ package com.paintbynumber.prototype
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.content.Intent
 import android.graphics.*
 import android.view.MotionEvent
 import android.view.View
@@ -179,12 +178,41 @@ class PaintGameView(context: Context) : View(context) {
         drawingNames.indices.count { prefs.getBoolean("drawing_${it}_numbers_complete", false) }
 
     private fun shareArtwork() {
-        val text = "Olha a arte que eu terminei no Pintura por Número: ${drawingNames[drawingIndex]} 🎨"
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
+        // Render only the artwork itself (without buttons, palette or HUD) so
+        // the shared PNG looks like a finished picture instead of a screenshot.
+        val bounds = RectF()
+        areas.forEach { area ->
+            val areaBounds = RectF()
+            area.path.computeBounds(areaBounds, true)
+            if (bounds.isEmpty) bounds.set(areaBounds) else bounds.union(areaBounds)
         }
-        context.startActivity(Intent.createChooser(intent, "Compartilhar minha arte"))
+        if (bounds.isEmpty) return
+
+        val padding = 48f
+        val bitmap = Bitmap.createBitmap(
+            (bounds.width() + padding * 2).toInt().coerceAtLeast(1),
+            (bounds.height() + padding * 2).toInt().coerceAtLeast(1),
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
+        canvas.translate(padding - bounds.left, padding - bounds.top)
+
+        areas.forEach { area ->
+            paint.style = Paint.Style.FILL
+            paint.color = if (creativeMode) {
+                area.creativeColor ?: colors[area.number - 1]
+            } else {
+                colors[area.number - 1]
+            }
+            canvas.drawPath(area.path, paint)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 3f
+            paint.color = Color.rgb(100, 100, 100)
+            canvas.drawPath(area.path, paint)
+        }
+
+        ArtworkShareHelper.share(context, bitmap, drawingNames[drawingIndex])
     }
 
     private fun triggerCompletionReward() {
