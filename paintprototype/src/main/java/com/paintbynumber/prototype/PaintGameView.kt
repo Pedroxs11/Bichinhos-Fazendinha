@@ -771,7 +771,7 @@ class PaintGameView(context: Context) : View(context) {
                 val row = ((e.y + galleryScroll - h*.19f) / (h*.235f)).toInt()
                 val col = if (e.x < w/2) 0 else 1
                 val visibleIndices = drawingNames.indices.filter { i ->
-                    galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6)
+                    galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6) || (galleryCategory == 3 && savedProgress(i) == 100)
                 }
                 val position = row*2 + col
                 val index = visibleIndices.getOrNull(position) ?: -1
