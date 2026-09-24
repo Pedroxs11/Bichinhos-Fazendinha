@@ -414,22 +414,28 @@ class PaintGameView(context: Context) : View(context) {
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(248,248,248); c.drawRect(0f,0f,w,h,paint)
         textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Conquistas",w/2,h*.09f,textPaint)
         val done=completedDrawings()
+        data class Badge(val name:String,val target:Int,val icon:String,val usesTotal:Boolean=false)
         val badges=listOf(
-            Triple("Primeira Obra",1,"🏅"),
-            Triple("Artista em Ascensão",3,"🏆"),
-            Triple("Mestre das Cores",drawingNames.size,"👑")
+            Badge("Primeira Obra",1,"🏅"),
+            Badge("Artista em Ascensão",3,"🏆"),
+            Badge("Pincel Incansável",10,"🎨",true),
+            Badge("Mestre das Cores",drawingNames.size,"👑")
         )
+        val total=totalCompletedPaintings()
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
-        c.drawText("Obras únicas: $done • pinturas concluídas: ${totalCompletedPaintings()}",w/2,h*.145f,textPaint)
+        c.drawText("Obras únicas: $done • pinturas concluídas: $total",w/2,h*.145f,textPaint)
         badges.forEachIndexed { i,b ->
-            val unlocked=done>=b.second
-            val cy=h*(.25f+i*.20f)
+            val progress=if(b.usesTotal) total else done
+            val unlocked=progress>=b.target
+            val cy=h*(.235f+i*.145f)
             paint.color=if(unlocked) Color.rgb(255,244,200) else Color.rgb(232,232,232)
-            c.drawRoundRect(w*.12f,cy-h*.07f,w*.88f,cy+h*.07f,28f,28f,paint)
-            textPaint.textSize=w*.055f; textPaint.color=if(unlocked) Color.rgb(170,120,20) else Color.GRAY
-            c.drawText(b.third,w*.23f,cy+h*.018f,textPaint)
-            textPaint.textSize=w*.034f; c.drawText(b.first,w*.57f,cy-h*.005f,textPaint)
-            textPaint.textSize=w*.026f; c.drawText(if(unlocked) "Conquistado ✓" else "$done/${b.second} artes",w*.57f,cy+h*.04f,textPaint)
+            c.drawRoundRect(w*.12f,cy-h*.055f,w*.88f,cy+h*.055f,28f,28f,paint)
+            textPaint.textSize=w*.050f; textPaint.color=if(unlocked) Color.rgb(170,120,20) else Color.GRAY
+            c.drawText(b.icon,w*.23f,cy+h*.016f,textPaint)
+            textPaint.textSize=w*.032f; c.drawText(b.name,w*.57f,cy-h*.004f,textPaint)
+            textPaint.textSize=w*.024f
+            val unit=if(b.usesTotal) "pinturas" else "artes"
+            c.drawText(if(unlocked) "Conquistado ✓" else "$progress/${b.target} $unit",w*.57f,cy+h*.032f,textPaint)
         }
         paint.color=Color.rgb(225,235,255); c.drawRoundRect(w*.28f,h*.86f,w*.72f,h*.93f,24f,24f,paint)
         textPaint.textSize=w*.032f; textPaint.color=Color.DKGRAY; c.drawText("← Voltar à galeria",w/2,h*.905f,textPaint)
