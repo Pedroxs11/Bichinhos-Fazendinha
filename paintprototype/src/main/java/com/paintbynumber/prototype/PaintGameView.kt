@@ -140,11 +140,18 @@ class PaintGameView(context: Context) : View(context) {
         }
     }
 
+    private fun drawingRegionCount(index: Int): Int = when(index) {
+        6 -> 25
+        7 -> 23
+        else -> 8
+    }
+
     private fun savedProgress(index: Int): Int {
         val prefix = "drawing_${index}_numbers"
+        if (prefs.getBoolean("${prefix}_complete", false)) return 100
         val painted = prefs.getString("${prefix}_painted", "") ?: ""
         val count = painted.split(",").count { it.isNotBlank() }
-        return (count * 100 / 8).coerceIn(0, 100)
+        return (count * 100 / drawingRegionCount(index)).coerceIn(0, 100)
     }
 
     private fun isNumberComplete(number: Int): Boolean {
