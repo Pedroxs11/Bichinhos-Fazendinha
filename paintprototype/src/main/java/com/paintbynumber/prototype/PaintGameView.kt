@@ -180,17 +180,23 @@ class PaintGameView(context: Context) : View(context) {
     private fun isDrawingComplete(): Boolean = areas.isNotEmpty() && areas.all { it.painted }
 
     private fun completedDrawings(): Int =
-        drawingNames.indices.count { prefs.getBoolean("drawing_${it}_numbers_complete", false) }
+        drawingNames.indices.count { index ->
+            prefs.getBoolean("drawing_${index}_ever_completed", false) ||
+                prefs.getBoolean("drawing_${index}_numbers_complete", false)
+        }
 
     private fun totalCompletedPaintings(): Int = prefs.getInt("total_completed_paintings", 0)
 
     private fun recordCompletionOnce() {
         val key = "drawing_${drawingIndex}_completion_counted"
-        if (prefs.getBoolean(key, false)) return
-        prefs.edit()
-            .putInt("total_completed_paintings", totalCompletedPaintings() + 1)
-            .putBoolean(key, true)
-            .apply()
+        val editor = prefs.edit()
+            .putBoolean("drawing_${drawingIndex}_ever_completed", true)
+        if (!prefs.getBoolean(key, false)) {
+            editor
+                .putInt("total_completed_paintings", totalCompletedPaintings() + 1)
+                .putBoolean(key, true)
+        }
+        editor.apply()
     }
 
     private fun shareArtwork() {
