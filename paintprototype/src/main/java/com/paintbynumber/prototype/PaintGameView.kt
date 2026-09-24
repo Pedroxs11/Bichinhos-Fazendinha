@@ -31,6 +31,9 @@ class PaintGameView(context: Context) : View(context) {
     }
     private var creativeMode = false
     private var galleryMode = true
+    private var galleryScroll = 0f
+    private var galleryDownY = 0f
+    private var galleryStartScroll = 0f
     private var drawingIndex = 0
     private var areas = mutableListOf<Area>()
     private var wrongArea: Area? = null
@@ -361,7 +364,7 @@ class PaintGameView(context: Context) : View(context) {
             val row = i / 2
             val col = i % 2
             val l = lefts[col]
-            val t = h*.16f + row*h*.235f
+            val t = h*.16f + row*h*.235f - galleryScroll
             paint.color = Color.WHITE
             paint.setShadowLayer(8f, 0f, 3f, Color.LTGRAY)
             setLayerType(LAYER_TYPE_SOFTWARE, paint)
@@ -589,12 +592,25 @@ class PaintGameView(context: Context) : View(context) {
         if(e.action!=MotionEvent.ACTION_UP) return true
 
         if (galleryMode) {
+            if (e.action == MotionEvent.ACTION_DOWN) {
+                galleryDownY = e.y
+                galleryStartScroll = galleryScroll
+                return true
+            }
+            if (e.action == MotionEvent.ACTION_MOVE) {
+                val maxScroll = ((drawingNames.size + 1) / 2 * h*.235f - h*.68f).coerceAtLeast(0f)
+                galleryScroll = (galleryStartScroll + galleryDownY - e.y).coerceIn(0f, maxScroll)
+                invalidate()
+                return true
+            }
+            if (e.action != MotionEvent.ACTION_UP) return true
+            if (kotlin.math.abs(e.y - galleryDownY) > 18f) return true
             if (e.y in h*.88f..h*.95f && unlockedDrawingCount() < drawingNames.size) {
                 if (!spendTicketToUnlock()) earnRewardTicket() // simulated rewarded video
                 return true
             }
             if (e.y in h*.14f..h*.87f) {
-                val row = ((e.y - h*.16f) / (h*.235f)).toInt()
+                val row = ((e.y + galleryScroll - h*.16f) / (h*.235f)).toInt()
                 val col = if (e.x < w/2) 0 else 1
                 val index = row*2 + col
                 if (index in drawingNames.indices) {
