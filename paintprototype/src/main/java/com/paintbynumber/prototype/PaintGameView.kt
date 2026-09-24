@@ -2,6 +2,7 @@ package com.paintbynumber.prototype
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.Intent
 import android.graphics.*
 import android.view.MotionEvent
 import android.view.View
@@ -176,6 +177,15 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun completedDrawings(): Int =
         drawingNames.indices.count { prefs.getBoolean("drawing_${it}_numbers_complete", false) }
+
+    private fun shareArtwork() {
+        val text = "Olha a arte que eu terminei no Pintura por Número: ${drawingNames[drawingIndex]} 🎨"
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        context.startActivity(Intent.createChooser(intent, "Compartilhar minha arte"))
+    }
 
     private fun triggerCompletionReward() {
         celebrationParticles = List(28) { i ->
@@ -725,9 +735,7 @@ class PaintGameView(context: Context) : View(context) {
             return true
         }
         if (!creativeMode && isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f && e.x in w*.15f..w*.85f) {
-            rewardTitle = "Compartilhamento preparado 📤"
-            rewardUntil = System.currentTimeMillis() + 1600L
-            invalidate()
+            shareArtwork()
             return true
         }
         if (!creativeMode && !isDrawingComplete() && e.y in h*.845f..h*.905f && e.x in w*.34f..w*.66f) {
