@@ -61,7 +61,7 @@ class PaintGameView(context: Context) : View(context) {
     }
 
 
-    private fun progressKey() = "drawing_${drawingIndex}_" + if (creativeMode) "creative" else "numbers"
+    private fun progressKey() = "drawing_${drawingIndex}_" + (if (creativeMode) "creative" else "numbers")
 
     private fun saveProgress() {
         val painted = areas.mapIndexedNotNull { index, area -> if (area.painted) index.toString() else null }.joinToString(",")
