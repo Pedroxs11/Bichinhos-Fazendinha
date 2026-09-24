@@ -54,6 +54,24 @@ class PaintGameView(context: Context) : View(context) {
         rewardUntil = System.currentTimeMillis() + 2200L
         invalidate()
     }
+    private fun ticketCount(): Int = prefs.getInt("reward_tickets", 0)
+    private fun earnRewardTicket() {
+        prefs.edit().putInt("reward_tickets", ticketCount() + 1).apply()
+        rewardTitle = "Ticket ganho! 🎟"
+        rewardUntil = System.currentTimeMillis() + 1800L
+        invalidate()
+    }
+    private fun spendTicketToUnlock(): Boolean {
+        if (ticketCount() <= 0 || unlockedDrawingCount() >= drawingNames.size) return false
+        prefs.edit()
+            .putInt("reward_tickets", ticketCount() - 1)
+            .putInt("unlocked_drawing_count", (unlockedDrawingCount() + 2).coerceAtMost(drawingNames.size))
+            .apply()
+        rewardTitle = "Ticket usado • 2 artes liberadas!"
+        rewardUntil = System.currentTimeMillis() + 2000L
+        invalidate()
+        return true
+    }
 
     private fun rebuild() {
         areas = when (drawingIndex) {
@@ -256,6 +274,9 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize = w * .032f
         textPaint.color = Color.GRAY
         c.drawText("Pinte por números ou do seu jeito", w/2, h*.115f, textPaint)
+        textPaint.textSize = w*.028f
+        textPaint.color = Color.rgb(90,90,90)
+        c.drawText("🎟 Tickets: ${ticketCount()}", w*.82f, h*.075f, textPaint)
 
         val cardW = w*.40f
         val cardH = h*.20f
@@ -314,7 +335,9 @@ class PaintGameView(context: Context) : View(context) {
         paint.color=Color.rgb(235,242,255)
         c.drawRoundRect(w*.12f,h*.88f,w*.88f,h*.95f,24f,24f,paint)
         textPaint.textSize=w*.035f; textPaint.color=Color.DKGRAY
-        c.drawText(if (unlockedDrawingCount() < drawingNames.size) "▶ Assistir vídeo • liberar 2 artes" else "📷 Câmera • em breve",w/2,h*.925f,textPaint)
+        c.drawText(if (unlockedDrawingCount() < drawingNames.size) {
+            if (ticketCount() > 0) "🎟 Usar ticket • liberar 2 artes" else "▶ Assistir vídeo • ganhar 1 ticket"
+        } else "📷 Câmera • em breve",w/2,h*.925f,textPaint)
     }
 
     override fun onDraw(c: Canvas) {
@@ -480,7 +503,7 @@ class PaintGameView(context: Context) : View(context) {
 
         if (galleryMode) {
             if (e.y in h*.88f..h*.95f && unlockedDrawingCount() < drawingNames.size) {
-                simulateRewardedVideoUnlock()
+                if (!spendTicketToUnlock()) earnRewardTicket() // simulated rewarded video
                 return true
             }
             if (e.y in h*.14f..h*.87f) {
