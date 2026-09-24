@@ -36,6 +36,7 @@ class PaintGameView(context: Context) : View(context) {
     private var achievementsMode = false
     private var hintUntil = 0L
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
+    private var completionCardVisible = false
     private val galleryCategories = listOf("Todos", "Fáceis", "Detalhados")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
@@ -71,6 +72,7 @@ class PaintGameView(context: Context) : View(context) {
         prefs.edit().putInt("unlocked_drawing_count", (current + 2).coerceAtMost(drawingNames.size)).apply()
         rewardTitle = "2 novas artes liberadas!"
         rewardUntil = System.currentTimeMillis() + 2200L
+        completionCardVisible = true
         invalidate()
     }
     private fun ticketCount(): Int = prefs.getInt("reward_tickets", 0)
@@ -582,6 +584,13 @@ class PaintGameView(context: Context) : View(context) {
             c.drawText("Concluído! ✓", w/2, h*.77f, textPaint)
         }
 
+        if (completionCardVisible && isDrawingComplete()) {
+            paint.style=Paint.Style.FILL; paint.color=Color.rgb(230,245,255)
+            c.drawRoundRect(w*.18f,h*.62f,w*.82f,h*.70f,22f,22f,paint)
+            textPaint.textSize=w*.031f; textPaint.color=Color.DKGRAY
+            c.drawText("📤 Compartilhar minha arte",w/2,h*.67f,textPaint)
+        }
+
         if (rewardUntil > System.currentTimeMillis()) {
             celebrationParticles.forEachIndexed { i,p ->
                 paint.style=Paint.Style.FILL
@@ -713,6 +722,12 @@ class PaintGameView(context: Context) : View(context) {
                     rebuild()
                 }
             }
+            return true
+        }
+        if (!creativeMode && isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f && e.x in w*.15f..w*.85f) {
+            rewardTitle = "Compartilhamento preparado 📤"
+            rewardUntil = System.currentTimeMillis() + 1600L
+            invalidate()
             return true
         }
         if (!creativeMode && !isDrawingComplete() && e.y in h*.845f..h*.905f && e.x in w*.34f..w*.66f) {
