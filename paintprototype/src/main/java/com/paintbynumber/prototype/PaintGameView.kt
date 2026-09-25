@@ -38,7 +38,7 @@ class PaintGameView(context: Context) : View(context) {
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
     private var completionCardVisible = false
     private var completionRewardShown = false
-    private val galleryCategories = listOf("Todos", "Fáceis", "Desafios", "Concluídos")
+    private val galleryCategories = listOf("Todos", "Fáceis", "Desafios", "Concluídos", "Criativos")
     private var galleryDownY = 0f
     private var galleryStartScroll = 0f
     private var drawingIndex = 0
@@ -604,7 +604,8 @@ class PaintGameView(context: Context) : View(context) {
             galleryCategory == 0 ||
                 (galleryCategory == 1 && i <= 5) ||
                 (galleryCategory == 2 && i >= 6) ||
-                (galleryCategory == 3 && wasEverCompleted(i))
+                (galleryCategory == 3 && wasEverCompleted(i)) ||
+                (galleryCategory == 4 && (prefs.getBoolean("drawing_${i}_creative_ever_completed", false) || savedCreativeProgress(i) > 0))
         }
 
     private fun drawGallery(c: Canvas, w: Float, h: Float) {
@@ -625,13 +626,14 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize=w*.024f; textPaint.color=Color.DKGRAY; c.drawText("🏆 ${completedDrawings()}",w*.14f,h*.084f,textPaint)
 
         val tabY = h*.145f
+        val tabGap = w*.19f
         for (i in galleryCategories.indices) {
-            val x = w*(.14f+i*.24f)
+            val x = w*.12f + i*tabGap
             paint.style=Paint.Style.FILL
             paint.color=if(i==galleryCategory) Color.rgb(220,232,255) else Color.rgb(238,238,238)
-            c.drawRoundRect(x-w*.12f,tabY-h*.025f,x+w*.12f,tabY+h*.025f,18f,18f,paint)
-            textPaint.textSize=w*.026f; textPaint.color=Color.DKGRAY
-            c.drawText(galleryCategories[i],x,tabY+h*.009f,textPaint)
+            c.drawRoundRect(x-w*.09f,tabY-h*.025f,x+w*.09f,tabY+h*.025f,18f,18f,paint)
+            textPaint.textSize=w*.022f; textPaint.color=Color.DKGRAY
+            c.drawText(galleryCategories[i],x,tabY+h*.008f,textPaint)
         }
         val visibleIndices = visibleDrawingIndices()
         val cardW = w*.40f
@@ -963,12 +965,7 @@ class PaintGameView(context: Context) : View(context) {
                 achievementsMode=true; galleryMode=false; invalidate(); return true
             }
             if (e.y in h*.12f..h*.18f) {
-                galleryCategory = when {
-                    e.x < w*.26f -> 0
-                    e.x < w*.50f -> 1
-                    e.x < w*.74f -> 2
-                    else -> 3
-                }
+                galleryCategory = ((e.x - w*.025f) / (w*.19f)).toInt().coerceIn(0, galleryCategories.lastIndex)
                 galleryScroll = 0f
                 invalidate()
                 return true
