@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.content.Intent
+import androidx.core.content.FileProvider
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -191,6 +193,22 @@ class MainActivity : Activity() {
         root.addView(panel, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
     }
 
+    private fun shareCameraArtwork(file: File) {
+        if (!file.exists() || file.length() <= 0L) {
+            Toast.makeText(this, "Desenho não encontrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_TEXT, "Olha o desenho que criei a partir de uma foto 🎨")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            clipData = android.content.ClipData.newRawUri("camera_artwork", uri)
+        }
+        startActivity(Intent.createChooser(intent, "Compartilhar meu desenho"))
+    }
+
     private fun showLineArtPreview(file: File) {
         pendingLineArtFile = file
         cameraPreview?.let(root::removeView)
@@ -225,6 +243,10 @@ class MainActivity : Activity() {
                 pendingLineArtFile = null
                 launchCamera()
             }
+        }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        actions.addView(Button(this).apply {
+            text = "Compartilhar"
+            setOnClickListener { shareCameraArtwork(file) }
         }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         actions.addView(Button(this).apply {
             text = "Guardar desenho"
