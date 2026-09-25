@@ -802,7 +802,7 @@ class PaintGameView(context: Context) : View(context) {
                     paint.color=Color.DKGRAY; c.drawCircle(cx-cardW*.055f,cy-cardH*.025f,cardW*.018f,paint); c.drawCircle(cx+cardW*.055f,cy-cardH*.025f,cardW*.018f,paint)
                     paint.color=colors[8]; val nose=Path(); nose.moveTo(cx,cy+cardH*.035f); nose.lineTo(cx-cardW*.025f,cy+cardH*.07f); nose.lineTo(cx+cardW*.025f,cy+cardH*.07f); nose.close(); c.drawPath(nose,paint)
                 }
-                else -> { // dinosaur
+                10 -> { // dinosaur
                     paint.color=colors[2]
                     c.drawOval(cx-cardW*.22f,cy-cardH*.08f,cx+cardW*.13f,cy+cardH*.14f,paint)
                     c.drawCircle(cx+cardW*.19f,cy-cardH*.07f,cardW*.09f,paint)
@@ -814,6 +814,25 @@ class PaintGameView(context: Context) : View(context) {
                     }
                     paint.color=Color.DKGRAY; c.drawCircle(cx+cardW*.21f,cy-cardH*.09f,cardW*.014f,paint)
                     paint.color=colors[2]; c.drawRect(cx-cardW*.11f,cy+cardH*.10f,cx-cardW*.05f,cy+cardH*.23f,paint); c.drawRect(cx+cardW*.04f,cy+cardH*.10f,cx+cardW*.10f,cy+cardH*.23f,paint)
+                }
+                else -> { // enchanted castle
+                    paint.color=colors[3]
+                    c.drawRect(cx-cardW*.18f,cy-cardH*.02f,cx-cardW*.07f,cy+cardH*.20f,paint)
+                    c.drawRect(cx+cardW*.07f,cy-cardH*.02f,cx+cardW*.18f,cy+cardH*.20f,paint)
+                    paint.color=colors[2]
+                    c.drawRect(cx-cardW*.07f,cy-cardH*.08f,cx+cardW*.07f,cy+cardH*.20f,paint)
+                    paint.color=colors[4]
+                    fun roof(left: Float, top: Float, right: Float, base: Float) {
+                        val p=Path(); p.moveTo(cx,top); p.lineTo(left,base); p.lineTo(right,base); p.close(); c.drawPath(p,paint)
+                    }
+                    roof(cx-cardW*.18f,cy-cardH*.20f,cx-cardW*.29f,cy-cardH*.02f)
+                    roof(cx+cardW*.18f,cy-cardH*.20f,cx+cardW*.07f,cy-cardH*.02f)
+                    roof(cx,cy-cardH*.28f,cx-cardW*.08f,cy-cardH*.08f)
+                    paint.color=colors[7]
+                    c.drawRoundRect(cx-cardW*.025f,cy+cardH*.08f,cx+cardW*.025f,cy+cardH*.20f,10f,10f,paint)
+                    paint.color=colors[1]
+                    c.drawCircle(cx-cardW*.125f,cy+cardH*.06f,cardW*.018f,paint)
+                    c.drawCircle(cx+cardW*.125f,cy+cardH*.06f,cardW*.018f,paint)
                 }
             }
 
