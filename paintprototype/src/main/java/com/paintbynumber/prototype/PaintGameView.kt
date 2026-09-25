@@ -688,7 +688,7 @@ class PaintGameView(context: Context) : View(context) {
                     paint.color=colors[2]; c.drawRect(cx-cardW*.25f,cy,cx+cardW*.25f,cy+cardH*.18f,paint)
                     paint.color=colors[9]; val mountain=Path(); mountain.moveTo(cx-cardW*.23f,cy); mountain.lineTo(cx-cardW*.07f,cy-cardH*.15f); mountain.lineTo(cx+cardW*.05f,cy); mountain.lineTo(cx+cardW*.16f,cy-cardH*.12f); mountain.lineTo(cx+cardW*.25f,cy); mountain.close(); c.drawPath(mountain,paint)
                 }
-                else -> { // rainbow
+                8 -> { // rainbow
                     val oldStyle=paint.style; val oldWidth=paint.strokeWidth; val oldCap=paint.strokeCap; val oldColor=paint.color
                     paint.style=Paint.Style.STROKE; paint.strokeCap=Paint.Cap.ROUND
                     val bands=listOf(colors[0],colors[5],colors[1],colors[2],colors[3])
@@ -700,6 +700,13 @@ class PaintGameView(context: Context) : View(context) {
                         c.drawArc(oval,180f,180f,false,paint)
                     }
                     paint.style=oldStyle; paint.strokeWidth=oldWidth; paint.strokeCap=oldCap; paint.color=oldColor
+                }
+                else -> { // lion cub
+                    paint.color=colors[6]; c.drawCircle(cx,cy,cardW*.22f,paint)
+                    paint.color=colors[5]; c.drawCircle(cx,cy+cardH*.01f,cardW*.16f,paint)
+                    paint.color=colors[5]; c.drawCircle(cx-cardW*.15f,cy-cardH*.13f,cardW*.07f,paint); c.drawCircle(cx+cardW*.15f,cy-cardH*.13f,cardW*.07f,paint)
+                    paint.color=Color.DKGRAY; c.drawCircle(cx-cardW*.055f,cy-cardH*.025f,cardW*.018f,paint); c.drawCircle(cx+cardW*.055f,cy-cardH*.025f,cardW*.018f,paint)
+                    paint.color=colors[8]; val nose=Path(); nose.moveTo(cx,cy+cardH*.035f); nose.lineTo(cx-cardW*.025f,cy+cardH*.07f); nose.lineTo(cx+cardW*.025f,cy+cardH*.07f); nose.close(); c.drawPath(nose,paint)
                 }
             }
 
@@ -944,7 +951,7 @@ class PaintGameView(context: Context) : View(context) {
                 return true
             }
             if (e.action == MotionEvent.ACTION_MOVE) {
-                val filteredCount = drawingNames.indices.count { i -> galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6) || (galleryCategory == 3 && (prefs.getBoolean("drawing_${i}_ever_completed", false) || savedProgress(i) == 100)) }
+                val filteredCount = visibleDrawingIndices().size
                 val maxScroll = (((filteredCount + 1) / 2) * h*.235f - h*.68f).coerceAtLeast(0f)
                 galleryScroll = (galleryStartScroll + galleryDownY - e.y).coerceIn(0f, maxScroll)
                 invalidate()
@@ -973,9 +980,7 @@ class PaintGameView(context: Context) : View(context) {
             if (e.y in h*.14f..h*.87f) {
                 val row = ((e.y + galleryScroll - h*.19f) / (h*.235f)).toInt()
                 val col = if (e.x < w/2) 0 else 1
-                val visibleIndices = drawingNames.indices.filter { i ->
-                    galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6) || (galleryCategory == 3 && (prefs.getBoolean("drawing_${i}_ever_completed", false) || savedProgress(i) == 100))
-                }
+                val visibleIndices = visibleDrawingIndices()
                 val position = row*2 + col
                 val index = visibleIndices.getOrNull(position) ?: -1
                 if (index in drawingNames.indices) {
