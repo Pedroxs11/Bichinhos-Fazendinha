@@ -307,12 +307,20 @@ class PaintGameView(context: Context) : View(context) {
         }
         val completed = completedDrawings()
         val total = totalCompletedPaintings()
-        rewardTitle = when {
-            completed >= drawingNames.size -> "Mestre das Cores! 👑"
-            total >= 10 -> "Super Pintor! 🎨"
-            completed >= 3 -> "Pequeno Artista! 🏆"
-            completed >= 1 -> "Minha Primeira Arte! ⭐"
-            else -> "Muito bem! ⭐"
+        val achievementCandidates = listOf(
+            Triple("mestre_das_cores", completed >= drawingNames.size, "Mestre das Cores! 👑"),
+            Triple("super_pintor", total >= 10, "Super Pintor! 🎨"),
+            Triple("pequeno_artista", completed >= 3, "Pequeno Artista! 🏆"),
+            Triple("minha_primeira_arte", completed >= 1, "Minha Primeira Arte! ⭐")
+        )
+        val newlyUnlocked = achievementCandidates.firstOrNull { (key, reached, _) ->
+            reached && !prefs.getBoolean("achievement_${key}_celebrated", false)
+        }
+        if (newlyUnlocked != null) {
+            prefs.edit().putBoolean("achievement_${newlyUnlocked.first}_celebrated", true).apply()
+            rewardTitle = newlyUnlocked.third
+        } else {
+            rewardTitle = "Pintura pronta! Você ganhou uma estrelinha ⭐"
         }
         rewardUntil = System.currentTimeMillis() + 2200L
     }
