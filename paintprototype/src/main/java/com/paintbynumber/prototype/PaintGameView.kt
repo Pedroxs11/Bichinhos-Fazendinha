@@ -220,6 +220,7 @@ class PaintGameView(context: Context) : View(context) {
                 .putBoolean(key, true)
         }
         editor.apply()
+        syncAchievementHistory()
     }
 
     private fun repaintCurrentDrawing() {
@@ -247,6 +248,7 @@ class PaintGameView(context: Context) : View(context) {
                 .putBoolean(key, true)
         }
         editor.apply()
+        syncAchievementHistory()
     }
 
     private fun creativeCompletedDrawings(): Int =
@@ -537,6 +539,23 @@ class PaintGameView(context: Context) : View(context) {
         return result
     }
 
+    private fun syncAchievementHistory() {
+        val done = completedDrawings()
+        val total = totalCompletedPaintings()
+        val creativeUnique = creativeCompletedDrawings()
+        val unlocked = mutableListOf<String>()
+        if (done >= 1) unlocked += "minha_primeira_arte"
+        if (done >= 3) unlocked += "pequeno_artista"
+        if (creativeUnique >= 3) unlocked += "artista_criativo"
+        if (total >= 10) unlocked += "super_pintor"
+        if (done >= drawingNames.size) unlocked += "mestre_das_cores"
+        if (unlocked.isNotEmpty()) {
+            val editor = prefs.edit()
+            unlocked.forEach { editor.putBoolean("achievement_${it}_unlocked", true) }
+            editor.apply()
+        }
+    }
+
     private fun drawAchievements(c: Canvas, w: Float, h: Float) {
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(248,248,248); c.drawRect(0f,0f,w,h,paint)
         textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Minhas Estrelinhas ⭐",w/2,h*.09f,textPaint)
@@ -550,20 +569,6 @@ class PaintGameView(context: Context) : View(context) {
             Badge("Super Pintor",10,"🎨",true),
             Badge("Mestre das Cores",drawingNames.size,"👑")
         )
-        // Persist unlocked badges so future UI/rewards can rely on achievement history.
-        badges.forEach { badge ->
-            val progress = when {
-                badge.name == "Artista Criativo" -> creativeUnique
-                badge.usesTotal -> totalCompletedPaintings()
-                else -> done
-            }
-            if (progress >= badge.target) {
-                val badgeKey = badge.name.lowercase()
-                    .replace(Regex("[^a-z0-9]+"), "_")
-                    .trim('_')
-                prefs.edit().putBoolean("achievement_${badgeKey}_unlocked", true).apply()
-            }
-        }
         val total=totalCompletedPaintings()
         val creativeTotal=prefs.getInt("total_creative_completed", 0)
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
