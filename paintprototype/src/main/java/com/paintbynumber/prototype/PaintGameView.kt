@@ -1101,9 +1101,21 @@ class PaintGameView(context: Context) : View(context) {
                 saveProgress()
                 if (!wasComplete && isDrawingComplete()) {
                     completionCardVisible = true
+                    val creativeBadgeKey = "achievement_artista_criativo_unlocked"
+                    val hadCreativeBadge = prefs.getBoolean(creativeBadgeKey, false)
                     recordCreativeCompletionOnce()
-                    rewardTitle = "Modo criativo completo! ✨"
-                    rewardUntil = System.currentTimeMillis() + 1800L
+                    val unlockedCreativeBadge = creativeCompletedDrawings() >= 3 && !hadCreativeBadge
+                    if (unlockedCreativeBadge) {
+                        prefs.edit().putBoolean(creativeBadgeKey, true).apply()
+                        rewardTitle = "Artista Criativo! 🌈"
+                        rewardUntil = System.currentTimeMillis() + 2200L
+                    } else {
+                        rewardTitle = "Modo criativo completo! ✨"
+                        rewardUntil = System.currentTimeMillis() + 1800L
+                    }
+                    celebrationParticles = List(28) { i ->
+                        Pair(((i * 37) % 100) / 100f, ((i * 61) % 70) / 100f + .12f)
+                    }
                 }
                 invalidate()
             }
