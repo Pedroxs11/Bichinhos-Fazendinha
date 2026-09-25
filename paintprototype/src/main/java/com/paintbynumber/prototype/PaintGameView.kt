@@ -517,6 +517,20 @@ class PaintGameView(context: Context) : View(context) {
             Badge("Super Pintor",10,"🎨",true),
             Badge("Mestre das Cores",drawingNames.size,"👑")
         )
+        // Persist unlocked badges so future UI/rewards can rely on achievement history.
+        badges.forEach { badge ->
+            val progress = when {
+                badge.name == "Artista Criativo" -> creativeUnique
+                badge.usesTotal -> totalCompletedPaintings()
+                else -> done
+            }
+            if (progress >= badge.target) {
+                val badgeKey = badge.name.lowercase()
+                    .replace(Regex("[^a-z0-9]+"), "_")
+                    .trim('_')
+                prefs.edit().putBoolean("achievement_${badgeKey}_unlocked", true).apply()
+            }
+        }
         val total=totalCompletedPaintings()
         val creativeTotal=prefs.getInt("total_creative_completed", 0)
         textPaint.textSize=w*.027f; textPaint.color=Color.GRAY
