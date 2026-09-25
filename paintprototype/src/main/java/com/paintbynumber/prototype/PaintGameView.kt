@@ -647,11 +647,14 @@ class PaintGameView(context: Context) : View(context) {
         prefs.getBoolean("drawing_${index}_ever_completed", false) ||
             prefs.getBoolean("drawing_${index}_numbers_complete", false)
 
+    private fun isChallengeDrawing(index: Int): Boolean =
+        drawingRegionCount(index) >= 18
+
     private fun visibleDrawingIndices(): List<Int> =
         drawingNames.indices.filter { i ->
             galleryCategory == 0 ||
-                (galleryCategory == 1 && i <= 5) ||
-                (galleryCategory == 2 && i >= 6) ||
+                (galleryCategory == 1 && !isChallengeDrawing(i)) ||
+                (galleryCategory == 2 && isChallengeDrawing(i)) ||
                 (galleryCategory == 3 && wasEverCompleted(i)) ||
                 (galleryCategory == 4 && (prefs.getBoolean("drawing_${i}_creative_ever_completed", false) || savedCreativeProgress(i) > 0))
         }
