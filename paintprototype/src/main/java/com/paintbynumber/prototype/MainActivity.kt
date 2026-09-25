@@ -21,6 +21,7 @@ class MainActivity : Activity() {
     private var pendingCameraFile: File? = null
     private var cameraPreview: View? = null
     private var savedArtworkButton: View? = null
+    private var pendingLineArtFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,10 +55,17 @@ class MainActivity : Activity() {
 
         // If Android recreated the activity while the camera/preview was open,
         // recover the pending photo instead of silently losing the user's work.
-        val restoredPath = savedInstanceState?.getString(STATE_PENDING_CAMERA_FILE)
-        restoredPath?.let(::File)?.takeIf { it.exists() && it.length() > 0L }?.let {
-            pendingCameraFile = it
-            showCameraPreview(it)
+        val restoredLineArtPath = savedInstanceState?.getString(STATE_PENDING_LINE_ART_FILE)
+        val restoredLineArt = restoredLineArtPath?.let(::File)?.takeIf { it.exists() && it.length() > 0L }
+        if (restoredLineArt != null) {
+            pendingLineArtFile = restoredLineArt
+            showLineArtPreview(restoredLineArt)
+        } else {
+            val restoredPath = savedInstanceState?.getString(STATE_PENDING_CAMERA_FILE)
+            restoredPath?.let(::File)?.takeIf { it.exists() && it.length() > 0L }?.let {
+                pendingCameraFile = it
+                showCameraPreview(it)
+            }
         }
     }
 
@@ -95,6 +103,9 @@ class MainActivity : Activity() {
         super.onSaveInstanceState(outState)
         pendingCameraFile?.takeIf { it.exists() }?.let {
             outState.putString(STATE_PENDING_CAMERA_FILE, it.absolutePath)
+        }
+        pendingLineArtFile?.takeIf { it.exists() }?.let {
+            outState.putString(STATE_PENDING_LINE_ART_FILE, it.absolutePath)
         }
     }
 
@@ -181,6 +192,7 @@ class MainActivity : Activity() {
     }
 
     private fun showLineArtPreview(file: File) {
+        pendingLineArtFile = file
         cameraPreview?.let(root::removeView)
         val density = resources.displayMetrics.density
         val panel = LinearLayout(this).apply {
@@ -210,6 +222,7 @@ class MainActivity : Activity() {
             setOnClickListener {
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
+                pendingLineArtFile = null
                 launchCamera()
             }
         }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -239,6 +252,7 @@ class MainActivity : Activity() {
                     .apply()
                 cameraPreview?.let(root::removeView)
                 cameraPreview = null
+                pendingLineArtFile = null
                 refreshSavedArtworkEntry()
                 Toast.makeText(this@MainActivity, "Desenho guardado para colorir ✓", Toast.LENGTH_LONG).show()
             }
@@ -276,5 +290,6 @@ class MainActivity : Activity() {
 
     companion object {
         private const val STATE_PENDING_CAMERA_FILE = "pending_camera_file"
+        private const val STATE_PENDING_LINE_ART_FILE = "pending_line_art_file"
     }
 }
