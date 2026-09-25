@@ -562,6 +562,18 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize=w*.032f; textPaint.color=Color.DKGRAY; c.drawText("← Voltar à galeria",w/2,h*.905f,textPaint)
     }
 
+    private fun wasEverCompleted(index: Int): Boolean =
+        prefs.getBoolean("drawing_${index}_ever_completed", false) ||
+            prefs.getBoolean("drawing_${index}_numbers_complete", false)
+
+    private fun visibleDrawingIndices(): List<Int> =
+        drawingNames.indices.filter { i ->
+            galleryCategory == 0 ||
+                (galleryCategory == 1 && i <= 5) ||
+                (galleryCategory == 2 && i >= 6) ||
+                (galleryCategory == 3 && wasEverCompleted(i))
+        }
+
     private fun drawGallery(c: Canvas, w: Float, h: Float) {
         paint.style = Paint.Style.FILL
         paint.color = Color.rgb(248,248,248)
@@ -588,9 +600,7 @@ class PaintGameView(context: Context) : View(context) {
             textPaint.textSize=w*.026f; textPaint.color=Color.DKGRAY
             c.drawText(galleryCategories[i],x,tabY+h*.009f,textPaint)
         }
-        val visibleIndices = drawingNames.indices.filter { i ->
-            galleryCategory == 0 || (galleryCategory == 1 && i <= 5) || (galleryCategory == 2 && i >= 6) || (galleryCategory == 3 && (prefs.getBoolean("drawing_${i}_ever_completed", false) || savedProgress(i) == 100))
-        }
+        val visibleIndices = visibleDrawingIndices()
         val cardW = w*.40f
         val cardH = h*.20f
         val lefts = listOf(w*.07f, w*.53f)
