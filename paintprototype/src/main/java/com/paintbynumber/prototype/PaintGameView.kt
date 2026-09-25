@@ -965,7 +965,14 @@ class PaintGameView(context: Context) : View(context) {
                 achievementsMode=true; galleryMode=false; invalidate(); return true
             }
             if (e.y in h*.12f..h*.18f) {
-                galleryCategory = ((e.x - w*.025f) / (w*.19f)).toInt().coerceIn(0, galleryCategories.lastIndex)
+                // Match the visual center of each gallery tab instead of dividing
+                // the whole row into equal buckets. This keeps edge taps accurate.
+                val tabGap = w*.19f
+                val firstCenter = w*.12f
+                val nearestTab = galleryCategories.indices.minByOrNull { i ->
+                    kotlin.math.abs(e.x - (firstCenter + i*tabGap))
+                } ?: 0
+                galleryCategory = nearestTab
                 galleryScroll = 0f
                 invalidate()
                 return true
