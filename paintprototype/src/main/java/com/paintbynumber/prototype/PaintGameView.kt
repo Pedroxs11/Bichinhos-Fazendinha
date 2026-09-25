@@ -751,12 +751,25 @@ class PaintGameView(context: Context) : View(context) {
                     }
                     paint.style=oldStyle; paint.strokeWidth=oldWidth; paint.strokeCap=oldCap; paint.color=oldColor
                 }
-                else -> { // lion cub
+                9 -> { // lion cub
                     paint.color=colors[6]; c.drawCircle(cx,cy,cardW*.22f,paint)
                     paint.color=colors[5]; c.drawCircle(cx,cy+cardH*.01f,cardW*.16f,paint)
                     paint.color=colors[5]; c.drawCircle(cx-cardW*.15f,cy-cardH*.13f,cardW*.07f,paint); c.drawCircle(cx+cardW*.15f,cy-cardH*.13f,cardW*.07f,paint)
                     paint.color=Color.DKGRAY; c.drawCircle(cx-cardW*.055f,cy-cardH*.025f,cardW*.018f,paint); c.drawCircle(cx+cardW*.055f,cy-cardH*.025f,cardW*.018f,paint)
                     paint.color=colors[8]; val nose=Path(); nose.moveTo(cx,cy+cardH*.035f); nose.lineTo(cx-cardW*.025f,cy+cardH*.07f); nose.lineTo(cx+cardW*.025f,cy+cardH*.07f); nose.close(); c.drawPath(nose,paint)
+                }
+                else -> { // dinosaur
+                    paint.color=colors[2]
+                    c.drawOval(cx-cardW*.22f,cy-cardH*.08f,cx+cardW*.13f,cy+cardH*.14f,paint)
+                    c.drawCircle(cx+cardW*.19f,cy-cardH*.07f,cardW*.09f,paint)
+                    val tail=Path(); tail.moveTo(cx-cardW*.18f,cy); tail.lineTo(cx-cardW*.31f,cy-cardH*.08f); tail.lineTo(cx-cardW*.24f,cy+cardH*.08f); tail.close(); c.drawPath(tail,paint)
+                    paint.color=colors[4]
+                    for (spike in 0 until 4) {
+                        val x=cx-cardW*.12f+spike*cardW*.08f
+                        val crest=Path(); crest.moveTo(x,cy-cardH*.08f); crest.lineTo(x+cardW*.04f,cy-cardH*.19f); crest.lineTo(x+cardW*.08f,cy-cardH*.07f); crest.close(); c.drawPath(crest,paint)
+                    }
+                    paint.color=Color.DKGRAY; c.drawCircle(cx+cardW*.21f,cy-cardH*.09f,cardW*.014f,paint)
+                    paint.color=colors[2]; c.drawRect(cx-cardW*.11f,cy+cardH*.10f,cx-cardW*.05f,cy+cardH*.23f,paint); c.drawRect(cx+cardW*.04f,cy+cardH*.10f,cx+cardW*.10f,cy+cardH*.23f,paint)
                 }
             }
 
