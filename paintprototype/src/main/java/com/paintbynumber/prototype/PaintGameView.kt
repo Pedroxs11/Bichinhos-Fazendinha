@@ -64,7 +64,7 @@ class PaintGameView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuild()
 
-    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Quebra-cabeça", "Mundo Mágico", "Arco-íris", "Leãozinho", "Dinossauro")
+    private val drawingNames = listOf("Borboleta", "Peixinho", "Tartaruga", "Foguete", "Flor", "Sorvete", "Quebra-cabeça", "Mundo Mágico", "Arco-íris", "Leãozinho", "Dinossauro", "Castelo Encantado")
     // Monetization prototype: first four are free; one rewarded-video action
     // unlocks the next two drawings. Real ad SDK will replace this simulator later.
     private fun unlockedDrawingCount(): Int = prefs.getInt("unlocked_drawing_count", 4).coerceAtMost(drawingNames.size)
@@ -107,7 +107,8 @@ class PaintGameView(context: Context) : View(context) {
             7 -> landscape()
             8 -> rainbow()
             9 -> lionCub()
-            else -> dinosaur()
+            10 -> dinosaur()
+            else -> magicCastle()
         }
         restoreProgress()
         completionCardVisible = isDrawingComplete()
@@ -175,6 +176,7 @@ class PaintGameView(context: Context) : View(context) {
         8 -> 18
         9 -> 20
         10 -> 22
+        11 -> 24
         else -> 8
     }
 
@@ -523,6 +525,41 @@ class PaintGameView(context: Context) : View(context) {
             Area(15, poly(.38f,.18f,.32f,.12f,.28f,.22f,.30f,.28f)),
             Area(15, poly(.62f,.18f,.68f,.12f,.72f,.22f,.70f,.28f)),
             Area(12, poly(.45f,.90f,.55f,.90f,.58f,.95f,.42f,.95f))
+        )
+    }
+
+    private fun magicCastle(): MutableList<Area> {
+        fun poly(vararg pts: Float): Path = Path().apply {
+            moveTo(pts[0]*width, pts[1]*height)
+            var i=2
+            while(i<pts.size){ lineTo(pts[i]*width, pts[i+1]*height); i+=2 }
+            close()
+        }
+        return mutableListOf(
+            Area(4, poly(.30f,.42f,.43f,.42f,.43f,.78f,.30f,.78f)),
+            Area(4, poly(.57f,.42f,.70f,.42f,.70f,.78f,.57f,.78f)),
+            Area(3, poly(.43f,.35f,.57f,.35f,.57f,.78f,.43f,.78f)),
+            Area(5, poly(.28f,.42f,.36f,.27f,.44f,.42f)),
+            Area(5, poly(.56f,.42f,.64f,.27f,.72f,.42f)),
+            Area(6, poly(.42f,.35f,.50f,.18f,.58f,.35f)),
+            Area(7, poly(.33f,.30f,.36f,.21f,.39f,.30f)),
+            Area(7, poly(.61f,.30f,.64f,.21f,.67f,.30f)),
+            Area(8, poly(.47f,.78f,.53f,.78f,.53f,.63f,.47f,.63f)),
+            Area(9, poly(.33f,.49f,.39f,.49f,.39f,.57f,.33f,.57f)),
+            Area(9, poly(.61f,.49f,.67f,.49f,.67f,.57f,.61f,.57f)),
+            Area(10, poly(.47f,.43f,.53f,.43f,.53f,.51f,.47f,.51f)),
+            Area(11, poly(.30f,.60f,.24f,.64f,.30f,.69f)),
+            Area(11, poly(.70f,.60f,.76f,.64f,.70f,.69f)),
+            Area(12, poly(.24f,.64f,.18f,.68f,.24f,.72f,.30f,.69f,.30f,.60f)),
+            Area(12, poly(.76f,.64f,.82f,.68f,.76f,.72f,.70f,.69f,.70f,.60f)),
+            Area(13, poly(.18f,.68f,.12f,.72f,.18f,.76f,.24f,.72f)),
+            Area(13, poly(.82f,.68f,.88f,.72f,.82f,.76f,.76f,.72f)),
+            Area(14, poly(.36f,.27f,.34f,.17f,.38f,.17f,.39f,.30f)),
+            Area(14, poly(.64f,.27f,.62f,.17f,.66f,.17f,.67f,.30f)),
+            Area(15, poly(.50f,.18f,.48f,.09f,.52f,.09f,.58f,.35f)),
+            Area(16, poly(.43f,.78f,.47f,.78f,.47f,.86f,.39f,.86f)),
+            Area(16, poly(.53f,.78f,.57f,.78f,.61f,.86f,.53f,.86f)),
+            Area(17, poly(.39f,.86f,.61f,.86f,.58f,.91f,.42f,.91f))
         )
     }
 
