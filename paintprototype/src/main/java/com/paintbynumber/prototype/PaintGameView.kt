@@ -33,6 +33,7 @@ class PaintGameView(context: Context) : View(context) {
     private var galleryMode = true
     private var galleryScroll = 0f
     private var galleryCategory = 0
+    private var selectedCollection = -1
     private var achievementsMode = false
     private var hintUntil = 0L
     private var celebrationParticles = emptyList<Pair<Float,Float>>()
@@ -705,11 +706,16 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun visibleDrawingIndices(): List<Int> =
         drawingNames.indices.filter { i ->
-            galleryCategory == 0 ||
-                (galleryCategory == 1 && !isChallengeDrawing(i)) ||
-                (galleryCategory == 2 && isChallengeDrawing(i)) ||
-                (galleryCategory == 3 && wasEverCompleted(i)) ||
-                (galleryCategory == 4 && (prefs.getBoolean("drawing_${i}_creative_ever_completed", false) || savedCreativeProgress(i) > 0))
+            val categoryMatch =
+                galleryCategory == 0 ||
+                    (galleryCategory == 1 && !isChallengeDrawing(i)) ||
+                    (galleryCategory == 2 && isChallengeDrawing(i)) ||
+                    (galleryCategory == 3 && wasEverCompleted(i)) ||
+                    (galleryCategory == 4 && (prefs.getBoolean("drawing_${i}_creative_ever_completed", false) || savedCreativeProgress(i) > 0))
+            val collectionMatch =
+                selectedCollection !in artCollections.indices ||
+                    i in artCollections[selectedCollection].drawings
+            categoryMatch && collectionMatch
         }
 
     private fun drawGallery(c: Canvas, w: Float, h: Float) {
@@ -748,7 +754,11 @@ class PaintGameView(context: Context) : View(context) {
             val centerX = w*.145f + index*collectionGap
             val (done, total) = collectionProgress(collection)
             paint.style=Paint.Style.FILL
-            paint.color=if (done == total) Color.rgb(255,244,200) else Color.rgb(238,244,255)
+            paint.color=when {
+                selectedCollection == index -> Color.rgb(210,230,255)
+                done == total -> Color.rgb(255,244,200)
+                else -> Color.rgb(238,244,255)
+            }
             c.drawRoundRect(centerX-w*.105f,collectionY-h*.036f,centerX+w*.105f,collectionY+h*.050f,20f,20f,paint)
             textPaint.textSize=w*.025f; textPaint.color=Color.DKGRAY
             c.drawText("${collection.icon} ${collection.name}",centerX,collectionY-h*.004f,textPaint)
@@ -1152,16 +1162,34 @@ class PaintGameView(context: Context) : View(context) {
                     kotlin.math.abs(e.x - (firstCenter + i*tabGap))
                 } ?: 0
                 galleryCategory = nearestTab
+                selectedCollection = -1
                 galleryScroll = 0f
                 invalidate()
                 return true
+            }
+            val collectionY = h*.205f - galleryScroll
+            if (e.y in (collectionY-h*.045f)..(collectionY+h*.060f)) {
+                val collectionGap = w*.235f
+                val nearestCollection = artCollections.indices.minByOrNull { i ->
+                    kotlin.math.abs(e.x - (w*.145f + i*collectionGap))
+                }
+                if (nearestCollection != null) {
+                    val centerX = w*.145f + nearestCollection*collectionGap
+                    if (kotlin.math.abs(e.x-centerX) <= w*.11f) {
+                        selectedCollection =
+                            if (selectedCollection == nearestCollection) -1 else nearestCollection
+                        galleryScroll = 0f
+                        invalidate()
+                        return true
+                    }
+                }
             }
             if (e.y in h*.88f..h*.95f && unlockedDrawingCount() < drawingNames.size) {
                 if (!spendTicketToUnlock()) earnRewardTicket() // simulated rewarded video
                 return true
             }
             if (e.y in h*.14f..h*.87f) {
-                val row = ((e.y + galleryScroll - h*.19f) / (h*.235f)).toInt()
+                val row = ((e.y + galleryScroll - h*.275f) / (h*.235f)).toInt()
                 val col = if (e.x < w/2) 0 else 1
                 val visibleIndices = visibleDrawingIndices()
                 val position = row*2 + col
