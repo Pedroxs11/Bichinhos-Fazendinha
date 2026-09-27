@@ -876,11 +876,32 @@ class PaintGameView(context: Context) : View(context) {
             drawGallery(c, w, h)
             return
         }
-        paint.style = Paint.Style.FILL; paint.color = Color.rgb(248,248,248)
-        c.drawRect(0f,0f,w,h*.11f,paint)
-        textPaint.textSize = min(w,h)*.045f
+        paint.style = Paint.Style.FILL
+        paint.color = Color.rgb(247, 250, 255)
+        c.drawRoundRect(w*.025f,h*.018f,w*.975f,h*.115f,28f,28f,paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 2f
+        paint.color = Color.rgb(220, 230, 245)
+        c.drawRoundRect(w*.025f,h*.018f,w*.975f,h*.115f,28f,28f,paint)
+
+        val paintedCount = areas.count { it.painted }
+        val progressPercent = if (areas.isEmpty()) 0 else (paintedCount * 100 / areas.size)
+        textPaint.textSize = min(w,h)*.043f
         textPaint.color = Color.DKGRAY
-        c.drawText(drawingNames[drawingIndex], w/2,h*.07f,textPaint)
+        c.drawText(drawingNames[drawingIndex], w/2,h*.055f,textPaint)
+        textPaint.textSize = w*.024f
+        textPaint.color = Color.rgb(105,105,115)
+        c.drawText(if (creativeMode) "🎨 Modo criativo • $progressPercent%" else "⭐ $progressPercent% completo", w/2,h*.086f,textPaint)
+
+        val barLeft=w*.20f; val barTop=h*.098f; val barRight=w*.80f; val barBottom=h*.106f
+        paint.style=Paint.Style.FILL
+        paint.color=Color.rgb(225,230,238)
+        c.drawRoundRect(barLeft,barTop,barRight,barBottom,12f,12f,paint)
+        if (progressPercent > 0) {
+            paint.color=if (creativeMode) Color.rgb(255,152,0) else Color.rgb(76,175,80)
+            val filledRight=barLeft+(barRight-barLeft)*(progressPercent/100f)
+            c.drawRoundRect(barLeft,barTop,filledRight,barBottom,12f,12f,paint)
+        }
 
         c.save()
         c.translate(offsetX, offsetY)
