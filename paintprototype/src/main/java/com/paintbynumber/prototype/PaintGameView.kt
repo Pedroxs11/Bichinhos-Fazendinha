@@ -684,6 +684,18 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize=w*.032f; textPaint.color=Color.DKGRAY; c.drawText("← Voltar à galeria",w/2,h*.905f,textPaint)
     }
 
+    private data class ArtCollection(val name: String, val icon: String, val drawings: Set<Int>)
+
+    private val artCollections = listOf(
+        ArtCollection("Bichinhos", "🐾", setOf(0, 1, 2, 9)),
+        ArtCollection("Aventuras", "🚀", setOf(3, 10)),
+        ArtCollection("Mundo Mágico", "✨", setOf(4, 5, 8, 11)),
+        ArtCollection("Criatividade", "🎨", setOf(6, 7))
+    )
+
+    private fun collectionProgress(collection: ArtCollection): Pair<Int, Int> =
+        collection.drawings.count { wasEverCompleted(it) } to collection.drawings.size
+
     private fun wasEverCompleted(index: Int): Boolean =
         prefs.getBoolean("drawing_${index}_ever_completed", false) ||
             prefs.getBoolean("drawing_${index}_numbers_complete", false)
@@ -728,6 +740,23 @@ class PaintGameView(context: Context) : View(context) {
             c.drawText(galleryCategories[i],x,tabY+h*.008f,textPaint)
         }
         val visibleIndices = visibleDrawingIndices()
+
+        // Collection album: gives children a longer-term goal beyond finishing one picture.
+        val collectionY = h*.205f - galleryScroll
+        val collectionGap = w*.235f
+        artCollections.forEachIndexed { index, collection ->
+            val centerX = w*.145f + index*collectionGap
+            val (done, total) = collectionProgress(collection)
+            paint.style=Paint.Style.FILL
+            paint.color=if (done == total) Color.rgb(255,244,200) else Color.rgb(238,244,255)
+            c.drawRoundRect(centerX-w*.105f,collectionY-h*.036f,centerX+w*.105f,collectionY+h*.050f,20f,20f,paint)
+            textPaint.textSize=w*.025f; textPaint.color=Color.DKGRAY
+            c.drawText("${collection.icon} ${collection.name}",centerX,collectionY-h*.004f,textPaint)
+            textPaint.textSize=w*.021f
+            textPaint.color=if (done == total) Color.rgb(170,120,20) else Color.GRAY
+            c.drawText(if (done == total) "Completa ⭐" else "$done/$total",centerX,collectionY+h*.028f,textPaint)
+        }
+
         val cardW = w*.40f
         val cardH = h*.20f
         val lefts = listOf(w*.07f, w*.53f)
@@ -735,7 +764,7 @@ class PaintGameView(context: Context) : View(context) {
             val row = position / 2
             val col = position % 2
             val l = lefts[col]
-            val t = h*.19f + row*h*.235f - galleryScroll
+            val t = h*.275f + row*h*.235f - galleryScroll
             paint.color = Color.WHITE
             paint.setShadowLayer(8f, 0f, 3f, Color.LTGRAY)
             setLayerType(LAYER_TYPE_SOFTWARE, paint)
