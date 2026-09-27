@@ -1129,8 +1129,6 @@ class PaintGameView(context: Context) : View(context) {
             }
         }
 
-        if(e.action!=MotionEvent.ACTION_UP) return true
-
         if (achievementsMode) {
             if (e.action == MotionEvent.ACTION_UP && e.y in h*.84f..h*.96f) { achievementsMode=false; galleryMode=true; invalidate() }
             return true
@@ -1209,6 +1207,9 @@ class PaintGameView(context: Context) : View(context) {
             }
             return true
         }
+
+        if(e.action!=MotionEvent.ACTION_UP) return true
+
         if (!creativeMode && isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f) {
             when {
                 e.x in w*.10f..w*.50f -> shareArtwork()
