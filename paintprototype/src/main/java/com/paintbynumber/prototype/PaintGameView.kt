@@ -822,12 +822,17 @@ class PaintGameView(context: Context) : View(context) {
                     paint.color=colors[2]
                     c.drawRect(cx-cardW*.07f,cy-cardH*.08f,cx+cardW*.07f,cy+cardH*.20f,paint)
                     paint.color=colors[4]
-                    fun roof(left: Float, top: Float, right: Float, base: Float) {
-                        val p=Path(); p.moveTo(cx,top); p.lineTo(left,base); p.lineTo(right,base); p.close(); c.drawPath(p,paint)
+                    fun roof(centerX: Float, apexY: Float, halfWidth: Float, baseY: Float) {
+                        val p=Path()
+                        p.moveTo(centerX,apexY)
+                        p.lineTo(centerX-halfWidth,baseY)
+                        p.lineTo(centerX+halfWidth,baseY)
+                        p.close()
+                        c.drawPath(p,paint)
                     }
-                    roof(cx-cardW*.18f,cy-cardH*.20f,cx-cardW*.29f,cy-cardH*.02f)
-                    roof(cx+cardW*.18f,cy-cardH*.20f,cx+cardW*.07f,cy-cardH*.02f)
-                    roof(cx,cy-cardH*.28f,cx-cardW*.08f,cy-cardH*.08f)
+                    roof(cx-cardW*.125f,cy-cardH*.20f,cardW*.075f,cy-cardH*.02f)
+                    roof(cx+cardW*.125f,cy-cardH*.20f,cardW*.075f,cy-cardH*.02f)
+                    roof(cx,cy-cardH*.28f,cardW*.09f,cy-cardH*.08f)
                     paint.color=colors[7]
                     c.drawRoundRect(cx-cardW*.025f,cy+cardH*.08f,cx+cardW*.025f,cy+cardH*.20f,10f,10f,paint)
                     paint.color=colors[1]
