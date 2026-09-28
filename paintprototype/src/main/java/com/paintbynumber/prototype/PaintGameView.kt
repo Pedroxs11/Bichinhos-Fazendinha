@@ -210,6 +210,12 @@ class PaintGameView(context: Context) : View(context) {
     private fun completedDrawings(): Int =
         drawingNames.indices.count(::wasEverCompleted)
 
+    private fun numberedCompletedDrawings(): Int =
+        drawingNames.indices.count { index ->
+            prefs.getBoolean("drawing_${index}_ever_completed", false) ||
+                prefs.getBoolean("drawing_${index}_numbers_complete", false)
+        }
+
     private fun totalCompletedPaintings(): Int = prefs.getInt("total_completed_paintings", 0)
 
     private fun recordCompletionOnce() {
@@ -311,7 +317,7 @@ class PaintGameView(context: Context) : View(context) {
             val y = ((i * 61) % 70) / 100f + .12f
             Pair(x,y)
         }
-        val completed = completedDrawings()
+        val completed = numberedCompletedDrawings()
         val total = totalCompletedPaintings()
         val achievementCandidates = listOf(
             Triple("minha_primeira_arte", completed >= 1, "Minha Primeira Arte! ⭐"),
@@ -626,7 +632,7 @@ class PaintGameView(context: Context) : View(context) {
     }
 
     private fun syncAchievementHistory() {
-        val done = completedDrawings()
+        val done = numberedCompletedDrawings()
         val total = totalCompletedPaintings()
         val creativeUnique = creativeCompletedDrawings()
         val unlocked = mutableListOf<String>()
@@ -645,7 +651,7 @@ class PaintGameView(context: Context) : View(context) {
     private fun drawAchievements(c: Canvas, w: Float, h: Float) {
         paint.style=Paint.Style.FILL; paint.color=Color.rgb(248,248,248); c.drawRect(0f,0f,w,h,paint)
         textPaint.color=Color.DKGRAY; textPaint.textSize=w*.06f; c.drawText("Minhas Estrelinhas ⭐",w/2,h*.09f,textPaint)
-        val done=completedDrawings()
+        val done=numberedCompletedDrawings()
         data class Badge(val name:String,val target:Int,val icon:String,val usesTotal:Boolean=false)
         val creativeUnique=creativeCompletedDrawings()
         val badges=listOf(
