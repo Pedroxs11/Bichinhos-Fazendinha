@@ -1289,10 +1289,12 @@ class PaintGameView(context: Context) : View(context) {
                 galleryMode = true
                 invalidate()
             } else if (e.x < w*.32f) {
-                drawingIndex = (drawingIndex - 1 + drawingNames.size) % drawingNames.size
+                val unlocked = unlockedDrawingCount().coerceAtLeast(1)
+                drawingIndex = (drawingIndex - 1 + unlocked) % unlocked
                 rebuild()
             } else if (e.x > w*.68f) {
-                drawingIndex = (drawingIndex + 1) % drawingNames.size
+                val unlocked = unlockedDrawingCount().coerceAtLeast(1)
+                drawingIndex = (drawingIndex + 1) % unlocked
                 rebuild()
             }
             return true
