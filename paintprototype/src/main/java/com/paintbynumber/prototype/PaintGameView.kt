@@ -226,14 +226,18 @@ class PaintGameView(context: Context) : View(context) {
     }
 
     private fun repaintCurrentDrawing() {
-        val prefix = "drawing_${drawingIndex}_numbers"
-        prefs.edit()
+        val mode = if (creativeMode) "creative" else "numbers"
+        val prefix = "drawing_${drawingIndex}_${mode}"
+        val editor = prefs.edit()
             .remove("${prefix}_painted")
             .remove("${prefix}_colors")
             .remove("${prefix}_complete")
-            .remove("drawing_${drawingIndex}_completion_counted")
-            .apply()
-        creativeMode = false
+        if (creativeMode) {
+            editor.remove("drawing_${drawingIndex}_creative_completion_counted")
+        } else {
+            editor.remove("drawing_${drawingIndex}_completion_counted")
+        }
+        editor.apply()
         completionCardVisible = false
         completionRewardShown = false
         celebrationParticles = emptyList()
@@ -1212,7 +1216,7 @@ class PaintGameView(context: Context) : View(context) {
 
         if(e.action!=MotionEvent.ACTION_UP) return true
 
-        if (!creativeMode && isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f) {
+        if (isDrawingComplete() && completionCardVisible && e.y in h*.60f..h*.72f) {
             when {
                 e.x in w*.10f..w*.50f -> shareArtwork()
                 e.x in w*.50f..w*.90f -> repaintCurrentDrawing()
