@@ -974,6 +974,11 @@ class PaintGameView(context: Context) : View(context) {
             }
         }
 
+        // Keep controls outside the artwork transform. Zoom/pan must move only
+        // the drawing; otherwise the visual buttons drift away from their fixed
+        // touch targets when the artwork is enlarged.
+        c.restore()
+
         // Mode switch
         paint.style=Paint.Style.FILL
         paint.color=if (!creativeMode) Color.rgb(225,235,255) else Color.rgb(245,245,245)
@@ -983,8 +988,6 @@ class PaintGameView(context: Context) : View(context) {
         textPaint.textSize=w*.028f; textPaint.color=Color.DKGRAY
         c.drawText("Por números",w*.335f,h*.782f,textPaint)
         c.drawText("Criativo",w*.665f,h*.782f,textPaint)
-
-        c.restore()
 
         val y=h*.84f
         val visibleCount = 8
