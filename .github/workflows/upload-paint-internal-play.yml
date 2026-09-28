@@ -1,0 +1,76 @@
+name: Upload Paint to Internal Testing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload-internal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Restore upload keystore
+        env:
+          PAINT_KEYSTORE_BASE64: ${{ secrets.PAINT_KEYSTORE_BASE64 }}
+          PAINT_STORE_PASSWORD: ${{ secrets.PAINT_STORE_PASSWORD }}
+          PAINT_KEY_PASSWORD: ${{ secrets.PAINT_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          [ -n "$PAINT_KEYSTORE_BASE64" ] || fail "PAINT_KEYSTORE_BASE64 is empty."
+          [ -n "$PAINT_STORE_PASSWORD" ] || fail "PAINT_STORE_PASSWORD is empty."
+          [ -n "$PAINT_KEY_PASSWORD" ] || fail "PAINT_KEY_PASSWORD is empty."
+
+          KEYSTORE="${RUNNER_TEMP}/paint-upload.jks"
+          printf '%s' "$PAINT_KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE"
+          [ -s "$KEYSTORE" ] || fail "Decoded keystore is empty."
+
+          RESOLVED_ALIAS="$(keytool -J-Duser.language=en -list -keystore "$KEYSTORE" -storepass "$PAINT_STORE_PASSWORD" 2>/dev/null | awk -F',' '/PrivateKeyEntry/{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); print $1}')"
+          ALIAS_COUNT="$(printf '%s\n' "$RESOLVED_ALIAS" | sed '/^$/d' | wc -l | tr -d ' ')"
+          [ "$ALIAS_COUNT" -eq 1 ] || fail "Expected exactly one PrivateKeyEntry, found $ALIAS_COUNT."
+          echo "PAINT_RESOLVED_ALIAS=$RESOLVED_ALIAS" >> "$GITHUB_ENV"
+
+      - name: Build release AAB
+        run: |
+          gradle :paintprototype:bundleRelease --stacktrace
+          test -s paintprototype/build/outputs/bundle/release/paintprototype-release.aab
+
+      - name: Sign AAB
+        env:
+          PAINT_STORE_PASSWORD: ${{ secrets.PAINT_STORE_PASSWORD }}
+          PAINT_KEY_PASSWORD: ${{ secrets.PAINT_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          AAB="paintprototype/build/outputs/bundle/release/paintprototype-release.aab"
+          KEYSTORE="${RUNNER_TEMP}/paint-upload.jks"
+          jarsigner -keystore "$KEYSTORE" -storepass "$PAINT_STORE_PASSWORD" -keypass "$PAINT_KEY_PASSWORD" -sigalg SHA256withRSA -digestalg SHA-256 "$AAB" "$PAINT_RESOLVED_ALIAS"
+          jarsigner -verify -verbose -certs "$AAB" >/dev/null
+
+      - name: Write Google Play service account
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ] || { echo "::error::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is empty."; exit 1; }
+          printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "${RUNNER_TEMP}/google-play-service-account.json"
+          python3 -m json.tool "${RUNNER_TEMP}/google-play-service-account.json" >/dev/null
+
+      - name: Upload to Google Play Internal Testing only
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ runner.temp }}/google-play-service-account.json
+          packageName: com.pedroxs11.colorbynumber
+          releaseFiles: paintprototype/build/outputs/bundle/release/paintprototype-release.aab
+          track: internal
+          status: draft
