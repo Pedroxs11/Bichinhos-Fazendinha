@@ -4,24 +4,15 @@ plugins {
 }
 
 android {
-    namespace = "com.paintbynumber.prototype"
-    compileSdk = 35
-
-    signingConfigs {
-        create("releaseLocal") {
-            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-    }
+    namespace = "com.pedroxs11.colorbynumber"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.pedro.colorbynumber.prototype.release"
+        applicationId = "com.pedroxs11.colorbynumber"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 4
-        versionName = "0.1.3"
+        targetSdk = 36
+        versionCode = 5
+        versionName = "0.1.4"
     }
 
     buildTypes {
@@ -32,7 +23,6 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig = signingConfigs.getByName("releaseLocal")
         }
     }
 
