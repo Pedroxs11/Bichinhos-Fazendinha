@@ -208,10 +208,7 @@ class PaintGameView(context: Context) : View(context) {
     private fun isDrawingComplete(): Boolean = areas.isNotEmpty() && areas.all { it.painted }
 
     private fun completedDrawings(): Int =
-        drawingNames.indices.count { index ->
-            prefs.getBoolean("drawing_${index}_ever_completed", false) ||
-                prefs.getBoolean("drawing_${index}_numbers_complete", false)
-        }
+        drawingNames.indices.count(::wasEverCompleted)
 
     private fun totalCompletedPaintings(): Int = prefs.getInt("total_completed_paintings", 0)
 
@@ -699,7 +696,9 @@ class PaintGameView(context: Context) : View(context) {
 
     private fun wasEverCompleted(index: Int): Boolean =
         prefs.getBoolean("drawing_${index}_ever_completed", false) ||
-            prefs.getBoolean("drawing_${index}_numbers_complete", false)
+            prefs.getBoolean("drawing_${index}_numbers_complete", false) ||
+            prefs.getBoolean("drawing_${index}_creative_ever_completed", false) ||
+            prefs.getBoolean("drawing_${index}_creative_complete", false)
 
     private fun isChallengeDrawing(index: Int): Boolean =
         drawingRegionCount(index) >= 18
