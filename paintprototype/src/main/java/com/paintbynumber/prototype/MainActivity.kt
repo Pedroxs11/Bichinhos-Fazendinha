@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.content.Intent
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import android.os.Bundle
 import android.view.Gravity
@@ -39,8 +41,8 @@ class MainActivity : Activity() {
             text = "📷"
             textSize = 22f
             setTextColor(Color.DKGRAY)
-            contentDescription = "Criar arte pela câmera"
-            setOnClickListener { openCameraImport() }
+            contentDescription = "Criar arte pela câmera ou galeria"
+            setOnClickListener { openCameraOrGalleryChooser() }
         }
         val density = resources.displayMetrics.density
         root.addView(cameraButton, FrameLayout.LayoutParams(
@@ -109,6 +111,57 @@ class MainActivity : Activity() {
         pendingLineArtFile?.takeIf { it.exists() }?.let {
             outState.putString(STATE_PENDING_LINE_ART_FILE, it.absolutePath)
         }
+    }
+
+    private fun openGalleryImport() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
+            type = "image/*"
+        }
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivityForResult(intent, GALLERY_IMPORT_REQUEST)
+        } else {
+            Toast.makeText(this, "Galeria não está disponível neste aparelho", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openCameraOrGalleryChooser() {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(24, 24, 24, 24)
+            setBackgroundColor(Color.WHITE)
+        }
+        panel.addView(TextView(this).apply {
+            text = "Criar desenho a partir de uma foto 🎨"
+            textSize = 20f
+            setTextColor(Color.DKGRAY)
+            gravity = Gravity.CENTER
+        })
+        panel.addView(Button(this).apply {
+            text = "📷 Tirar foto"
+            setOnClickListener {
+                cameraPreview?.let(root::removeView)
+                cameraPreview = null
+                openCameraImport()
+            }
+        })
+        panel.addView(Button(this).apply {
+            text = "🖼 Escolher da galeria"
+            setOnClickListener {
+                cameraPreview?.let(root::removeView)
+                cameraPreview = null
+                openGalleryImport()
+            }
+        })
+        panel.addView(Button(this).apply {
+            text = "Cancelar"
+            setOnClickListener {
+                cameraPreview?.let(root::removeView)
+                cameraPreview = null
+            }
+        })
+        cameraPreview = panel
+        root.addView(panel, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
     }
 
     fun openCameraImport() {
@@ -298,6 +351,18 @@ class MainActivity : Activity() {
     @Deprecated("Kept for the dependency-free camera prototype")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == GALLERY_IMPORT_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                val uri = data?.data
+                val sourceFile = uri?.let(::copyGalleryImageToCache)
+                if (sourceFile != null) {
+                    showCameraPreview(sourceFile)
+                } else {
+                    Toast.makeText(this, "Não foi possível abrir essa foto", Toast.LENGTH_LONG).show()
+                }
+            }
+            return
+        }
         if (requestCode != CameraCaptureHelper.CAMERA_CAPTURE_REQUEST) return
 
         val file = pendingCameraFile
@@ -310,8 +375,22 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun copyGalleryImageToCache(uri: Uri): File? {
+        val directory = File(cacheDir, "camera_import").apply { mkdirs() }
+        val target = File(directory, "gallery_" + System.currentTimeMillis() + ".jpg")
+        return runCatching {
+            contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
+            target.takeIf { it.exists() && it.length() > 0L }
+        }.getOrElse {
+            target.delete()
+            null
+        }
+    }
+
     companion object {
-        private const val STATE_PENDING_CAMERA_FILE = "pending_camera_file"
+        private const val GALLERY_IMPORT_REQUEST = 4103        private const val STATE_PENDING_CAMERA_FILE = "pending_camera_file"
         private const val STATE_PENDING_LINE_ART_FILE = "pending_line_art_file"
     }
 }
