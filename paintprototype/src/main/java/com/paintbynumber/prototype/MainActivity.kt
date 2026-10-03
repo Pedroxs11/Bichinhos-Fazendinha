@@ -390,7 +390,8 @@ class MainActivity : Activity() {
     }
 
     companion object {
-        private const val GALLERY_IMPORT_REQUEST = 4103        private const val STATE_PENDING_CAMERA_FILE = "pending_camera_file"
+        private const val GALLERY_IMPORT_REQUEST = 4103
+        private const val STATE_PENDING_CAMERA_FILE = "pending_camera_file"
         private const val STATE_PENDING_LINE_ART_FILE = "pending_line_art_file"
     }
 }
