@@ -114,12 +114,18 @@ class MainActivity : Activity() {
     }
 
     private fun openGalleryImport() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
+        // ACTION_GET_CONTENT works with the Android photo picker and older gallery apps.
+        // Avoid combining ACTION_PICK's data URI with setType(), which clears the URI.
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
             type = "image/*"
         }
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivityForResult(intent, GALLERY_IMPORT_REQUEST)
-        } else {
+        runCatching {
+            startActivityForResult(
+                Intent.createChooser(intent, "Escolher uma foto"),
+                GALLERY_IMPORT_REQUEST
+            )
+        }.onFailure {
             Toast.makeText(this, "Galeria não está disponível neste aparelho", Toast.LENGTH_SHORT).show()
         }
     }
@@ -200,7 +206,7 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
 
         panel.addView(ImageView(this).apply {
-            setImageBitmap(BitmapFactory.decodeFile(file.absolutePath))
+            setImageBitmap(decodePreviewBitmap(file))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             adjustViewBounds = true
             contentDescription = "Prévia da foto capturada"
@@ -373,6 +379,25 @@ class MainActivity : Activity() {
             file?.delete()
             Toast.makeText(this, "Foto cancelada", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun decodePreviewBitmap(file: File, maxSize: Int = 1600): android.graphics.Bitmap? {
+        // Read dimensions first and downsample during decode so high-resolution
+        // phone photos do not allocate a full-size bitmap just to show a preview.
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+        val limit = maxSize.coerceAtLeast(256)
+        var sampleSize = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / sampleSize > limit) {
+            sampleSize *= 2
+        }
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeFile(file.absolutePath, options)
     }
 
     private fun copyGalleryImageToCache(uri: Uri): File? {
