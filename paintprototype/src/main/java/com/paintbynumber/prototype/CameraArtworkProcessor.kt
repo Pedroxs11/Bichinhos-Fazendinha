@@ -39,14 +39,15 @@ object CameraArtworkProcessor {
             val scale = if (largest > targetSize) targetSize.toFloat() / largest else 1f
             val width = max(1, (decoded.width * scale).toInt())
             val height = max(1, (decoded.height * scale).toInt())
-            working = if (width != decoded.width || height != decoded.height) {
+            val bitmap = if (width != decoded.width || height != decoded.height) {
                 Bitmap.createScaledBitmap(decoded, width, height, true)
             } else {
                 decoded
             }
+            working = bitmap
 
             val gray = IntArray(width * height)
-            working.getPixels(gray, 0, width, 0, 0, width, height)
+            bitmap.getPixels(gray, 0, width, 0, 0, width, height)
             for (i in gray.indices) {
                 val c = gray[i]
                 gray[i] = (Color.red(c) * 30 + Color.green(c) * 59 + Color.blue(c) * 11) / 100
@@ -65,10 +66,11 @@ object CameraArtworkProcessor {
                 }
             }
 
-            lineArt = Bitmap.createBitmap(result, width, height, Bitmap.Config.ARGB_8888)
+            val generated = Bitmap.createBitmap(result, width, height, Bitmap.Config.ARGB_8888)
+            lineArt = generated
             output.parentFile?.mkdirs()
             succeeded = FileOutputStream(output).use {
-                lineArt.compress(Bitmap.CompressFormat.PNG, 100, it)
+                generated.compress(Bitmap.CompressFormat.PNG, 100, it)
             } && output.exists() && output.length() > 0L
             return succeeded
         } catch (_: Exception) {
